@@ -1,4 +1,4 @@
-package net.gini.android.requests;
+package net.gini.android.authorization.requests;
 
 
 import android.test.AndroidTestCase;
@@ -9,26 +9,26 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.NoCache;
 import com.android.volley.toolbox.RequestFuture;
 
-import net.gini.android.authorization.requests.UserCenterLoginRequest;
 import net.gini.android.helpers.MockNetwork;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 
-public class UserCenterLoginRequestTest extends AndroidTestCase {
+public class TokenRequestTest extends AndroidTestCase {
     public RequestFuture<JSONObject> requestFuture;
-    public UserCenterLoginRequest loginRequest;
+    public TokenRequest loginRequest;
     public RequestQueue requestQueue;
     public MockNetwork mockNetwork;
 
     @Override
     public void setUp() {
         requestFuture = RequestFuture.newFuture();
-        loginRequest = new UserCenterLoginRequest("foobar", "1234", "https://user.gini.net/", requestFuture, requestFuture);
+        loginRequest = new TokenRequest("foobar", "1234", "https://user.gini.net/oauth/token?grant_type=client_credentials", null, requestFuture, requestFuture);
         mockNetwork = new MockNetwork();
         requestQueue = new RequestQueue(new NoCache(), mockNetwork);
         requestQueue.start();
@@ -47,12 +47,29 @@ public class UserCenterLoginRequestTest extends AndroidTestCase {
     }
 
     public void testCorrectURL() {
-        assertEquals(loginRequest.getUrl(), "https://user.gini.net//oauth/token?grant_type=client_credentials");
+        assertEquals(loginRequest.getUrl(), "https://user.gini.net/oauth/token?grant_type=client_credentials");
     }
 
-    /** The login request has an empty Body */
     public void testEmptyBody() {
         assertEquals(loginRequest.getBody(), null);
+    }
+
+    public void testBody() {
+        HashMap<String, String> data = new HashMap<String, String>();
+        data.put("foo", "bar");
+        data.put("bar", "foo");
+        loginRequest = new TokenRequest("foobar", "1234", "https://user.gini.net", data, null, null);
+
+        assertEquals("bar=foo&foo=bar", new String(loginRequest.getBody()));
+    }
+
+    public void testBodyContentTypeHeader() throws AuthFailureError {
+        HashMap<String, String> data = new HashMap<String, String>();
+        data.put("foo", "bar");
+        data.put("bar", "foo");
+        loginRequest = new TokenRequest("foobar", "1234", "https://user.gini.net", data, null, null);
+
+        assertEquals("application/x-www-form-urlencoded", loginRequest.getBodyContentType());
     }
 
     public void testSuccessfulResponse() throws ExecutionException, InterruptedException, JSONException {

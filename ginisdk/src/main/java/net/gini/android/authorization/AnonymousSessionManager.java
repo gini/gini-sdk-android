@@ -9,9 +9,9 @@ import java.util.concurrent.Future;
  */
 public class AnonymousSessionManager implements SessionManager {
     /** The UserCenterManager instance which is used to create and log in the anonymous users. */
-    private UserCenterManager mUserCenterManager;
+    final private UserCenterManager mUserCenterManager;
     /** The credentials store which is used to store the user credentials. */
-    private final CredentialsStore mCredentialsStore;
+    final private CredentialsStore mCredentialsStore;
 
     /** The user's current session. */
     private Session mCurrentSession;
