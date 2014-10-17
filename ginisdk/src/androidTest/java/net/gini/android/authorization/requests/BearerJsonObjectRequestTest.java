@@ -19,7 +19,7 @@ public class BearerJsonObjectRequestTest extends TestCase {
         BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com", null, session, null, null);
 
         Map<String, String> headers = request.getHeaders();
-        assertEquals(headers.get("Accept"), "application/json");
+        assertEquals("application/json", headers.get("Accept"));
     }
 
     public void testContentTypeHeader() throws AuthFailureError, JSONException {
@@ -28,6 +28,6 @@ public class BearerJsonObjectRequestTest extends TestCase {
         payload.put("foo", "bar");
         BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com", payload, session, null, null);
 
-        assertEquals(request.getBodyContentType(), "application/json; charset=utf-8");
+        assertEquals("application/json; charset=utf-8", request.getBodyContentType());
     }
 }

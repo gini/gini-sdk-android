@@ -37,17 +37,17 @@ public class TokenRequestTest extends AndroidTestCase {
     public void testJSONAcceptHeader() throws AuthFailureError {
         Map<String, String> headers = loginRequest.getHeaders();
 
-        assertEquals(headers.get("Accept"), "application/json");
+        assertEquals("application/json", headers.get("Accept"));
     }
 
     public void testAuthorizationHeader() throws AuthFailureError {
         Map<String, String> headers = loginRequest.getHeaders();
 
-        assertEquals(headers.get("Authorization"), "Basic Zm9vYmFyOjEyMzQ=");
+        assertEquals("Basic Zm9vYmFyOjEyMzQ=", headers.get("Authorization"));
     }
 
     public void testCorrectURL() {
-        assertEquals(loginRequest.getUrl(), "https://user.gini.net/oauth/token?grant_type=client_credentials");
+        assertEquals("https://user.gini.net/oauth/token?grant_type=client_credentials", loginRequest.getUrl());
     }
 
     public void testEmptyBody() {

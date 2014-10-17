@@ -23,7 +23,7 @@ public class SessionTest extends AndroidTestCase {
 
     public void testGetSessionSetter() {
         Session session = new Session("1234-5678-9101", Calendar.getInstance());
-        assertEquals(session.getAccessToken(), "1234-5678-9101");
+        assertEquals("1234-5678-9101", session.getAccessToken());
     }
 
     public void testFactoryReturnsSession() throws JSONException {

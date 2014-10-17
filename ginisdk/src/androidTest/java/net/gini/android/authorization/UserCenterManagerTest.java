@@ -47,7 +47,7 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
 
         Session session = mUserCenterManager.loginClient().getResult();
 
-        assertEquals(session.getAccessToken(), "74c1e7fe-e464-451f-a6eb-8f0998c46ff6");
+        assertEquals("74c1e7fe-e464-451f-a6eb-8f0998c46ff6", session.getAccessToken());
     }
 
     public void testGetSessionReusesSession() throws JSONException {
