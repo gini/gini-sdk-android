@@ -1,6 +1,5 @@
 package net.gini.android;
 
-import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
@@ -14,64 +13,30 @@ import bolts.Task;
  * @param <T> The response type of the request.
  */
 public class RequestTaskCompletionSource<T> implements Response.Listener<T>, Response.ErrorListener {
-    private Request<?> mRequest;
-    private boolean mResultReceived = false;
-    private VolleyError mError;
-    private Task<T>.TaskCompletionSource mCompletionSource;
+    private final Task<T>.TaskCompletionSource mCompletionSource;
 
-    public static <E> RequestTaskCompletionSource<E> newTask() {
-        return new RequestTaskCompletionSource<E>();
+    public static <T> RequestTaskCompletionSource<T> newCompletionSource() {
+        return new RequestTaskCompletionSource<T>();
     }
 
     private RequestTaskCompletionSource() {
         mCompletionSource = Task.create();
     }
 
-    public void setRequest(Request<?> request) {
-        mRequest = request;
-    }
-
-
-    public synchronized boolean cancel(boolean mayInterruptIfRunning) {
-        if (mRequest == null) {
-            return false;
-        }
-
-        if (!isDone()) {
-            mRequest.cancel();
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public boolean isCancelled() {
-        if (mRequest == null) {
-            return false;
-        }
-        return mRequest.isCanceled();
-    }
-
-    public synchronized boolean isDone() {
-        return mResultReceived || mError != null || isCancelled();
-    }
-
-    public synchronized Task<T> getTask() {
+    /**
+     * Returns the task which will be completed by this completion source.
+     */
+    public Task<T> getTask() {
         return mCompletionSource.getTask();
     }
 
     @Override
-    public synchronized void onResponse(T response) {
-        mResultReceived = true;
+    public void onResponse(T response) {
         mCompletionSource.setResult(response);
-        notifyAll();
     }
 
     @Override
     public synchronized void onErrorResponse(VolleyError error) {
-        mError = error;
         mCompletionSource.setError(error);
-        notifyAll();
     }
 }
-

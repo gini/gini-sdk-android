@@ -42,7 +42,7 @@ public class UserCenterAPICommunicator {
      */
     public Task<JSONObject> loginClient() {
         // Build and execute the request.
-        final RequestTaskCompletionSource<JSONObject> completionSource = RequestTaskCompletionSource.newTask();
+        final RequestTaskCompletionSource<JSONObject> completionSource = RequestTaskCompletionSource.newCompletionSource();
         final String url = mBaseUrl + "oauth/token?grant_type=client_credentials";
         TokenRequest loginRequest = new TokenRequest(mClientId, mClientSecret, url, null, completionSource, completionSource);
         mRequestQueue.add(loginRequest);
@@ -59,7 +59,7 @@ public class UserCenterAPICommunicator {
      */
     public Task<JSONObject> loginUser(UserCredentials userCredentials) {
         // Build and execute the request.
-        final RequestTaskCompletionSource<JSONObject> completionSource = RequestTaskCompletionSource.newTask();
+        final RequestTaskCompletionSource<JSONObject> completionSource = RequestTaskCompletionSource.newCompletionSource();
         final String url = mBaseUrl + "oauth/token?grant_type=password";
         final HashMap<String, String> data = new HashMap<String, String>();
         data.put("username", userCredentials.getUsername());
