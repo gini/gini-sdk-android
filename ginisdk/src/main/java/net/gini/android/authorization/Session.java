@@ -16,7 +16,7 @@ public class Session {
 
     public Session(final String accessToken, final Date expirationDate) {
         mAccessToken = accessToken;
-        mExpirationDate = expirationDate;
+        mExpirationDate = new Date(expirationDate.getTime());
     }
 
     /** The session's access token. */
