@@ -10,12 +10,12 @@ import net.gini.android.authorization.Session;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Calendar;
+import java.util.Date;
 import java.util.Map;
 
 public class BearerJsonObjectRequestTest extends TestCase {
     public void testAcceptHeader() throws AuthFailureError {
-        Session session = new Session("1234-5678-9012", Calendar.getInstance());
+        Session session = new Session("1234-5678-9012", new Date());
         BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com", null, session, null, null);
 
         Map<String, String> headers = request.getHeaders();
@@ -23,7 +23,7 @@ public class BearerJsonObjectRequestTest extends TestCase {
     }
 
     public void testContentTypeHeader() throws AuthFailureError, JSONException {
-        Session session = new Session("1234-5678-9012", Calendar.getInstance());
+        Session session = new Session("1234-5678-9012", new Date());
         JSONObject payload = new JSONObject();
         payload.put("foo", "bar");
         BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com", payload, session, null, null);

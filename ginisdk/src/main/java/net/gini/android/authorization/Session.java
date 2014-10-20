@@ -4,7 +4,7 @@ package net.gini.android.authorization;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Calendar;
+import java.util.Date;
 
 
 /**
@@ -12,9 +12,9 @@ import java.util.Calendar;
  */
 public class Session {
     final String mAccessToken;
-    final Calendar mExpirationDate;
+    final Date mExpirationDate;
 
-    public Session(final String accessToken, final Calendar expirationDate) {
+    public Session(final String accessToken, final Date expirationDate) {
         mAccessToken = accessToken;
         mExpirationDate = expirationDate;
     }
@@ -25,7 +25,7 @@ public class Session {
     }
 
     /** The expiration date of the acces token. */
-    public Calendar getExpirationDate() {
+    public Date getExpirationDate() {
         return mExpirationDate;
     }
 
@@ -35,17 +35,15 @@ public class Session {
      * @return Whether or not the session has already expired.
      */
     public boolean hasExpired() {
-        Calendar now = Calendar.getInstance();
+        Date now = new Date();
         return now.after(mExpirationDate);
     }
 
     // TODO: exception encapsulation instead of simply throwing JSONException
     public static Session newSessionfromAPIResponse(final JSONObject apiResponse) throws JSONException {
         final String accessToken = apiResponse.getString("access_token");
-        final Calendar now = Calendar.getInstance();
-        final long expirationTime = now.getTimeInMillis() + apiResponse.getInt("expires_in") * 1000;
-        // I am really sorry. But the calendar API seems to love mutable objects.
-        now.setTimeInMillis(expirationTime);
-        return new Session(accessToken, now);
+        final Date now = new Date();
+        final long expirationTime = now.getTime() + apiResponse.getInt("expires_in") * 1000;
+        return new Session(accessToken, new Date(expirationTime));
     }
 }

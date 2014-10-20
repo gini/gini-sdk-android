@@ -8,7 +8,7 @@ import net.gini.android.authorization.Session;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Calendar;
+import java.util.Date;
 
 
 public class SessionTest extends AndroidTestCase {
@@ -22,7 +22,7 @@ public class SessionTest extends AndroidTestCase {
     }
 
     public void testGetSessionSetter() {
-        Session session = new Session("1234-5678-9101", Calendar.getInstance());
+        Session session = new Session("1234-5678-9101", new Date());
         assertEquals("1234-5678-9101", session.getAccessToken());
     }
 
