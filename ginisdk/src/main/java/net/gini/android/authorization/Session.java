@@ -40,7 +40,7 @@ public class Session {
     }
 
     // TODO: exception encapsulation instead of simply throwing JSONException
-    public static Session newSessionfromAPIResponse(final JSONObject apiResponse) throws JSONException {
+    public static Session fromAPIResponse(final JSONObject apiResponse) throws JSONException {
         final String accessToken = apiResponse.getString("access_token");
         final Date now = new Date();
         final long expirationTime = now.getTime() + apiResponse.getInt("expires_in") * 1000;

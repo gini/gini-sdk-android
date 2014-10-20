@@ -46,7 +46,7 @@ public class UserCenterManager {
         return loginTask.onSuccess(new Continuation<JSONObject, Session>() {
             @Override
             public Session then(Task<JSONObject> task) throws Exception {
-                return Session.newSessionfromAPIResponse(task.getResult());
+                return Session.fromAPIResponse(task.getResult());
             }
         });
     }
@@ -70,7 +70,7 @@ public class UserCenterManager {
         return loginClient.onSuccess(new Continuation<JSONObject, Session>() {
             @Override
             public Session then(Task<JSONObject> task) throws Exception {
-                Session session = Session.newSessionfromAPIResponse(task.getResult());
+                Session session = Session.fromAPIResponse(task.getResult());
                 synchronized (userCenterManager) {
                     mCurrentSession = session;
                 }

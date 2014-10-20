@@ -29,13 +29,13 @@ public class SessionTest extends AndroidTestCase {
     public void testFactoryReturnsSession() throws JSONException {
         JSONObject responseData = createTestResponse();
 
-        assertNotNull(Session.newSessionfromAPIResponse(responseData));
+        assertNotNull(Session.fromAPIResponse(responseData));
     }
 
     public void testFactorySetsCorrectAccessToken() throws JSONException {
         JSONObject responseData = createTestResponse();
 
-        Session session = Session.newSessionfromAPIResponse(responseData);
+        Session session = Session.fromAPIResponse(responseData);
 
         assertEquals("74c1e7fe-e464-451f-a6eb-8f0998c46ff6", session.getAccessToken());
     }
@@ -43,7 +43,7 @@ public class SessionTest extends AndroidTestCase {
     public void testFactorySetsCorrectExpirationDate() throws JSONException {
         JSONObject responseData = createTestResponse();
 
-        Session session = Session.newSessionfromAPIResponse(responseData);
+        Session session = Session.fromAPIResponse(responseData);
 
         assertFalse(session.hasExpired());
     }
