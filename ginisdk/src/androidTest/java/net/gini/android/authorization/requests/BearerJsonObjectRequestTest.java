@@ -1,4 +1,4 @@
-package net.gini.android.requests;
+package net.gini.android.authorization.requests;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -6,28 +6,28 @@ import com.android.volley.Request;
 import junit.framework.TestCase;
 
 import net.gini.android.authorization.Session;
-import net.gini.android.authorization.requests.BearerJsonObjectRequest;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
 import java.util.Map;
 
 public class BearerJsonObjectRequestTest extends TestCase {
     public void testAcceptHeader() throws AuthFailureError {
-        Session session = new Session("1234-5678-9012");
+        Session session = new Session("1234-5678-9012", new Date());
         BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com", null, session, null, null);
 
         Map<String, String> headers = request.getHeaders();
-        assertEquals(headers.get("Accept"), "application/json");
+        assertEquals("application/json", headers.get("Accept"));
     }
 
     public void testContentTypeHeader() throws AuthFailureError, JSONException {
-        Session session = new Session("1234-5678-9012");
+        Session session = new Session("1234-5678-9012", new Date());
         JSONObject payload = new JSONObject();
         payload.put("foo", "bar");
         BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com", payload, session, null, null);
 
-        assertEquals(request.getBodyContentType(), "application/json; charset=utf-8");
+        assertEquals("application/json; charset=utf-8", request.getBodyContentType());
     }
 }

@@ -16,6 +16,7 @@ public class MockNetwork implements Network {
 
     @Override
     public NetworkResponse performRequest(Request<?> request) throws VolleyError {
+        mLastRequest = request;
         return mResponseToReturn;
     }
 

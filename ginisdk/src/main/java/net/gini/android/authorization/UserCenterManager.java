@@ -1,80 +1,81 @@
 package net.gini.android.authorization;
 
-
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.RequestFuture;
-
-import java.util.concurrent.Future;
-
-import net.gini.android.ConstantFuture;
-
-import net.gini.android.authorization.requests.UserCenterLoginRequest;
-
 import org.json.JSONObject;
 
+import bolts.Continuation;
+import bolts.Task;
 
+
+/**
+ * The UserCenterManager is responsible for managing Gini users.
+ */
 public class UserCenterManager {
-    /** The RequestQueue instance which is used to do the requests to the Gini User Center API */
-    private final RequestQueue mRequestQueue;
-    /** The application's client ID for the Gini API. */
-    private final String mClientId;
-    /** The application's client secret for the Gini API */
-    private final String mClientSecret;
-    private final String mBaseUrl;
+    final private UserCenterAPICommunicator mUserCenterAPICommunicator;
 
     // An active session for the User Center API.
     private Session mCurrentSession;
 
     /**
-     * @param requestQueue      The RequestQueue instance (volley) which is used to do the requests
-     *                          to the Gini User Center API.
-     * @param clientId          The application's client ID for the Gini API.
-     * @param clientSecret      The application's client secret for the Gini API.
+     * @param userCenterAPICommunicator  An implementation of the UserCenterAPIManager which handles the
+     *                              communication with the Gini User Center API for this manager
+     *                              instance.
      */
-    public UserCenterManager(final RequestQueue requestQueue, final String baseUrl, final String clientId, final String clientSecret) {
-        mRequestQueue = requestQueue;
-        mClientId = clientId;
-        mClientSecret = clientSecret;
-        mBaseUrl = baseUrl;
+    public UserCenterManager(final UserCenterAPICommunicator userCenterAPICommunicator) {
+        mUserCenterAPICommunicator = userCenterAPICommunicator;
     }
 
     /**
      * Creates a new user which has the given client credentials.
      *
-     * @param userCredentials   The user's credentials.
-     * @return                  TODO
+     * @param userCredentials       The user's credentials.
+     * @return                      A (Bolts) task which will resolve to the freshly created user.
      */
-    public Future<User> createUser(UserCredentials userCredentials) {
+    public Task<User> createUser(UserCredentials userCredentials) {
         return null;
     }
 
     /**
-     * Log-in the user  which is identified with the given credentials.
+     * Log-in the user which is identified with the given credentials.
      *
-     * TODO: explanation to not mix the sessions.
-     *
-     * @return                  TODO
+     * @param userCredentials       The user's credentials.
+     * @return                      A (Bolts) task which will resolve to a session that can be used to do
+     *                              requests to the Gini API.
      */
-    public Future<Session> loginUser(UserCredentials userCredentials) {
-        return null;
+    public Task<Session> loginUser(final UserCredentials userCredentials) {
+        Task<JSONObject> loginTask = mUserCenterAPICommunicator.loginUser(userCredentials);
+        return loginTask.onSuccess(new Continuation<JSONObject, Session>() {
+            @Override
+            public Session then(Task<JSONObject> task) throws Exception {
+                return Session.fromAPIResponse(task.getResult());
+            }
+        });
     }
 
     /**
-     * Returns a future that will resolve to a valid session for the User Center API! (Not the user.
+     * Returns a future that will resolve to a valid session (for the User Center API!).
      */
-    private Future<Session> getSession() {
+    protected synchronized Task<Session> getUserCenterSession() {
+        // Reuse the current session if possible.
         if (mCurrentSession != null && !mCurrentSession.hasExpired()) {
-            return new ConstantFuture<Session>(mCurrentSession);
+            return Task.forResult(mCurrentSession);
         }
-
-        return login();
+        // Or do a login.
+        return loginClient();
     }
 
-    private Future<Session> login() {
-        RequestFuture<JSONObject> requestFuture = RequestFuture.newFuture();
-        UserCenterLoginRequest loginRequest = new UserCenterLoginRequest(mClientId, mClientSecret, mBaseUrl, requestFuture, requestFuture);
-        mRequestQueue.add(loginRequest);
+    protected Task<Session> loginClient() {
+        final Task<JSONObject> loginClient = mUserCenterAPICommunicator.loginClient();
+        final UserCenterManager userCenterManager = this;
 
-        return Session.sessionFutureFromAPIResponse(requestFuture);
+        return loginClient.onSuccess(new Continuation<JSONObject, Session>() {
+            @Override
+            public Session then(Task<JSONObject> task) throws Exception {
+                Session session = Session.fromAPIResponse(task.getResult());
+                synchronized (userCenterManager) {
+                    mCurrentSession = session;
+                }
+                return session;
+            }
+        });
     }
 }

@@ -1,35 +1,49 @@
 package net.gini.android.authorization;
 
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
+import java.util.Date;
 
+
+/**
+ * The session is the value object for the session of a user.
+ */
 public class Session {
     final String mAccessToken;
+    final Date mExpirationDate;
 
-    public Session(final String accessToken) {
+    public Session(final String accessToken, final Date expirationDate) {
         mAccessToken = accessToken;
+        mExpirationDate = new Date(expirationDate.getTime());
     }
 
+    /** The session's access token. */
     public String getAccessToken() {
         return mAccessToken;
     }
 
-    public boolean hasExpired() {
-        return true;
+    /** The expiration date of the acces token. */
+    public Date getExpirationDate() {
+        return mExpirationDate;
     }
 
-    public static Future<Session> sessionFutureFromAPIResponse(final Future<JSONObject> apiResponse) {
-        return new FutureTask<Session>(new Callable<Session>() {
-            @Override
-            public Session call() throws Exception {
-                JSONObject responseData = apiResponse.get();
-                String accessToken = responseData.getString("access_token");
-                return  new Session(accessToken);
-            }
-        });
+    /**
+     * Uses the current locale's time to check whether or not this session has already expired.
+     *
+     * @return Whether or not the session has already expired.
+     */
+    public boolean hasExpired() {
+        Date now = new Date();
+        return now.after(mExpirationDate);
+    }
+
+    // TODO: exception encapsulation instead of simply throwing JSONException
+    public static Session fromAPIResponse(final JSONObject apiResponse) throws JSONException {
+        final String accessToken = apiResponse.getString("access_token");
+        final Date now = new Date();
+        final long expirationTime = now.getTime() + apiResponse.getInt("expires_in") * 1000;
+        return new Session(accessToken, new Date(expirationTime));
     }
 }
