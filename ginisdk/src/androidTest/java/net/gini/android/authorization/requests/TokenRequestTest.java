@@ -51,7 +51,7 @@ public class TokenRequestTest extends AndroidTestCase {
     }
 
     public void testEmptyBody() {
-        assertEquals(loginRequest.getBody(), null);
+        assertNull(loginRequest.getBody());
     }
 
     public void testBody() {

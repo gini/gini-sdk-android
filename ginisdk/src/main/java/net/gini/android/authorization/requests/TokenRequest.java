@@ -22,19 +22,21 @@ import java.util.Map;
  */
 public class TokenRequest extends JsonObjectRequest {
 
-    final private String mAuthorizationCredentials;
-    final private Map<String, String> mRequestData;
+    private final String mAuthorizationCredentials;
+    private final Map<String, String> mRequestData;
 
-    public TokenRequest(String clientId, String clientSecret, String url, @Nullable Map<String, String> requestData, Response.Listener<JSONObject> listener, Response.ErrorListener errorListener) {
+    public TokenRequest(String clientId, String clientSecret, String url, @Nullable Map<String, String> requestData,
+                        Response.Listener<JSONObject> listener, Response.ErrorListener errorListener) {
         super(Method.POST, url, null, listener, errorListener);
 
-        mAuthorizationCredentials = Base64.encodeToString(String.format("%s:%s", clientId, clientSecret).getBytes(), Base64.NO_WRAP);
+        mAuthorizationCredentials =
+                Base64.encodeToString(String.format("%s:%s", clientId, clientSecret).getBytes(), Base64.NO_WRAP);
         mRequestData = requestData;
     }
 
     @Override
     public Map<String, String> getHeaders() throws AuthFailureError {
-        HashMap<String, String> headers =  new HashMap<String, String>();
+        HashMap<String, String> headers = new HashMap<String, String>();
         headers.put("Authorization", "Basic " + mAuthorizationCredentials);
         headers.put("Accept", "application/json");
         return headers;
@@ -49,9 +51,9 @@ public class TokenRequest extends JsonObjectRequest {
     public byte[] getBody() {
         byte[] body = null;
         if (mRequestData != null) {
-            ArrayList<BasicNameValuePair> parameters = new ArrayList<BasicNameValuePair>();
-            for (String key : mRequestData.keySet() ) {
-                parameters.add(new BasicNameValuePair(key, mRequestData.get(key)));
+            ArrayList<BasicNameValuePair> parameters = new ArrayList<BasicNameValuePair>(mRequestData.size());
+            for (Map.Entry<String, String> entry : mRequestData.entrySet()) {
+                parameters.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
             }
             body = URLEncodedUtils.format(parameters, "utf-8").getBytes();
         }
