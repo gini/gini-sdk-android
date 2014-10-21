@@ -28,26 +28,28 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
     }
 
     /**
-     * Many tests require a valid response from the Gini API. This method returns as JSONObject
-     * which is a valid Gini API response.
+     * Many tests require a valid response from the Gini API. This method returns a task which will resolve to a
+     * JSONObject which is a valid Gini API response.
      */
-    public JSONObject createTestTokenResponse(final String accessToken) throws JSONException{
-        return new JSONObject() {{
+    public Task<JSONObject> createTestTokenResponse(final String accessToken) throws JSONException{
+        final JSONObject responseData = new JSONObject() {{
             put("token_type", "bearer");
             put("access_token", accessToken);
             put("expires_in", 3599);
         }};
+        return Task.forResult(responseData);
     }
 
     /**
-     * Creates and returns a JSONObject which is a valid Gini User Center API response for requesting a user's
-     * information.
+     * Creates and returns a task which will resolve to a JSONObject which is a valid Gini User Center API response for
+     * requesting a user's information.
      */
-    public JSONObject createLoginUserResponse(final String email) throws JSONException {
-        return new JSONObject() {{
+    public Task<JSONObject> createLoginUserResponse(final String email) throws JSONException {
+        final JSONObject responseData = new JSONObject() {{
             put("id", "88a28076-18e8-4275-b39c-eaacc240d406");
             put("email", email);
         }};
+        return Task.forResult(responseData);
     }
 
     public void testLoginClientReturnsFuture() {
@@ -57,8 +59,8 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
     }
 
     public void testLoginClientResolvesToCorrectSession() throws JSONException {
-        JSONObject responseData = createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6");
-        when(mMockUserCenterAPICommunicator.loginClient()).thenReturn(Task.forResult(responseData));
+        when(mMockUserCenterAPICommunicator.loginClient())
+                .thenReturn(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6"));
 
         Session session = mUserCenterManager.loginClient().getResult();
 
@@ -67,8 +69,8 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
 
     public void testGetSessionReusesSession() throws JSONException {
         // First try which sets the first session.
-        final JSONObject firstResponseData = createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6");
-        when(mMockUserCenterAPICommunicator.loginClient()).thenReturn(Task.forResult(firstResponseData));
+        when(mMockUserCenterAPICommunicator.loginClient())
+                .thenReturn(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6"));
         Session firstSession = mUserCenterManager.getUserCenterSession().getResult();
 
         // Second try which should reuse the old session.
@@ -85,16 +87,16 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
 
     public void testLoginUserShouldReturnTask() throws JSONException {
         UserCredentials userCredentials = new UserCredentials("foobar", "1234");
-        JSONObject responseData = createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6");
-        when(mMockUserCenterAPICommunicator.loginUser(userCredentials)).thenReturn(Task.forResult(responseData));
+        when(mMockUserCenterAPICommunicator.loginUser(userCredentials))
+                .thenReturn(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6"));
 
         assertNotNull(mUserCenterManager.loginUser(userCredentials));
     }
 
     public void testLoginUserShouldReturnCorrectSession() throws JSONException {
         UserCredentials userCredentials = new UserCredentials("foobar", "1234");
-        JSONObject responseData = createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6");
-        when(mMockUserCenterAPICommunicator.loginUser(userCredentials)).thenReturn(Task.forResult(responseData));
+        when(mMockUserCenterAPICommunicator.loginUser(userCredentials))
+                .thenReturn(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6"));
 
         Session session = mUserCenterManager.loginUser(userCredentials).getResult();
         assertNotNull(session);
@@ -102,17 +104,18 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
     }
 
     public void testCreateUserShouldReturnTask() throws JSONException {
-        when(mMockUserCenterAPICommunicator.loginClient()).thenReturn(
-                Task.forResult(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6")));
+        when(mMockUserCenterAPICommunicator.loginClient())
+                .thenReturn(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6"));
+
         assertNotNull(mUserCenterManager.createUser(new UserCredentials("foo", "bar")));
     }
 
     public void testCreateUserShouldResolveToUser() throws JSONException, InterruptedException {
         when(mMockUserCenterAPICommunicator.loginClient())
-                .thenReturn(Task.forResult(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6")));
+                .thenReturn(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6"));
         UserCredentials userCredentials = new UserCredentials("foobar@example.com", "1234");
         when(mMockUserCenterAPICommunicator.createUser(eq(userCredentials), any(Session.class)))
-                .thenReturn(Task.forResult(createLoginUserResponse("foobar@example.com")));
+                .thenReturn(createLoginUserResponse("foobar@example.com"));
 
         Task<User> creationTask = mUserCenterManager.createUser(userCredentials);
         creationTask.waitForCompletion();
