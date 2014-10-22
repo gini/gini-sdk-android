@@ -1,9 +1,9 @@
 package net.gini.android.authorization;
 
 
-import java.util.concurrent.Future;
+import bolts.Task;
 
 
 public interface SessionManager {
-    public Future<Session> getSession();
+    public Task<Session> getSession();
 }

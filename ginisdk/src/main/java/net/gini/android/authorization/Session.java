@@ -24,7 +24,7 @@ public class Session {
         return mAccessToken;
     }
 
-    /** The expiration date of the acces token. */
+    /** The expiration date of the access token. */
     public Date getExpirationDate() {
         return mExpirationDate;
     }
