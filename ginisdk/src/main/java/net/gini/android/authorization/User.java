@@ -21,11 +21,7 @@ public class User {
         return mUsername;
     }
 
-    public static User fromApiResponse(JSONObject apiResponse) {
-        try {
-            return new User(apiResponse.getString("id"), apiResponse.getString("email"));
-        } catch (JSONException e) {
-            return null;
-        }
+    public static User fromApiResponse(JSONObject apiResponse) throws JSONException {
+        return new User(apiResponse.getString("id"), apiResponse.getString("email"));
     }
 }

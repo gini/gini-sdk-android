@@ -3,7 +3,22 @@ package net.gini.android.authorization;
 
 public interface CredentialsStore {
 
-    public void storeUserCredentials(UserCredentials userCredentials);
+    /**
+     * Store the given user credentials.
+     *
+     * Warning: This method overwrites existing user credentials.
+     *
+     * @param userCredentials   The user's credentials.
+     * @return                  Whether the storing of the credentials was successful.
+     */
+    public boolean storeUserCredentials(UserCredentials userCredentials);
 
+    /**
+     * Returns the stored user credentials.
+     *
+     * Warning: If there are no stored user credentials, this method returns null.
+     *
+     * @return                  The stored user credentials.
+     */
     public UserCredentials getUserCredentials();
 }
