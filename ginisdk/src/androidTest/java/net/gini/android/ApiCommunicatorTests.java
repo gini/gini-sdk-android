@@ -15,6 +15,8 @@ import org.mockito.Mockito;
 import java.util.Date;
 import java.util.Map;
 
+import static com.android.volley.Request.Method.DELETE;
+import static com.android.volley.Request.Method.GET;
 import static com.android.volley.Request.Method.POST;
 import static org.mockito.Mockito.verify;
 
@@ -47,12 +49,14 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         try {
             new ApiCommunicator(null, null);
             fail("NullPointerException not thrown");
-        } catch (NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
 
         try {
             new ApiCommunicator("https://api.gini.net", null);
             fail("NullPointerException not thrown");
-        } catch (NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
     }
 
     public void testUploadDocumentThrowsWithNullArguments() {
@@ -178,5 +182,294 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         final Request request = requestCaptor.getValue();
 
         assertEquals("https://api.gini.net/documents/?doctype=invoice", request.getUrl());
+    }
+
+    public void testDeleteDocumentsReturnsTask() {
+        final Session session = createSession();
+
+        assertNotNull(mApiCommunicator.deleteDocument("1234", session));
+    }
+
+    public void testDeleteDocumentDeletesDocument() {
+        final Session session = createSession();
+
+        mApiCommunicator.deleteDocument("1234", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals(DELETE, request.getMethod());
+    }
+
+    public void testDeleteDocumentDeletesTheCorrectDocument() {
+        final Session session = createSession();
+
+        mApiCommunicator.deleteDocument("1234", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("https://api.gini.net/documents/1234", request.getUrl());
+    }
+
+    public void testDeleteDocumentUsesTheCorrectSession() throws AuthFailureError {
+        final Session session = createSession("4321-1234");
+
+        mApiCommunicator.deleteDocument("1234", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("Bearer 4321-1234", request.getHeaders().get("Authorization"));
+    }
+
+    public void testDeleteDocumentThrowsWithWrongArguments() {
+        try {
+            mApiCommunicator.deleteDocument(null, null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+
+        try {
+            mApiCommunicator.deleteDocument("1234", null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+
+        try {
+            mApiCommunicator.deleteDocument(null, createSession());
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+
+    }
+
+    public void testGetDocumentThrowsWithNullArguments() {
+        try {
+            mApiCommunicator.getDocument(null, null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+
+        try {
+            mApiCommunicator.getDocument("1234", null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+
+        try {
+            mApiCommunicator.getDocument(null, createSession());
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+    }
+
+    public void testGetDocumentReturnsTask() {
+        Session session = createSession();
+
+        assertNotNull(mApiCommunicator.getDocument("1234", session));
+    }
+
+    public void testGetDocumentGetsCorrectDocument() {
+        Session session = createSession();
+
+        mApiCommunicator.getDocument("1234", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("https://api.gini.net/documents/1234", request.getUrl());
+        assertEquals(GET, request.getMethod());
+    }
+
+    public void testGetDocumentSendsCorrectAuthorizationHeaders() throws AuthFailureError {
+        Session session = createSession("4321-1234");
+
+        mApiCommunicator.getDocument("1234", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("BEARER 4321-1234", request.getHeaders().get("Authorization"));
+    }
+
+    public void testGetDocumentSendsCorrectAcceptHeader() throws AuthFailureError {
+        Session session = createSession();
+
+        mApiCommunicator.getDocument("1234", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertTrue(((String) request.getHeaders().get("Accept")).contains("application/vnd.gini.v1+json"));
+    }
+
+    public void testGetExtractionsThrowsWithNullArguments() {
+        try {
+            mApiCommunicator.getExtractions(null, null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+
+        try {
+            mApiCommunicator.getExtractions("1234-4321", null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+
+        try {
+            mApiCommunicator.getExtractions(null, createSession());
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+    }
+
+    public void testGetExtractionsGetsTheCorrectDocument() {
+        Session session = createSession();
+
+        mApiCommunicator.getExtractions("1234", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("https://api.gini.net/documents/1234/extractions", request.getUrl());
+        assertEquals(GET, request.getMethod());
+    }
+
+    public void testGetExtractionsHasCorrectAuthorizationHeader() throws AuthFailureError {
+        Session session = createSession("1234-1234");
+
+        mApiCommunicator.getExtractions("1234", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("BEARER 1234-1234", request.getHeaders().get("Authorization"));
+    }
+
+    public void testGetExtractionsHasCorrectAcceptHeader() throws AuthFailureError {
+        Session session = createSession("1234-1234");
+
+        mApiCommunicator.getExtractions("1234", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertTrue(((String) request.getHeaders().get("Accept")).contains("application/vnd.gini.v1+json"));
+    }
+
+    public void testGetIncubatorExtractionsThrowsWithNullArguments() {
+        try {
+            mApiCommunicator.getExtractions(null, null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+
+        try {
+            mApiCommunicator.getExtractions("1234-4321", null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+
+        try {
+            mApiCommunicator.getExtractions(null, createSession());
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+    }
+
+    public void testGetIncubatorExtractionsGetsTheCorrectDocument() {
+        Session session = createSession();
+
+        mApiCommunicator.getExtractions("1234", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("https://api.gini.net/documents/1234/extractions", request.getUrl());
+        assertEquals(GET, request.getMethod());
+    }
+
+    public void testGetIncubatorExtractionsHasCorrectAuthorizationHeader() throws AuthFailureError {
+        Session session = createSession("1234-1234");
+
+        mApiCommunicator.getIncubatorExtractions("1234", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("BEARER 1234-1234", request.getHeaders().get("Authorization"));
+    }
+
+    public void testGetIncubatorExtractionsHasCorrectAcceptHeader() throws AuthFailureError {
+        Session session = createSession("1234-1234");
+
+        mApiCommunicator.getIncubatorExtractions("1234", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertTrue(((String) request.getHeaders().get("Accept")).contains("application/vnd.gini.incubator+json"));
+    }
+
+    public void testErrorReportForDocumentsThrowsWithNullArguments() {
+        try {
+            mApiCommunicator.errorReportForDocument(null, null, null, null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+
+        try {
+            mApiCommunicator.errorReportForDocument("1234", null, null, null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+
+        try {
+            mApiCommunicator.errorReportForDocument(null, null, null, createSession());
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+
+        try {
+            mApiCommunicator.errorReportForDocument(null, "foobar", "foobar", createSession());
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+    }
+
+    public void testErrorReportForDocumentHasCorrectUrl() {
+        Session session = createSession();
+
+        mApiCommunicator.errorReportForDocument("1234", "short summary", "and a description", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals(
+                "https://api.gini.net/documents/1234/errorreport?summary=short+summary&description=and+a+description",
+                request.getUrl());
+    }
+
+    public void testErrorReportForDocumentHasCorrectAuthorizationHeader() throws AuthFailureError {
+        Session session = createSession("4444-2222");
+
+        mApiCommunicator.errorReportForDocument("1234", "short summary", "and a description", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("BEARER 4444-2222", request.getHeaders().get("Authorization"));
+    }
+
+    public void testErrorReportHasCorrectAcceptHeader() throws  AuthFailureError {
+        Session session = createSession("4444-2222");
+
+        mApiCommunicator.errorReportForDocument("1234", "short summary", "and a description", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertTrue(((String) request.getHeaders().get("Accept")).contains("application/vnd.gini.v1+json"));
     }
 }

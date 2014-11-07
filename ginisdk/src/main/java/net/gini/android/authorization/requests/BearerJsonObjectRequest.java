@@ -23,8 +23,8 @@ public class BearerJsonObjectRequest extends JsonObjectRequest {
     @Override
     public Map<String, String> getHeaders() throws AuthFailureError {
         HashMap<String, String> headers = new HashMap<String, String>();
-        headers.put("Accept", "application/json");
-        headers.put("Authorization", "Bearer: " + mSession.getAccessToken());
+        headers.put("Accept", "application/json, application/vnd.gini.v1+json");
+        headers.put("Authorization", "BEARER " + mSession.getAccessToken());
         return headers;
     }
 }
