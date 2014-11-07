@@ -7,14 +7,13 @@ import com.android.volley.AuthFailureError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.Response;
 
-import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.message.BasicNameValuePair;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import static net.gini.android.Utils.mapToUrlEncodedString;
 
 
 /**
@@ -51,11 +50,7 @@ public class TokenRequest extends JsonObjectRequest {
     public byte[] getBody() {
         byte[] body = null;
         if (mRequestData != null) {
-            ArrayList<BasicNameValuePair> parameters = new ArrayList<BasicNameValuePair>(mRequestData.size());
-            for (Map.Entry<String, String> entry : mRequestData.entrySet()) {
-                parameters.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
-            }
-            body = URLEncodedUtils.format(parameters, "utf-8").getBytes();
+            body = mapToUrlEncodedString(mRequestData).getBytes();
         }
         return body;
     }
