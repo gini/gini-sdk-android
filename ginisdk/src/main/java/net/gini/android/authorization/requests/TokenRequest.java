@@ -7,14 +7,15 @@ import com.android.volley.AuthFailureError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.Response;
 
-import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.message.BasicNameValuePair;
+import net.gini.android.MediaTypes;
+
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import static net.gini.android.Utils.mapToUrlEncodedString;
 
 
 /**
@@ -38,24 +39,20 @@ public class TokenRequest extends JsonObjectRequest {
     public Map<String, String> getHeaders() throws AuthFailureError {
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put("Authorization", "Basic " + mAuthorizationCredentials);
-        headers.put("Accept", "application/json");
+        headers.put("Accept", MediaTypes.APPLICATION_JSON);
         return headers;
     }
 
     @Override
     public String getBodyContentType() {
-        return "application/x-www-form-urlencoded";
+        return MediaTypes.APPLICATION_FORM_URLENCODED;
     }
 
     @Override
     public byte[] getBody() {
         byte[] body = null;
         if (mRequestData != null) {
-            ArrayList<BasicNameValuePair> parameters = new ArrayList<BasicNameValuePair>(mRequestData.size());
-            for (Map.Entry<String, String> entry : mRequestData.entrySet()) {
-                parameters.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
-            }
-            body = URLEncodedUtils.format(parameters, "utf-8").getBytes();
+            body = mapToUrlEncodedString(mRequestData).getBytes();
         }
         return body;
     }
