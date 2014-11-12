@@ -98,7 +98,7 @@ public class ApiCommunicator {
             public Map<String, String>getHeaders() throws AuthFailureError{
                 Map<String, String> headers = super.getHeaders();
                 // The incubator is discriminated from the "normal" extractions by the accept header.
-                headers.put("Accept", "application/vnd.gini.incubator+json");
+                headers.put("Accept", MediaTypes.GINI_JSON_INCUBATOR);
                 return headers;
             }
         };
@@ -166,7 +166,7 @@ public class ApiCommunicator {
             public Map<String, String> getHeaders() throws AuthFailureError {
                 HashMap<String, String> headers = new HashMap<String, String>();
                 headers.put("Authorization", "BEARER " + accessToken);
-                headers.put("Accept", "image/jpeg");
+                headers.put("Accept", MediaTypes.IMAGE_JPEG);
                 return headers;
             }
         };

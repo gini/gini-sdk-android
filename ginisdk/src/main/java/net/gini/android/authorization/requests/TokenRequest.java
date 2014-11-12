@@ -7,6 +7,8 @@ import com.android.volley.AuthFailureError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.Response;
 
+import net.gini.android.MediaTypes;
+
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
@@ -37,13 +39,13 @@ public class TokenRequest extends JsonObjectRequest {
     public Map<String, String> getHeaders() throws AuthFailureError {
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put("Authorization", "Basic " + mAuthorizationCredentials);
-        headers.put("Accept", "application/json");
+        headers.put("Accept", MediaTypes.APPLICATION_JSON);
         return headers;
     }
 
     @Override
     public String getBodyContentType() {
-        return "application/x-www-form-urlencoded";
+        return MediaTypes.APPLICATION_FORM_URLENCODED;
     }
 
     @Override

@@ -9,6 +9,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.NoCache;
 import com.android.volley.toolbox.RequestFuture;
 
+import net.gini.android.MediaTypes;
 import net.gini.android.helpers.MockNetwork;
 
 import org.json.JSONException;
@@ -37,7 +38,7 @@ public class TokenRequestTest extends AndroidTestCase {
     public void testJSONAcceptHeader() throws AuthFailureError {
         Map<String, String> headers = loginRequest.getHeaders();
 
-        assertEquals("application/json", headers.get("Accept"));
+        assertEquals(MediaTypes.APPLICATION_JSON, headers.get("Accept"));
     }
 
     public void testAuthorizationHeader() throws AuthFailureError {
@@ -69,7 +70,7 @@ public class TokenRequestTest extends AndroidTestCase {
         data.put("bar", "foo");
         loginRequest = new TokenRequest("foobar", "1234", "https://user.gini.net", data, null, null);
 
-        assertEquals("application/x-www-form-urlencoded", loginRequest.getBodyContentType());
+        assertEquals(MediaTypes.APPLICATION_FORM_URLENCODED, loginRequest.getBodyContentType());
     }
 
     public void testSuccessfulResponse() throws ExecutionException, InterruptedException, JSONException {

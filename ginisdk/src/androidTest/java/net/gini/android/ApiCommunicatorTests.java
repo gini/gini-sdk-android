@@ -79,7 +79,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         } catch (NullPointerException ignored) {}
 
         try {
-            mApiCommunicator.uploadDocument(createUploadData(), "image/jpeg", null, null, null);
+            mApiCommunicator.uploadDocument(createUploadData(), MediaTypes.IMAGE_JPEG, null, null, null);
             fail("Exception not thrown");
         } catch (NullPointerException ignored) {}
 
@@ -88,21 +88,21 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
     public void testUploadDocumentReturnsTask() {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
-        assertNotNull(mApiCommunicator.uploadDocument(documentData, "image/jpeg", null, null, session));
+        assertNotNull(mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session));
     }
 
     public void testUploadDocumentWithNameReturnsTask() {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
 
-        assertNotNull(mApiCommunicator.uploadDocument(documentData, "image/jpeg", null, "foobar.jpg", session));
+        assertNotNull(mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, "foobar.jpg", session));
     }
 
     public void testUploadDocumentHasCorrectAccessToken() throws AuthFailureError {
         final byte[] documentData = createUploadData();
         final Session session = createSession("1234-5678");
 
-        mApiCommunicator.uploadDocument(documentData, "image/jpeg", null, null, session);
+        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
@@ -114,32 +114,32 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
 
-        mApiCommunicator.uploadDocument(documentData, "image/jpeg", null, null, session);
+        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
         Map headers = requestCaptor.getValue().getHeaders();
-        assertEquals("image/jpeg", headers.get("Content-Type"));
+        assertEquals(MediaTypes.IMAGE_JPEG, headers.get("Content-Type"));
     }
 
     public void testUploadDocumentHasCorrectAcceptHeader() throws AuthFailureError {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
 
-        mApiCommunicator.uploadDocument(documentData, "image/jpeg", null, null, session);
+        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
         Map headers = requestCaptor.getValue().getHeaders();
         final String acceptHeader = (String) headers.get("Accept");
-        assertTrue(acceptHeader.contains("application/vnd.gini.v1+json"));
+        assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V1));
     }
 
     public void testUploadDocumentHasCorrectBody() throws AuthFailureError {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
 
-        mApiCommunicator.uploadDocument(documentData, "image/jpeg", null, null, session);
+        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
@@ -151,7 +151,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
 
-        mApiCommunicator.uploadDocument(documentData, "image/jpeg", null, null, session);
+        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
@@ -165,7 +165,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
 
-        mApiCommunicator.uploadDocument(documentData, "image/jpeg", "foobar.jpg", null, session);
+        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, "foobar.jpg", null, session);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
@@ -178,7 +178,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
 
-        mApiCommunicator.uploadDocument(documentData, "image/jpeg", null, "invoice", session);
+        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, "invoice", session);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
@@ -304,7 +304,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
-        assertTrue(((String) request.getHeaders().get("Accept")).contains("application/vnd.gini.v1+json"));
+        assertTrue(((String) request.getHeaders().get("Accept")).contains(MediaTypes.GINI_JSON_V1));
     }
 
     public void testGetExtractionsThrowsWithNullArguments() {
@@ -358,7 +358,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
-        assertTrue(((String) request.getHeaders().get("Accept")).contains("application/vnd.gini.v1+json"));
+        assertTrue(((String) request.getHeaders().get("Accept")).contains(MediaTypes.GINI_JSON_V1));
     }
 
     public void testGetIncubatorExtractionsThrowsWithNullArguments() {
@@ -412,7 +412,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
-        assertTrue(((String) request.getHeaders().get("Accept")).contains("application/vnd.gini.incubator+json"));
+        assertTrue(((String) request.getHeaders().get("Accept")).contains(MediaTypes.GINI_JSON_INCUBATOR));
     }
 
     public void testErrorReportForDocumentsThrowsWithNullArguments() {
@@ -473,7 +473,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
-        assertTrue(((String) request.getHeaders().get("Accept")).contains("application/vnd.gini.v1+json"));
+        assertTrue(((String) request.getHeaders().get("Accept")).contains(MediaTypes.GINI_JSON_V1));
     }
 
     public void testSendFeedbackThrowsExceptionWithNullArguments() throws JSONException {
@@ -545,7 +545,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
         final String acceptHeader = (String) request.getHeaders().get("Accept");
-        assertTrue(acceptHeader.contains("application/vnd.gini.v1+json"));
+        assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V1));
     }
 
     public void testGetPreviewThrowsWithNullArguments() {
@@ -606,6 +606,6 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
-        assertEquals("image/jpeg", request.getHeaders().get("Accept"));
+        assertEquals(MediaTypes.IMAGE_JPEG, request.getHeaders().get("Accept"));
     }
 }

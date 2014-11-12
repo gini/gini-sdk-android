@@ -3,6 +3,8 @@ package net.gini.android.requests;
 import com.android.volley.Response;
 import com.android.volley.toolbox.JsonObjectRequest;
 
+import net.gini.android.MediaTypes;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,10 +32,10 @@ public class BearerUploadRequest extends JsonObjectRequest{
 
     @Override
     public Map<String, String> getHeaders() {
-        return new HashMap<String, String>() {{
-            put("Content-Type", mContentType);
-            put("Accept", "application/json,application/vnd.gini.v1+json");
-            put("Authorization", "Bearer " + mAccessToken);
-        }};
+        HashMap<String, String> headers = new HashMap<String, String>();
+        headers.put("Content-Type", mContentType);
+        headers.put("Accept", String.format("%s, %s", MediaTypes.APPLICATION_JSON, MediaTypes.GINI_JSON_V1));
+        headers.put("Authorization", "Bearer " + mAccessToken);
+        return headers;
     }
 }
