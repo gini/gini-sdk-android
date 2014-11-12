@@ -547,4 +547,65 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         final String acceptHeader = (String) request.getHeaders().get("Accept");
         assertTrue(acceptHeader.contains("application/vnd.gini.v1+json"));
     }
+
+    public void testGetPreviewThrowsWithNullArguments() {
+        try {
+            mApiCommunicator.getPreview(null, 0, null, null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {}
+
+        try {
+            mApiCommunicator.getPreview("1234", 1, null, null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {}
+
+        try {
+            mApiCommunicator.getPreview("1234", 1, ApiCommunicator.PreviewSize.MEDIUM, null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {}
+    }
+
+    public void testGetPreviewHasCorrectUrlWithBigPreview() {
+        Session session = createSession();
+
+        mApiCommunicator.getPreview("1234", 1, ApiCommunicator.PreviewSize.BIG, session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("https://api.gini.net/documents/1234/pages/1/1280x1810", request.getUrl());
+    }
+
+    public void testGetPreviewHasCorrectUrlWithMediumPreview() {
+        Session session = createSession();
+
+        mApiCommunicator.getPreview("1234", 1, ApiCommunicator.PreviewSize.MEDIUM, session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("https://api.gini.net/documents/1234/pages/1/750x900", request.getUrl());
+    }
+
+    public void testGetPreviewHasCorrectAuthorizationHeader() throws AuthFailureError{
+        Session session = createSession("9876-5432");
+
+        mApiCommunicator.getPreview("1234", 1, ApiCommunicator.PreviewSize.BIG, session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("BEARER 9876-5432", request.getHeaders().get("Authorization"));
+    }
+
+    public void testGetPreviewHasCorrectAcceptHeader() throws AuthFailureError{
+        Session session = createSession();
+
+        mApiCommunicator.getPreview("1234", 1, ApiCommunicator.PreviewSize.MEDIUM, session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("image/jpeg", request.getHeaders().get("Accept"));
+    }
 }

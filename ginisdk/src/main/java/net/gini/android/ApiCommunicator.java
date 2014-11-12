@@ -1,7 +1,10 @@
 package net.gini.android;
 
+import android.graphics.Bitmap;
+
 import com.android.volley.AuthFailureError;
 import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.StringRequest;
 
 import net.gini.android.authorization.Session;
@@ -17,6 +20,7 @@ import java.util.Map;
 
 import bolts.Task;
 
+import static android.graphics.Bitmap.Config.ARGB_8888;
 import static com.android.volley.Request.Method.DELETE;
 import static com.android.volley.Request.Method.GET;
 import static com.android.volley.Request.Method.POST;
@@ -149,5 +153,42 @@ public class ApiCommunicator {
         mRequestQueue.add(request);
 
         return completionSource.getTask();
+    }
+
+    public Task<Bitmap> getPreview(final String documentId, final int pageNumber,
+                                   PreviewSize previewSize, final Session session) {
+        final String url = String.format("%sdocuments/%s/pages/%s/%s", mBaseUrl, checkNotNull(documentId), pageNumber,
+                                         previewSize.getDimensions());
+        final String accessToken = checkNotNull(session).getAccessToken();
+        RequestTaskCompletionSource<Bitmap> completionSource = RequestTaskCompletionSource.newCompletionSource();
+        final ImageRequest imageRequest = new ImageRequest(url, completionSource, 0, 0, ARGB_8888, completionSource) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> headers = new HashMap<String, String>();
+                headers.put("Authorization", "BEARER " + accessToken);
+                headers.put("Accept", "image/jpeg");
+                return headers;
+            }
+        };
+        mRequestQueue.add(imageRequest);
+
+        return completionSource.getTask();
+    }
+
+    public enum PreviewSize {
+        /** Medium sized image, maximum dimensions are 750x900. */
+        MEDIUM("750x900"),
+        /** Big image, maximum dimensions are 1280x1810 */
+        BIG("1280x1810");
+
+        private final String mDimensions;
+
+        PreviewSize(final String dimensions) {
+            mDimensions = dimensions;
+        }
+
+        public String getDimensions() {
+            return mDimensions;
+        }
     }
 }
