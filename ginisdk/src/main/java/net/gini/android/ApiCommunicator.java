@@ -9,6 +9,7 @@ import net.gini.android.authorization.requests.BearerJsonObjectRequest;
 import net.gini.android.requests.BearerUploadRequest;
 
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -19,6 +20,7 @@ import bolts.Task;
 import static com.android.volley.Request.Method.DELETE;
 import static com.android.volley.Request.Method.GET;
 import static com.android.volley.Request.Method.POST;
+import static com.android.volley.Request.Method.PUT;
 import static net.gini.android.Utils.checkNotNull;
 import static net.gini.android.Utils.mapToUrlEncodedString;
 
@@ -129,6 +131,21 @@ public class ApiCommunicator {
                 RequestTaskCompletionSource.newCompletionSource();
         final BearerJsonObjectRequest request =
                 new BearerJsonObjectRequest(POST, url, null, checkNotNull(session), completionSource, completionSource);
+        mRequestQueue.add(request);
+
+        return completionSource.getTask();
+    }
+
+    public Task<JSONObject> sendFeedback(final String documentId, final JSONObject extractions, final Session session)
+            throws JSONException {
+        final String url = String.format("%sdocuments/%s/extractions", mBaseUrl, checkNotNull(documentId));
+        final RequestTaskCompletionSource<JSONObject> completionSource =
+                RequestTaskCompletionSource.newCompletionSource();
+        final JSONObject requestData = new JSONObject();
+        requestData.put("feedback", checkNotNull(extractions));
+        final BearerJsonObjectRequest request =
+                new BearerJsonObjectRequest(PUT, url, requestData, checkNotNull(session),
+                                            completionSource, completionSource);
         mRequestQueue.add(request);
 
         return completionSource.getTask();

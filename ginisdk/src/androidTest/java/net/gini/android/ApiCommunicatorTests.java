@@ -9,6 +9,8 @@ import com.android.volley.RequestQueue;
 
 import net.gini.android.authorization.Session;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -18,6 +20,7 @@ import java.util.Map;
 import static com.android.volley.Request.Method.DELETE;
 import static com.android.volley.Request.Method.GET;
 import static com.android.volley.Request.Method.POST;
+import static com.android.volley.Request.Method.PUT;
 import static org.mockito.Mockito.verify;
 
 public class ApiCommunicatorTests extends InstrumentationTestCase {
@@ -471,5 +474,77 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
         assertTrue(((String) request.getHeaders().get("Accept")).contains("application/vnd.gini.v1+json"));
+    }
+
+    public void testSendFeedbackThrowsExceptionWithNullArguments() throws JSONException {
+        try {
+            mApiCommunicator.sendFeedback(null, null, null);
+            fail("Exception not raised");
+        } catch(NullPointerException ignored) {}
+
+        try {
+            mApiCommunicator.sendFeedback("1234-1234", new JSONObject(), null);
+            fail("Exception not raised");
+        } catch (NullPointerException ignored) {}
+
+        try {
+            mApiCommunicator.sendFeedback("1234-1234", null, createSession());
+            fail("Exception not raised");
+        } catch (NullPointerException ignored) {}
+
+        try {
+            mApiCommunicator.sendFeedback(null, new JSONObject(), createSession());
+            fail("Exception not raised");
+        } catch (NullPointerException ignored) {}
+    }
+
+    public void testSendFeedbackUpdatesCorrectDocument() throws JSONException {
+        Session session = createSession();
+
+        mApiCommunicator.sendFeedback("1234-1234", new JSONObject(), session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("https://api.gini.net/documents/1234-1234/extractions", request.getUrl());
+        assertEquals(PUT, request.getMethod());
+    }
+
+    public void testSendFeedbackSendsCorrectData() throws JSONException, AuthFailureError {
+        Session session = createSession();
+        JSONObject extractions = new JSONObject();
+        JSONObject value = new JSONObject();
+        extractions.put("amountToPay", value);
+        value.put("value", "32:EUR");
+
+        mApiCommunicator.sendFeedback("1234-1234", extractions, session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("{\"feedback\":{\"amountToPay\":{\"value\":\"32:EUR\"}}}", new String(request.getBody()));
+    }
+
+    public void testSendFeedbackHasCorrectAuthorizationHeader() throws AuthFailureError, JSONException {
+        Session session = createSession("9999-8888-7777");
+
+        mApiCommunicator.sendFeedback("1234", new JSONObject(), session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("BEARER 9999-8888-7777", request.getHeaders().get("Authorization"));
+    }
+
+    public void testSendFeedbackHasCorrectContentType() throws AuthFailureError, JSONException {
+        Session session = createSession("9999-8888-7777");
+
+        mApiCommunicator.sendFeedback("1234", new JSONObject(), session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        final String acceptHeader = (String) request.getHeaders().get("Accept");
+        assertTrue(acceptHeader.contains("application/vnd.gini.v1+json"));
     }
 }
