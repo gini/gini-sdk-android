@@ -20,6 +20,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import bolts.Continuation;
 import bolts.Task;
@@ -33,6 +36,9 @@ import static net.gini.android.Utils.checkNotNull;
  */
 public class DocumentTaskManager {
 
+    /** The time in seconds between HTTP requests when a document is polled. */
+    public static long POLLING_INTERVAL = 1;
+
     /** The default compression rate which is used for JPEG compression in per cent. */
     public final static int DEFAULT_COMPRESSION = 90;
 
@@ -41,6 +47,8 @@ public class DocumentTaskManager {
     /** The SessionManager instance which is used to create the documents. */
     private final SessionManager mSessionManager;
 
+    /** The worker which is used to schedule the polling of documents. */
+    private static final ScheduledExecutorService mWorker = Executors.newSingleThreadScheduledExecutor();
 
     public DocumentTaskManager(final ApiCommunicator apiCommunicator, final SessionManager sessionManager) {
         mApiCommunicator = checkNotNull(apiCommunicator);
@@ -126,6 +134,75 @@ public class DocumentTaskManager {
                         return extractionsByName;
                     }
                 });
+    }
+
+    /**
+     * Get the document with the given unique identifier.
+     *
+     * @param documentId        The unique identifier of the document.
+     * @return                  A document instance representing all the document's metadata.
+     */
+    public Task<Document> getDocument(final String documentId) {
+        checkNotNull(documentId);
+        return mSessionManager.getSession()
+                .onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
+                    @Override
+                    public Task<JSONObject> then(Task<Session> sessionTask) throws Exception {
+                        final Session session = sessionTask.getResult();
+                        return mApiCommunicator.getDocument(documentId, session);
+                    }
+                })
+                .onSuccess(new Continuation<JSONObject, Document>() {
+                    @Override
+                    public Document then(Task<JSONObject> task) throws Exception {
+                        return Document.fromApiResponse(task.getResult());
+                    }
+                });
+    }
+
+    /**
+     * Continually checks the document status (via the Gini API) until the document is fully processed. To avoid
+     * flooding the network, there is a pause of at least the number of seconds that is set in the POLLING_INTERVAL
+     * constant of this class.
+     *
+     * <b>This method returns a Task which will resolve to a new document instance. It does not update the given
+     * document instance.</b>
+     *
+     * @param document          The document which will be polled.
+     */
+    public Task<Document> pollDocument(final Document document) {
+        if (document.getState() != Document.ProcessingState.PENDING) {
+            return Task.forResult(document);
+        }
+        final String documentId = document.getId();
+        final Task<Document>.TaskCompletionSource completionSource = Task.create();
+        final Runnable completionRunner = new Runnable() {
+            @Override
+            public void run() {
+                final Runnable that = this;
+                getDocument(documentId).continueWith(new Continuation<Document, Object>() {
+                    @Override
+                    public Object then(Task<Document> task) throws Exception {
+                        if (task.isFaulted()) {
+                            completionSource.setError(task.getError());
+                        } else if (task.isCancelled()) {
+                            completionSource.setCancelled();
+                        } else {
+                            Document polledDocument = task.getResult();
+                            if (polledDocument.getState() == Document.ProcessingState.PENDING) {
+                                mWorker.schedule(that, POLLING_INTERVAL, TimeUnit.SECONDS);
+                            } else {
+                                completionSource.setResult(polledDocument);
+                            }
+                        }
+                        return null;
+                    }
+                });
+            }
+        };
+        mWorker.execute(completionRunner);
+
+        return completionSource.getTask();
     }
 
     /**

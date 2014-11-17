@@ -66,6 +66,20 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         return Task.forResult(responseData);
     }
 
+    private Task<JSONObject> createDocumentJSONTask(final String documentId, final String processingState)
+            throws IOException, JSONException {
+        InputStream inputStream = getInstrumentation().getContext().getResources().getAssets().open("document.json");
+        int size = inputStream.available();
+        byte[] buffer = new byte[size];
+        inputStream.read(buffer);
+        inputStream.close();
+
+        final JSONObject responseData = new JSONObject(new String(buffer));
+        responseData.put("id", documentId);
+        responseData.put("progress", processingState);
+        return Task.forResult(responseData);
+    }
+
     private Task<JSONObject> createExtractionsJSONTask() throws IOException, JSONException {
         InputStream inputStream = getInstrumentation().getContext().getResources().getAssets().open("extractions.json");
         int size = inputStream.available();
@@ -166,5 +180,72 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
             throw extractionsTask.getError();
         }
         assertNotNull(extractionsTask.getResult());
+    }
+
+    public void testGetDocumentThrowsWithNullArgument() {
+        try {
+            mDocumentTaskManager.getDocument(null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {}
+    }
+
+    public void testGetDocumentReturnsTask() throws IOException, JSONException {
+        when(mApiCommunicator.getDocument(eq("1234"), any(Session.class))).thenReturn(createDocumentJSONTask("1234"));
+
+        Task<Document> documentTask = mDocumentTaskManager.getDocument("1234");
+
+        assertNotNull(documentTask);
+    }
+
+    public void testGetDocumentResolvesToDocument() throws IOException, JSONException, InterruptedException {
+        when(mApiCommunicator.getDocument(eq("1234"), any(Session.class))).thenReturn(createDocumentJSONTask("1234"));
+
+        Task<Document> documentTask = mDocumentTaskManager.getDocument("1234");
+        documentTask.waitForCompletion();
+        Document document = documentTask.getResult();
+
+        assertNotNull(document);
+        assertEquals("1234", document.getId());
+    }
+
+    public void testPollDocumentThrowsWithNullArgument() {
+        try {
+            mDocumentTaskManager.pollDocument(null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {}
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testPollDocument() throws IOException, JSONException, InterruptedException {
+        when(mApiCommunicator.getDocument(eq("1234"), any(Session.class))).thenReturn(
+                createDocumentJSONTask("1234", "PENDING"), createDocumentJSONTask("1234", "COMPLETED"));
+        Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
+                                         Document.SourceClassification.NATIVE);
+
+        Task<Document> documentTask = mDocumentTaskManager.pollDocument(document);
+        documentTask.waitForCompletion();
+
+        Document polledDocument = documentTask.getResult();
+        assertNotNull(polledDocument);
+        assertEquals("1234", polledDocument.getId());
+        assertEquals(Document.ProcessingState.COMPLETED, polledDocument.getState());
+
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testPollDocumentProcessingStateErrorCompletesTask()
+            throws IOException, JSONException, InterruptedException {
+        when(mApiCommunicator.getDocument(eq("1234"), any(Session.class))).thenReturn(
+                createDocumentJSONTask("1234", "PENDING"), createDocumentJSONTask("1234", "ERROR"));
+        Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
+                                         Document.SourceClassification.NATIVE);
+
+        Task<Document> documentTask = mDocumentTaskManager.pollDocument(document);
+        documentTask.waitForCompletion();
+
+        Document polledDocument = documentTask.getResult();
+        assertNotNull(polledDocument);
+        assertEquals("1234", polledDocument.getId());
+        assertEquals(Document.ProcessingState.ERROR, polledDocument.getState());
     }
 }
