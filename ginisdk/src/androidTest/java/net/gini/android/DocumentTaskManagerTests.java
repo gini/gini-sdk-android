@@ -8,6 +8,7 @@ import android.test.InstrumentationTestCase;
 import net.gini.android.authorization.Session;
 import net.gini.android.authorization.SessionManager;
 import net.gini.android.models.Document;
+import net.gini.android.models.SpecificExtraction;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,6 +17,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.Map;
 
 import bolts.Task;
 
@@ -61,6 +63,17 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
         final JSONObject responseData = new JSONObject(new String(buffer));
         responseData.put("id", documentId);
+        return Task.forResult(responseData);
+    }
+
+    private Task<JSONObject> createExtractionsJSONTask() throws IOException, JSONException {
+        InputStream inputStream = getInstrumentation().getContext().getResources().getAssets().open("extractions.json");
+        int size = inputStream.available();
+        byte[] buffer = new byte[size];
+        inputStream.read(buffer);
+        inputStream.close();
+
+        final JSONObject responseData = new JSONObject(new String(buffer));
         return Task.forResult(responseData);
     }
 
@@ -132,5 +145,26 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         new DocumentTaskManager.DocumentUploadBuilder(bitmap).upload(documentTaskManager);
 
         verify(documentTaskManager).createDocument(bitmap, null, null, DocumentTaskManager.DEFAULT_COMPRESSION);
+    }
+
+    public void testGetExtractionsReturnsTask() throws IOException, JSONException {
+        when(mApiCommunicator.getExtractions(eq("1234"), any(Session.class))).thenReturn(createExtractionsJSONTask());
+        Document document = new Document("1234", Document.ProcessingState.COMPLETED, "foobar", 1, new Date(),
+                                         Document.SourceClassification.NATIVE);
+
+        assertNotNull(mDocumentTaskManager.getExtractions(document));
+    }
+
+    public void testGetExtractionsResolvesToHashMap() throws Exception {
+        when(mApiCommunicator.getExtractions(eq("1234"), any(Session.class))).thenReturn(createExtractionsJSONTask());
+        Document document = new Document("1234", Document.ProcessingState.COMPLETED, "foobar", 1, new Date(),
+                                         Document.SourceClassification.NATIVE);
+
+        Task<Map<String, SpecificExtraction>> extractionsTask = mDocumentTaskManager.getExtractions(document);
+        extractionsTask.waitForCompletion();
+        if (extractionsTask.isFaulted()) {
+            throw extractionsTask.getError();
+        }
+        assertNotNull(extractionsTask.getResult());
     }
 }
