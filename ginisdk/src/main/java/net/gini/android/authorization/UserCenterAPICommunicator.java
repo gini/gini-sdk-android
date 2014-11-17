@@ -20,13 +20,14 @@ import bolts.Task;
  * related error handling.
  */
 public class UserCenterAPICommunicator {
+
     final private RequestQueue mRequestQueue;
     final private String mBaseUrl;
     final private String mClientId;
     final private String mClientSecret;
 
-    UserCenterAPICommunicator(final RequestQueue requestQueue, final String baseUrl,
-                              final String clientId, final String clientSecret) {
+    public UserCenterAPICommunicator(final RequestQueue requestQueue, final String baseUrl,
+                                     final String clientId, final String clientSecret) {
         mRequestQueue = requestQueue;
         mBaseUrl = baseUrl;
         mClientId = clientId;
