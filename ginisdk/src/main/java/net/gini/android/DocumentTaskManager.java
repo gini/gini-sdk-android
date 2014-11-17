@@ -116,7 +116,8 @@ public class DocumentTaskManager {
                         final HashMap<String, SpecificExtraction> extractionsByName =
                                 new HashMap<String, SpecificExtraction>();
                         final JSONObject extractionsData = responseData.getJSONObject("extractions");
-                        @SuppressWarnings("unchecked") // Quote Android Source: "/* Return a raw type for API compatibility */"
+                        @SuppressWarnings("unchecked")
+                        // Quote Android Source: "/* Return a raw type for API compatibility */"
                         final Iterator<String> extractionsNameIterator = extractionsData.keys();
                         while (extractionsNameIterator.hasNext()) {
                             final String extractionName = extractionsNameIterator.next();
@@ -244,6 +245,37 @@ public class DocumentTaskManager {
                     entry.getValue().setIsDirty(false);
                 }
                 return document;
+            }
+        });
+    }
+
+    /**
+     * Sends an error report for the given document to Gini. If the processing result for a document was not
+     * satisfactory (e.g. extractions where empty or incorrect), you can create an error report for a document. This
+     * allows Gini to analyze and correct the problem that was found.
+     *
+     * <b>The owner of this document must agree that Gini can use this document for debugging and error analysis.</b>
+     *
+     * @param document      The erroneous document.
+     * @param summary       Optional a short summary of the occurred error.
+     * @param description   Optional a more detailed description of the occurred error.
+     * @return              A Task which will resolve to an error ID. This is a unique identifier for your error report
+     *                      and can be used to refer to the reported error towards the Gini support.
+     */
+    public Task<String> reportDocument(final Document document, final @Nullable String summary,
+                                       final @Nullable String description) {
+        final String documentId = document.getId();
+        return mSessionManager.getSession().continueWithTask(new Continuation<Session, Task<JSONObject>>() {
+            @Override
+            public Task<JSONObject> then(Task<Session> task) throws Exception {
+                final Session session = task.getResult();
+                return mApiCommunicator.errorReportForDocument(documentId, summary, description, session);
+            }
+        }).onSuccess(new Continuation<JSONObject, String>() {
+            @Override
+            public String then(Task<JSONObject> task) throws Exception {
+                final JSONObject responseData = task.getResult();
+                return responseData.getString("errorId");
             }
         });
     }

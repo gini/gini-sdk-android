@@ -98,6 +98,13 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         return Task.forResult(responseData);
     }
 
+    private Task<JSONObject> createErrorReportJSONTask(final String errorId) throws JSONException {
+        final JSONObject responseData = new JSONObject();
+        responseData.put("errorId", errorId);
+        responseData.put("message", "error was reported, please refer to the given error id");
+        return Task.forResult(responseData);
+    }
+
     public void testThatConstructorChecksForNull() {
         try {
             new DocumentTaskManager(null, null);
@@ -335,5 +342,35 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
         updateTask.waitForCompletion();
         assertFalse(extractions.get("amountToPay").isDirty());
+    }
+
+    public void testReportDocumentThrowsWithNullArgument() {
+        try {
+            mDocumentTaskManager.reportDocument(null, null, null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {}
+    }
+
+    public void testReportDocumentReturnsTask() throws JSONException {
+        when(mApiCommunicator.errorReportForDocument(eq("1234"), eq("short summary"), eq("detailed description"),
+                                                     any(Session.class)))
+                .thenReturn(createErrorReportJSONTask("4444-3333"));
+        final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
+                                               Document.SourceClassification.NATIVE);
+
+        assertNotNull(mDocumentTaskManager.reportDocument(document, "short summary", "detailed description"));
+    }
+
+    public void testReportDocumentTaskResolvesToErrorId() throws JSONException, InterruptedException {
+        when(mApiCommunicator.errorReportForDocument(eq("1234"), eq("short summary"), eq("detailed description"),
+                                                     any(Session.class)))
+                .thenReturn(createErrorReportJSONTask("4444-3333"));
+        final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
+                                               Document.SourceClassification.NATIVE);
+
+        Task<String> reportTask = mDocumentTaskManager.reportDocument(document, "short summary", "detailed description");
+        reportTask.waitForCompletion();
+
+        assertEquals("4444-3333", reportTask.getResult());
     }
 }
