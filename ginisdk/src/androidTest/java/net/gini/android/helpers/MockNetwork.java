@@ -5,6 +5,8 @@ import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.VolleyError;
 
+import net.gini.android.Utils;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,6 +31,6 @@ public class MockNetwork implements Network {
         if (headers == null) {
             headers = new HashMap<String, String>();
         }
-        return new NetworkResponse(statusCode, data.getBytes(), headers, false);
+        return new NetworkResponse(statusCode, data.getBytes(Utils.CHARSET_UTF8), headers, false);
     }
 }

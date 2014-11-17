@@ -4,6 +4,7 @@ package net.gini.android;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -40,4 +41,6 @@ public class Utils {
         }
         return URLEncodedUtils.format(parameters, "utf-8");
     }
+
+    public static Charset CHARSET_UTF8 = Charset.forName("utf-8");
 }

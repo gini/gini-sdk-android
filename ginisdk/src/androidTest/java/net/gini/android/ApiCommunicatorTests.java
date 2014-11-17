@@ -37,7 +37,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
     }
 
     public byte[] createUploadData() {
-        return "foobar".getBytes();
+        return "foobar".getBytes(Utils.CHARSET_UTF8);
     }
 
     public Session createSession(final String accessToken) {

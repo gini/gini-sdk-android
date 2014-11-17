@@ -8,6 +8,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.Response;
 
 import net.gini.android.MediaTypes;
+import net.gini.android.Utils;
 
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -31,7 +32,8 @@ public class TokenRequest extends JsonObjectRequest {
         super(Method.POST, url, null, listener, errorListener);
 
         mAuthorizationCredentials =
-                Base64.encodeToString(String.format("%s:%s", clientId, clientSecret).getBytes(), Base64.NO_WRAP);
+                Base64.encodeToString(String.format("%s:%s", clientId, clientSecret).getBytes(Utils.CHARSET_UTF8),
+                                      Base64.NO_WRAP);
         mRequestData = requestData;
     }
 
@@ -52,7 +54,7 @@ public class TokenRequest extends JsonObjectRequest {
     public byte[] getBody() {
         byte[] body = null;
         if (mRequestData != null) {
-            body = mapToUrlEncodedString(mRequestData).getBytes();
+            body = mapToUrlEncodedString(mRequestData).getBytes(Utils.CHARSET_UTF8);
         }
         return body;
     }
