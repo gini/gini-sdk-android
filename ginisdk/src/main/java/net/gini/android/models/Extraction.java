@@ -50,4 +50,8 @@ public class Extraction {
     public synchronized boolean isDirty() {
         return mIsDirty;
     }
+
+    public void setIsDirty(boolean isDirty) {
+        mIsDirty = isDirty;
+    }
 }

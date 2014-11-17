@@ -8,15 +8,19 @@ import android.test.InstrumentationTestCase;
 import net.gini.android.authorization.Session;
 import net.gini.android.authorization.SessionManager;
 import net.gini.android.models.Document;
+import net.gini.android.models.Extraction;
 import net.gini.android.models.SpecificExtraction;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import bolts.Task;
@@ -58,7 +62,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         InputStream inputStream = getInstrumentation().getContext().getResources().getAssets().open("document.json");
         int size = inputStream.available();
         byte[] buffer = new byte[size];
-        inputStream.read(buffer);
+        @SuppressWarnings("unused")
+        int read = inputStream.read(buffer);
         inputStream.close();
 
         final JSONObject responseData = new JSONObject(new String(buffer));
@@ -71,7 +76,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         InputStream inputStream = getInstrumentation().getContext().getResources().getAssets().open("document.json");
         int size = inputStream.available();
         byte[] buffer = new byte[size];
-        inputStream.read(buffer);
+        @SuppressWarnings("unused")
+        int read = inputStream.read(buffer);
         inputStream.close();
 
         final JSONObject responseData = new JSONObject(new String(buffer));
@@ -84,7 +90,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         InputStream inputStream = getInstrumentation().getContext().getResources().getAssets().open("extractions.json");
         int size = inputStream.available();
         byte[] buffer = new byte[size];
-        inputStream.read(buffer);
+        @SuppressWarnings("unused")
+        int read = inputStream.read(buffer);
         inputStream.close();
 
         final JSONObject responseData = new JSONObject(new String(buffer));
@@ -247,5 +254,86 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         assertNotNull(polledDocument);
         assertEquals("1234", polledDocument.getId());
         assertEquals(Document.ProcessingState.ERROR, polledDocument.getState());
+    }
+
+    public void testSaveDocumentUpdatesThrowsWithNullArguments() throws JSONException {
+        final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
+                                               Document.SourceClassification.NATIVE);
+
+        try {
+            mDocumentTaskManager.saveDocumentUpdates(null, null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {}
+
+        try {
+            mDocumentTaskManager.saveDocumentUpdates(document, null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {}
+
+        try {
+            mDocumentTaskManager.saveDocumentUpdates(null, new HashMap<String, SpecificExtraction>());
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {}
+    }
+
+    public void testSaveDocumentReturnsTask() throws JSONException {
+        final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
+                                               Document.SourceClassification.NATIVE);
+        final HashMap<String, SpecificExtraction> extractions = new HashMap<String, SpecificExtraction>();
+
+        assertNotNull(mDocumentTaskManager.saveDocumentUpdates(document, extractions));
+    }
+
+    public void testSaveDocumentResolvesToDocumentInstance() throws JSONException, InterruptedException {
+        final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
+                                               Document.SourceClassification.NATIVE);
+        final HashMap<String, SpecificExtraction> extractions = new HashMap<String, SpecificExtraction>();
+        when(mApiCommunicator.sendFeedback(eq("1234"), any(JSONObject.class), any(Session.class))).thenReturn(
+                Task.forResult(new JSONObject()));
+
+        Task<Document> updateTask = mDocumentTaskManager.saveDocumentUpdates(document, extractions);
+        updateTask.waitForCompletion();
+        assertNotNull(updateTask.getResult());
+    }
+
+    public void testSaveDocumentSavesExtractions() throws JSONException, InterruptedException {
+        final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
+                                               Document.SourceClassification.NATIVE);
+        final HashMap<String, SpecificExtraction> extractions = new HashMap<String, SpecificExtraction>();
+        extractions.put("amountToPay",
+                        new SpecificExtraction("amountToPay", "42:EUR", "amount", null, new ArrayList<Extraction>()));
+        extractions.put("senderName",
+                        new SpecificExtraction("senderName", "blah", "senderName", null, new ArrayList<Extraction>()));
+
+        extractions.get("amountToPay").setValue("23:EUR");
+        mDocumentTaskManager.saveDocumentUpdates(document, extractions);
+
+        ArgumentCaptor<JSONObject> dataCaptor = ArgumentCaptor.forClass(JSONObject.class);
+        verify(mApiCommunicator).sendFeedback(eq("1234"), dataCaptor.capture(), any(Session.class));
+        final JSONObject updateData = dataCaptor.getValue();
+        // Should update the amountToPay
+        assertTrue(updateData.has("amountToPay"));
+        final JSONObject amountToPay = updateData.getJSONObject("amountToPay");
+        assertEquals("23:EUR", amountToPay.getString("value"));
+        // Should not update the senderName, since isDirty() is false.
+        assertFalse(updateData.has("senderName"));
+    }
+
+    public void testSaveDocumentMarksExtractionsAsNotDirty() throws JSONException, InterruptedException {
+        when(mApiCommunicator.sendFeedback(eq("1234"), any(JSONObject.class), any(Session.class))).thenReturn(
+                Task.forResult(new JSONObject()));
+        final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
+                                               Document.SourceClassification.NATIVE);
+        final HashMap<String, SpecificExtraction> extractions = new HashMap<String, SpecificExtraction>();
+        extractions.put("amountToPay",
+                        new SpecificExtraction("amountToPay", "42:EUR", "amount", null, new ArrayList<Extraction>()));
+        extractions.put("senderName",
+                        new SpecificExtraction("senderName", "blah", "senderName", null, new ArrayList<Extraction>()));
+
+        extractions.get("amountToPay").setValue("23:EUR");
+        Task<Document> updateTask = mDocumentTaskManager.saveDocumentUpdates(document, extractions);
+
+        updateTask.waitForCompletion();
+        assertFalse(extractions.get("amountToPay").isDirty());
     }
 }
