@@ -128,7 +128,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
     public void testThatCreateDocumentResolvesToDocument() throws IOException, JSONException, InterruptedException {
         when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class), any(String.class), any(String.class),
                                              any(Session.class)))
-                .thenReturn(createDocumentJSONTask("1234"));
+                .thenReturn(Task.forResult("https://api.gini.net/documents/1234"));
+        when(mApiCommunicator.getDocument(eq("1234"), any(Session.class))).thenReturn(createDocumentJSONTask("1234"));
         Bitmap bitmap = createBitmap();
 
         Task<Document> documentTask = mDocumentTaskManager.createDocument(bitmap, "foobar.jpg", "invoice", 95);
@@ -142,7 +143,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
             throws IOException, JSONException, InterruptedException {
         when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class), any(String.class), any(String.class),
                                              any(Session.class)))
-                .thenReturn(createDocumentJSONTask("1234"));
+                .thenReturn(Task.forResult("https://api.gini.net/documents/1234"));
+        when(mApiCommunicator.getDocument(eq("1234"), any(Session.class))).thenReturn(createDocumentJSONTask("1234"));
 
         Bitmap bitmap = createBitmap();
         mDocumentTaskManager.createDocument(bitmap, "foobar.jpg", "invoice", 90).waitForCompletion();

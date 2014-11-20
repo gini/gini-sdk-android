@@ -68,9 +68,9 @@ public class DocumentTaskManager {
      */
     public Task<Document> createDocument(final Bitmap document, @Nullable final String filename,
                                          @Nullable final String documentType, final int compressionRate) {
-        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<String>>() {
             @Override
-            public Task<JSONObject> then(Task<Session> sessionTask) throws Exception {
+            public Task<String> then(Task<Session> sessionTask) throws Exception {
                 final Session session = sessionTask.getResult();
                 final ByteArrayOutputStream documentOutputStream = new ByteArrayOutputStream();
                 document.compress(JPEG, compressionRate, documentOutputStream);
@@ -78,10 +78,12 @@ public class DocumentTaskManager {
                 return mApiCommunicator
                         .uploadDocument(uploadData, MediaTypes.IMAGE_JPEG, filename, documentType, session);
             }
-        }).onSuccess(new Continuation<JSONObject, Document>() {
+        }).onSuccessTask(new Continuation<String, Task<Document>>() {
             @Override
-            public Document then(Task<JSONObject> uploadTask) throws Exception {
-                return Document.fromApiResponse(uploadTask.getResult());
+            public Task<Document> then(Task<String> uploadTask) throws Exception {
+                final String[] components = uploadTask.getResult().split("/");
+                final String documentId = components[components.length - 1];
+                return getDocument(documentId);
             }
         });
     }

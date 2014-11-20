@@ -46,9 +46,9 @@ public class ApiCommunicator {
         this.mRequestQueue = checkNotNull(mRequestQueue);
     }
 
-    public Task<JSONObject> uploadDocument(final byte[] documentData, final String contentType,
-                                           @Nullable final String documentName, @Nullable final String docTypeHint,
-                                           final Session session) {
+    public Task<String> uploadDocument(final byte[] documentData, final String contentType,
+                                       @Nullable final String documentName, @Nullable final String docTypeHint,
+                                       final Session session) {
 
         final HashMap<String, String> requestQueryData = new HashMap<String, String>();
         if (documentName != null) {
@@ -58,11 +58,11 @@ public class ApiCommunicator {
             requestQueryData.put("doctype", docTypeHint);
         }
         final String url = mBaseUrl + "documents/?" + mapToUrlEncodedString(requestQueryData);
-        final RequestTaskCompletionSource<JSONObject> completionSource =
+        final RequestTaskCompletionSource<String> completionSource =
                 RequestTaskCompletionSource.newCompletionSource();
         final BearerUploadRequest request =
-                new BearerUploadRequest(POST, url, checkNotNull(documentData), checkNotNull(contentType),
-                                        session.getAccessToken(), completionSource, completionSource);
+                new BearerUploadRequest(POST, url, checkNotNull(documentData), checkNotNull(contentType), session,
+                                        completionSource, completionSource);
         mRequestQueue.add(request);
 
         return completionSource.getTask();
