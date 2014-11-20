@@ -21,7 +21,7 @@ public class SdkBuilder {
     private final Context mContext;
 
     private String mApiBaseUrl = "https://api.gini.net/";
-    private String mUserCenterApiBaseUrl = "https://user.gini.net";
+    private String mUserCenterApiBaseUrl = "https://user.gini.net/";
 
     private String mEmailDomain;
     private String mClientId;
@@ -59,7 +59,10 @@ public class SdkBuilder {
      * @return                      The builder instance to enable chaining.
      */
     public SdkBuilder setApiBaseUrl(String newUrl) {
-        mApiBaseUrl = checkNotNull(newUrl);
+        if (!newUrl.endsWith("/")) {
+            newUrl += "/";
+        }
+        mApiBaseUrl = newUrl;
         return this;
     }
 
@@ -70,7 +73,10 @@ public class SdkBuilder {
      * @return                      The builder instance to enable chaining.
      */
     public SdkBuilder setUserCenterApiBaseUrl(String newUrl) {
-        mUserCenterApiBaseUrl = checkNotNull(newUrl);
+        if (!newUrl.endsWith("/")) {
+            newUrl += "/";
+        }
+        mUserCenterApiBaseUrl = newUrl;
         return this;
     }
 
