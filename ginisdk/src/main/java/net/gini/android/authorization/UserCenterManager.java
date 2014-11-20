@@ -34,17 +34,19 @@ public class UserCenterManager {
         // The request needs a valid user session. Get the user session.
         return getUserCenterSession()
                 // Next step: Do the user creation request.
-                .onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
+                .onSuccessTask(new Continuation<Session, Task<String>>() {
                     @Override
-                    public Task<JSONObject> then(Task<Session> sessionTask) throws Exception {
+                    public Task<String> then(Task<Session> sessionTask) throws Exception {
                         return mUserCenterAPICommunicator.createUser(userCredentials, sessionTask.getResult());
                     }
                 })
                 // And then create the user object from the API response.
-                .onSuccess(new Continuation<JSONObject, User>() {
+                .onSuccess(new Continuation<String, User>() {
                     @Override
-                    public User then(Task<JSONObject> task) throws Exception {
-                        return User.fromApiResponse(task.getResult());
+                    public User then(Task<String> task) throws Exception {
+                        final String[] components = task.getResult().split("/");
+                        final String userId = components[components.length - 1];
+                        return new User(userId, userCredentials.getUsername());
                     }
                 });
     }

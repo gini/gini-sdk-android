@@ -115,7 +115,7 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
                 .thenReturn(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6"));
         UserCredentials userCredentials = new UserCredentials("foobar@example.com", "1234");
         when(mMockUserCenterAPICommunicator.createUser(eq(userCredentials), any(Session.class)))
-                .thenReturn(createLoginUserResponse("foobar@example.com"));
+                .thenReturn(Task.forResult("https://user.gini.net/api/users/88a28076-18e8-4275-b39c-eaacc240d406"));
 
         Task<User> creationTask = mUserCenterManager.createUser(userCredentials);
         creationTask.waitForCompletion();

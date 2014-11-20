@@ -4,8 +4,8 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 
 import net.gini.android.RequestTaskCompletionSource;
-import net.gini.android.authorization.requests.BearerJsonObjectRequest;
 import net.gini.android.authorization.requests.TokenRequest;
+import net.gini.android.requests.BearerLocationRequest;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -87,19 +87,18 @@ public class UserCenterAPICommunicator {
      *                                  is a user information.
      * @throws JSONException            If the user credentials can't be JSON serialized.
      */
-    public Task<JSONObject> createUser(final UserCredentials userCredentials, Session userCenterApiSession)
+    public Task<String> createUser(final UserCredentials userCredentials, Session userCenterApiSession)
             throws JSONException {
 
-        final RequestTaskCompletionSource<JSONObject> completionSource =
-                RequestTaskCompletionSource.newCompletionSource();
+        final RequestTaskCompletionSource<String> completionSource = RequestTaskCompletionSource.newCompletionSource();
         final String url = mBaseUrl + "api/users";
         final JSONObject data = new JSONObject(){{
             put("email", userCredentials.getUsername());
             put("password", userCredentials.getPassword());
         }};
-        BearerJsonObjectRequest request =
-                new BearerJsonObjectRequest(Request.Method.POST, url, data, userCenterApiSession, completionSource,
-                                            completionSource);
+        BearerLocationRequest request =
+                new BearerLocationRequest(Request.Method.POST, url, data, userCenterApiSession, completionSource,
+                                          completionSource);
         mRequestQueue.add(request);
 
         return completionSource.getTask();
