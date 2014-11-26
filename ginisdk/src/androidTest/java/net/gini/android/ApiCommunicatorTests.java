@@ -1,6 +1,7 @@
 package net.gini.android;
 
 
+import android.net.Uri;
 import android.test.InstrumentationTestCase;
 
 import com.android.volley.AuthFailureError;
@@ -157,7 +158,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
 
-        assertEquals("https://api.gini.net/documents/?", request.getUrl());
+        assertEquals("https://api.gini.net/documents/", request.getUrl());
         assertEquals(POST, request.getMethod());
     }
 
@@ -247,12 +248,22 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
 
     }
 
+    @SuppressWarnings("ConstantConditions")
     public void testGetDocumentThrowsWithNullArguments() {
         try {
-            mApiCommunicator.getDocument(null, null);
+            final String documentId = null;
+            mApiCommunicator.getDocument(documentId, null);
             fail("Exception not thrown");
         } catch (NullPointerException ignored) {
         }
+
+        try {
+            final Uri documentUri = null;
+            mApiCommunicator.getDocument(documentUri, null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+
 
         try {
             mApiCommunicator.getDocument("1234", null);
@@ -261,10 +272,19 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         }
 
         try {
-            mApiCommunicator.getDocument(null, createSession());
+            final String documentId = null;
+            mApiCommunicator.getDocument(documentId, createSession());
             fail("Exception not thrown");
         } catch (NullPointerException ignored) {
         }
+
+        try {
+            final String documentUri = null;
+            mApiCommunicator.getDocument(documentUri, createSession());
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {
+        }
+
     }
 
     public void testGetDocumentReturnsTask() {
@@ -449,8 +469,9 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
+        // TODO: remove all the flakiness
         assertEquals(
-                "https://api.gini.net/documents/1234/errorreport?summary=short+summary&description=and+a+description",
+                "https://api.gini.net/documents/1234/errorreport?description=and+a+description&summary=short+summary",
                 request.getUrl());
     }
 

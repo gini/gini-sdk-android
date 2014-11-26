@@ -1,6 +1,7 @@
 package net.gini.android;
 
 import android.graphics.Bitmap;
+import android.net.Uri;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.RequestQueue;
@@ -37,18 +38,18 @@ import static net.gini.android.Utils.mapToUrlEncodedString;
  */
 public class ApiCommunicator {
 
-    private final String mBaseUrl;
+    private final Uri mBaseUri;
     private final RequestQueue mRequestQueue;
 
 
-    public ApiCommunicator(final String mBaseUrl, final RequestQueue mRequestQueue) {
-        this.mBaseUrl = checkNotNull(mBaseUrl);
+    public ApiCommunicator(final String baseUriString, final RequestQueue mRequestQueue) {
+        mBaseUri = Uri.parse(checkNotNull(baseUriString));
         this.mRequestQueue = checkNotNull(mRequestQueue);
     }
 
-    public Task<String> uploadDocument(final byte[] documentData, final String contentType,
-                                       @Nullable final String documentName, @Nullable final String docTypeHint,
-                                       final Session session) {
+    public Task<Uri> uploadDocument(final byte[] documentData, final String contentType,
+                                    @Nullable final String documentName, @Nullable final String docTypeHint,
+                                    final Session session) {
 
         final HashMap<String, String> requestQueryData = new HashMap<String, String>();
         if (documentName != null) {
@@ -57,19 +58,24 @@ public class ApiCommunicator {
         if (docTypeHint != null) {
             requestQueryData.put("doctype", docTypeHint);
         }
-        final String url = mBaseUrl + "documents/?" + mapToUrlEncodedString(requestQueryData);
-        final RequestTaskCompletionSource<String> completionSource =
-                RequestTaskCompletionSource.newCompletionSource();
+        final String url = mBaseUri.buildUpon().path("documents/").encodedQuery(mapToUrlEncodedString(requestQueryData))
+                .toString();
+        final RequestTaskCompletionSource<Uri> completionSource = RequestTaskCompletionSource.newCompletionSource();
         final BearerUploadRequest request =
                 new BearerUploadRequest(POST, url, checkNotNull(documentData), checkNotNull(contentType), session,
-                                        completionSource, completionSource);
+                        completionSource, completionSource);
         mRequestQueue.add(request);
 
         return completionSource.getTask();
     }
 
     public Task<JSONObject> getDocument(final String documentId, final Session session) {
-        final String url = String.format("%sdocuments/%s", mBaseUrl, checkNotNull(documentId));
+        final String url = mBaseUri.buildUpon().path("documents/" + checkNotNull(documentId)).toString();
+        return getDocument(Uri.parse(url), session);
+    }
+
+    public Task<JSONObject> getDocument(final Uri documentUri, final Session session) {
+        final String url = uriRelativeToBaseUri(documentUri).toString();
         final RequestTaskCompletionSource<JSONObject> completionSource =
                 RequestTaskCompletionSource.newCompletionSource();
         final BearerJsonObjectRequest request =
@@ -80,7 +86,8 @@ public class ApiCommunicator {
     }
 
     public Task<JSONObject> getExtractions(final String documentId, final Session session) {
-        final String url = String.format("%sdocuments/%s/extractions", mBaseUrl, checkNotNull(documentId));
+        final String url = mBaseUri.buildUpon().path(String.format("documents/%s/extractions",
+                checkNotNull(documentId))).toString();
         final RequestTaskCompletionSource<JSONObject> completionSource =
                 RequestTaskCompletionSource.newCompletionSource();
         final BearerJsonObjectRequest request =
@@ -91,11 +98,14 @@ public class ApiCommunicator {
     }
 
     public Task<JSONObject> getIncubatorExtractions(final String documentId, final Session session) {
-        final String url = String.format("%sdocuments/%s/extractions", mBaseUrl, checkNotNull(documentId));
-        final RequestTaskCompletionSource<JSONObject>completionSource = RequestTaskCompletionSource.newCompletionSource();
-        final BearerJsonObjectRequest request = new BearerJsonObjectRequest(GET, url, null, checkNotNull(session), completionSource, completionSource) {
+        final String url = mBaseUri.buildUpon().path(String.format("documents/%s/extractions",
+                checkNotNull(documentId))).toString();
+        final RequestTaskCompletionSource<JSONObject> completionSource = RequestTaskCompletionSource
+                .newCompletionSource();
+        final BearerJsonObjectRequest request = new BearerJsonObjectRequest(GET, url, null, checkNotNull(session),
+                completionSource, completionSource) {
             @Override
-            public Map<String, String>getHeaders() throws AuthFailureError{
+            public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> headers = super.getHeaders();
                 // The incubator is discriminated from the "normal" extractions by the accept header.
                 headers.put("Accept", MediaTypes.GINI_JSON_INCUBATOR);
@@ -109,7 +119,7 @@ public class ApiCommunicator {
 
     public Task<String> deleteDocument(final String documentId, final Session session) {
         final String accessToken = checkNotNull(session).getAccessToken();
-        final String url = String.format("%sdocuments/%s", mBaseUrl, checkNotNull(documentId));
+        final String url = mBaseUri.buildUpon().path("documents/" + checkNotNull(documentId)).toString();
         final RequestTaskCompletionSource<String> completionSource = RequestTaskCompletionSource.newCompletionSource();
         final StringRequest request = new StringRequest(DELETE, url, completionSource, completionSource) {
             @Override
@@ -129,8 +139,8 @@ public class ApiCommunicator {
         final HashMap<String, String> requestParams = new HashMap<String, String>();
         requestParams.put("summary", summary);
         requestParams.put("description", description);
-        final String url = String.format("%sdocuments/%s/errorreport?%s", mBaseUrl, checkNotNull(documentId),
-                                         mapToUrlEncodedString(requestParams));
+        final String url = mBaseUri.buildUpon().path("documents/" + checkNotNull(documentId) + "/errorreport")
+                .encodedQuery(mapToUrlEncodedString(requestParams)).toString();
         final RequestTaskCompletionSource<JSONObject> completionSource =
                 RequestTaskCompletionSource.newCompletionSource();
         final BearerJsonObjectRequest request =
@@ -142,14 +152,15 @@ public class ApiCommunicator {
 
     public Task<JSONObject> sendFeedback(final String documentId, final JSONObject extractions, final Session session)
             throws JSONException {
-        final String url = String.format("%sdocuments/%s/extractions", mBaseUrl, checkNotNull(documentId));
+        final String url = mBaseUri.buildUpon().path(String.format("documents/%s/extractions",
+                checkNotNull(documentId))).toString();
         final RequestTaskCompletionSource<JSONObject> completionSource =
                 RequestTaskCompletionSource.newCompletionSource();
         final JSONObject requestData = new JSONObject();
         requestData.put("feedback", checkNotNull(extractions));
         final BearerJsonObjectRequest request =
                 new BearerJsonObjectRequest(PUT, url, requestData, checkNotNull(session),
-                                            completionSource, completionSource);
+                        completionSource, completionSource);
         mRequestQueue.add(request);
 
         return completionSource.getTask();
@@ -157,8 +168,9 @@ public class ApiCommunicator {
 
     public Task<Bitmap> getPreview(final String documentId, final int pageNumber,
                                    PreviewSize previewSize, final Session session) {
-        final String url = String.format("%sdocuments/%s/pages/%s/%s", mBaseUrl, checkNotNull(documentId), pageNumber,
-                                         previewSize.getDimensions());
+        final String url = mBaseUri.buildUpon().path(String.format("documents/%s/pages/%s/%s",
+                checkNotNull(documentId), pageNumber,
+                previewSize.getDimensions())).toString();
         final String accessToken = checkNotNull(session).getAccessToken();
         RequestTaskCompletionSource<Bitmap> completionSource = RequestTaskCompletionSource.newCompletionSource();
         final ImageRequest imageRequest = new ImageRequest(url, completionSource, 0, 0, ARGB_8888, completionSource) {
@@ -173,6 +185,11 @@ public class ApiCommunicator {
         mRequestQueue.add(imageRequest);
 
         return completionSource.getTask();
+    }
+
+    private Uri uriRelativeToBaseUri(Uri uri) {
+
+        return mBaseUri.buildUpon().path(uri.getPath()).query(uri.getQuery()).build();
     }
 
     public enum PreviewSize {

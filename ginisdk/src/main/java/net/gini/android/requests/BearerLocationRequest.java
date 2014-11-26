@@ -1,6 +1,8 @@
 package net.gini.android.requests;
 
 
+import android.net.Uri;
+
 import com.android.volley.NetworkResponse;
 import com.android.volley.Response;
 import com.android.volley.toolbox.HttpHeaderParser;
@@ -13,12 +15,12 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BearerLocationRequest extends JsonRequest<String> {
+public class BearerLocationRequest extends JsonRequest<Uri> {
     private final String mAccessToken;
 
     public BearerLocationRequest(int method, String url, JSONObject jsonRequest,
                                  Session session,
-                                 Response.Listener<String> listener,
+                                 Response.Listener<Uri> listener,
                                  Response.ErrorListener errorListener) {
         super(method, url, (jsonRequest == null) ? null : jsonRequest.toString(), listener, errorListener);
         mAccessToken = session.getAccessToken();
@@ -32,8 +34,9 @@ public class BearerLocationRequest extends JsonRequest<String> {
     }
 
     @Override
-    protected Response<String> parseNetworkResponse(NetworkResponse response) {
-        final String header = response.headers.get("Location");
-        return Response.success(header, HttpHeaderParser.parseCacheHeaders(response));
+    protected Response<Uri> parseNetworkResponse(NetworkResponse response) {
+        final String locationString = response.headers.get("Location");
+        final Uri locationUri = Uri.parse(locationString);
+        return Response.success(locationUri, HttpHeaderParser.parseCacheHeaders(response));
     }
 }

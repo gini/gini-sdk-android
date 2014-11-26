@@ -1,9 +1,12 @@
 package net.gini.android.authorization;
 
+import android.net.Uri;
+
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 
 import net.gini.android.RequestTaskCompletionSource;
+import net.gini.android.authorization.requests.BearerJsonObjectRequest;
 import net.gini.android.authorization.requests.TokenRequest;
 import net.gini.android.requests.BearerLocationRequest;
 
@@ -13,6 +16,9 @@ import org.json.JSONObject;
 import java.util.HashMap;
 
 import bolts.Task;
+
+import static com.android.volley.Request.Method.GET;
+import static com.android.volley.Request.Method.POST;
 
 
 /**
@@ -87,20 +93,31 @@ public class UserCenterAPICommunicator {
      *                                  is a user information.
      * @throws JSONException            If the user credentials can't be JSON serialized.
      */
-    public Task<String> createUser(final UserCredentials userCredentials, Session userCenterApiSession)
+    public Task<Uri> createUser(final UserCredentials userCredentials, Session userCenterApiSession)
             throws JSONException {
 
-        final RequestTaskCompletionSource<String> completionSource = RequestTaskCompletionSource.newCompletionSource();
+        final RequestTaskCompletionSource<Uri> completionSource = RequestTaskCompletionSource.newCompletionSource();
         final String url = mBaseUrl + "api/users";
         final JSONObject data = new JSONObject(){{
             put("email", userCredentials.getUsername());
             put("password", userCredentials.getPassword());
         }};
         BearerLocationRequest request =
-                new BearerLocationRequest(Request.Method.POST, url, data, userCenterApiSession, completionSource,
+                new BearerLocationRequest(POST, url, data, userCenterApiSession, completionSource,
                                           completionSource);
         mRequestQueue.add(request);
 
+        return completionSource.getTask();
+    }
+
+    public Task<JSONObject> getUserInfo(Uri userUri, Session userCenterApiSession) {
+        final RequestTaskCompletionSource<JSONObject> completionSource =
+                RequestTaskCompletionSource.newCompletionSource();
+        final BearerJsonObjectRequest request = new BearerJsonObjectRequest(GET, userUri.toString(), null,
+                                                                            userCenterApiSession, completionSource,
+                                                                            completionSource);
+
+        mRequestQueue.add(request);
         return completionSource.getTask();
     }
 }

@@ -3,6 +3,7 @@ package net.gini.android;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.test.InstrumentationTestCase;
 
 import net.gini.android.authorization.Session;
@@ -126,10 +127,12 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
     }
 
     public void testThatCreateDocumentResolvesToDocument() throws IOException, JSONException, InterruptedException {
+        final Uri createdDocumentUri = Uri.parse("https://api.gini.net/documents/1234");
         when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class), any(String.class), any(String.class),
                                              any(Session.class)))
-                .thenReturn(Task.forResult("https://api.gini.net/documents/1234"));
-        when(mApiCommunicator.getDocument(eq("1234"), any(Session.class))).thenReturn(createDocumentJSONTask("1234"));
+                .thenReturn(Task.forResult(createdDocumentUri));
+        when(mApiCommunicator.getDocument(eq(createdDocumentUri), any(Session.class))).thenReturn(
+                createDocumentJSONTask("1234"));
         Bitmap bitmap = createBitmap();
 
         Task<Document> documentTask = mDocumentTaskManager.createDocument(bitmap, "foobar.jpg", "invoice", 95);
@@ -141,10 +144,12 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
     public void testThatCreateDocumentsSubmitsTheFileNameAndDocumentType()
             throws IOException, JSONException, InterruptedException {
+        final Uri createdDocumentUri = Uri.parse("https://api.gini.net/documents/1234");
         when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class), any(String.class), any(String.class),
                                              any(Session.class)))
-                .thenReturn(Task.forResult("https://api.gini.net/documents/1234"));
-        when(mApiCommunicator.getDocument(eq("1234"), any(Session.class))).thenReturn(createDocumentJSONTask("1234"));
+                .thenReturn(Task.forResult(Uri.parse("https://api.gini.net/documents/1234")));
+        when(mApiCommunicator.getDocument(eq(createdDocumentUri), any(Session.class))).thenReturn(
+                createDocumentJSONTask("1234"));
 
         Bitmap bitmap = createBitmap();
         mDocumentTaskManager.createDocument(bitmap, "foobar.jpg", "invoice", 90).waitForCompletion();
@@ -198,9 +203,17 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         assertNotNull(extractionsTask.getResult());
     }
 
+    @SuppressWarnings("ConstantConditions")
     public void testGetDocumentThrowsWithNullArgument() {
+        final String documentId = null;
         try {
-            mDocumentTaskManager.getDocument(null);
+            mDocumentTaskManager.getDocument(documentId);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {}
+
+        final Uri documentUri = null;
+        try {
+            mDocumentTaskManager.getDocument(documentUri);
             fail("Exception not thrown");
         } catch (NullPointerException ignored) {}
     }
