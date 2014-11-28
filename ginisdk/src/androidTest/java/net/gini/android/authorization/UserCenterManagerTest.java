@@ -1,6 +1,7 @@
 package net.gini.android.authorization;
 
 
+import android.net.Uri;
 import android.test.InstrumentationTestCase;
 
 import org.json.JSONException;
@@ -111,11 +112,17 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
     }
 
     public void testCreateUserShouldResolveToUser() throws JSONException, InterruptedException {
+        final Uri createdUserUri = Uri.parse("https://user.gini.net/api/users/88a28076-18e8-4275-b39c-eaacc240d406");
         when(mMockUserCenterAPICommunicator.loginClient())
                 .thenReturn(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6"));
         UserCredentials userCredentials = new UserCredentials("foobar@example.com", "1234");
         when(mMockUserCenterAPICommunicator.createUser(eq(userCredentials), any(Session.class)))
-                .thenReturn(createLoginUserResponse("foobar@example.com"));
+                .thenReturn(Task.forResult(createdUserUri));
+        final JSONObject userInfo = new JSONObject();
+        userInfo.put("id", "88a28076-18e8-4275-b39c-eaacc240d406");
+        userInfo.put("email", "foobar@example.com");
+        when(mMockUserCenterAPICommunicator.getUserInfo(eq(createdUserUri), any(Session.class)))
+                .thenReturn(Task.forResult(userInfo));
 
         Task<User> creationTask = mUserCenterManager.createUser(userCredentials);
         creationTask.waitForCompletion();

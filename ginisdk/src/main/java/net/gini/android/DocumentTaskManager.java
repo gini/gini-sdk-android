@@ -1,6 +1,7 @@
 package net.gini.android;
 
 import android.graphics.Bitmap;
+import android.net.Uri;
 
 import net.gini.android.authorization.Session;
 import net.gini.android.authorization.SessionManager;
@@ -56,6 +57,17 @@ public class DocumentTaskManager {
     }
 
     /**
+     * A Continuation that uses the JSON response from the Gini API and returns a new Document instance from the JSON.
+     */
+    private static final Continuation<JSONObject, Document> DOCUMENT_FROM_RESPONSE =
+            new Continuation<JSONObject, Document>() {
+                @Override
+                public Document then(Task<JSONObject> task) throws Exception {
+                    return Document.fromApiResponse(task.getResult());
+                }
+            };
+
+    /**
      * Uploads the given photo of a document and creates a new Gini document.
      *
      * @param document          A Bitmap representing the image
@@ -68,9 +80,9 @@ public class DocumentTaskManager {
      */
     public Task<Document> createDocument(final Bitmap document, @Nullable final String filename,
                                          @Nullable final String documentType, final int compressionRate) {
-        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
             @Override
-            public Task<JSONObject> then(Task<Session> sessionTask) throws Exception {
+            public Task<Uri> then(Task<Session> sessionTask) throws Exception {
                 final Session session = sessionTask.getResult();
                 final ByteArrayOutputStream documentOutputStream = new ByteArrayOutputStream();
                 document.compress(JPEG, compressionRate, documentOutputStream);
@@ -78,10 +90,10 @@ public class DocumentTaskManager {
                 return mApiCommunicator
                         .uploadDocument(uploadData, MediaTypes.IMAGE_JPEG, filename, documentType, session);
             }
-        }).onSuccess(new Continuation<JSONObject, Document>() {
+        }).onSuccessTask(new Continuation<Uri, Task<Document>>() {
             @Override
-            public Document then(Task<JSONObject> uploadTask) throws Exception {
-                return Document.fromApiResponse(uploadTask.getResult());
+            public Task<Document> then(Task<Uri> uploadTask) throws Exception {
+                return getDocument(uploadTask.getResult());
             }
         });
     }
@@ -153,12 +165,30 @@ public class DocumentTaskManager {
                         return mApiCommunicator.getDocument(documentId, session);
                     }
                 })
-                .onSuccess(new Continuation<JSONObject, Document>() {
+                .onSuccess(DOCUMENT_FROM_RESPONSE);
+    }
+
+    /**
+     * Get the document with the given unique identifier.
+     *
+     * <b>Please note that this method may use a slightly corrected URI from which it gets the document (e.g. if the
+     * URI's host does not conform to the base URL of the Gini API). Therefore it is not possibly to use this method to
+     * get a document from an arbitrary URI.</b>
+     *
+     * @param documentUri       The URI of the document.
+     * @return                  A document instance representing all the document's metadata.
+     */
+    public Task<Document> getDocument(final Uri documentUri) {
+        checkNotNull(documentUri);
+        return mSessionManager.getSession()
+                .onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
                     @Override
-                    public Document then(Task<JSONObject> task) throws Exception {
-                        return Document.fromApiResponse(task.getResult());
+                    public Task<JSONObject> then(Task<Session> sessionTask) throws Exception {
+                        final Session session = sessionTask.getResult();
+                        return mApiCommunicator.getDocument(documentUri, session);
                     }
-                });
+                })
+                .onSuccess(DOCUMENT_FROM_RESPONSE);
     }
 
     /**

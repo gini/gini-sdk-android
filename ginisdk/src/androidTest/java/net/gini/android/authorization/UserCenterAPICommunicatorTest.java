@@ -1,25 +1,29 @@
 package net.gini.android.authorization;
 
 import android.os.SystemClock;
-import android.test.AndroidTestCase;
+import android.test.InstrumentationTestCase;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.NoCache;
 
-import net.gini.android.helpers.MockNetwork;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+
+import static org.mockito.Mockito.verify;
 
 
-public class UserCenterAPICommunicatorTest extends AndroidTestCase {
+public class UserCenterAPICommunicatorTest extends InstrumentationTestCase {
     private UserCenterAPICommunicator apiManager;
-    private MockNetwork network;
+    private RequestQueue mRequestQueue;
 
     @Override
     public void setUp() {
-        network = new MockNetwork();
-        RequestQueue requestQueue = new RequestQueue(new NoCache(), network);
-        requestQueue.start();
-        apiManager = new UserCenterAPICommunicator(requestQueue, "https://user.gini.net/", "foobar", "1234");
+        // https://code.google.com/p/dexmaker/issues/detail?id=2
+        System.setProperty("dexmaker.dexcache", getInstrumentation().getTargetContext().getCacheDir().getPath());
+
+        mRequestQueue = Mockito.mock(RequestQueue.class);
+        apiManager = new UserCenterAPICommunicator(mRequestQueue, "https://user.gini.net/", "foobar", "1234");
     }
 
     /**
@@ -37,9 +41,12 @@ public class UserCenterAPICommunicatorTest extends AndroidTestCase {
 
     public void testLoginClientRequestHasCorrectUrl() {
         apiManager.loginClient();
-        waitForRequests();
 
-        assertEquals("https://user.gini.net/oauth/token?grant_type=client_credentials", network.mLastRequest.getUrl());
+        final ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("https://user.gini.net/oauth/token?grant_type=client_credentials",
+                     request.getUrl());
     }
 
 
@@ -50,9 +57,20 @@ public class UserCenterAPICommunicatorTest extends AndroidTestCase {
     public void testLoginUserRequestHasCorrectUrl() {
         UserCredentials userCredentials = new UserCredentials("foobar", "1234");
         apiManager.loginUser(userCredentials);
-        waitForRequests();
 
-        assertEquals("https://user.gini.net/oauth/token?grant_type=password", network.mLastRequest.getUrl());
+        final ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("https://user.gini.net/oauth/token?grant_type=password", request.getUrl());
+    }
+
+    public void testLoginClientHasCorrectData() throws AuthFailureError {
+        apiManager.loginClient();
+
+        final ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("Basic Zm9vYmFyOjEyMzQ=", request.getHeaders().get("Authorization"));
     }
 
     public void testLoginUserRequestHasCorrectData() throws AuthFailureError {
@@ -60,6 +78,10 @@ public class UserCenterAPICommunicatorTest extends AndroidTestCase {
         apiManager.loginUser(userCredentials);
         waitForRequests();
 
-        assertEquals("password=1234&username=foobar", new String(network.mLastRequest.getBody()));
+        final ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        // TODO: Remove all the flakiness.
+        assertEquals("username=foobar&password=1234", new String(request.getBody()));
     }
 }
