@@ -311,6 +311,24 @@ public class DocumentTaskManager {
     }
 
     /**
+     * Gets the layout of a document. The layout of the document describes the textual content of a document with
+     * positional information, based on the processed document.
+     *
+     * @param document      The document for which the layouts is requested.
+     * @return              A task which will resolve to a string containing the layout xml.
+     */
+    public Task<JSONObject> getLayout(final Document document) {
+        final String documentId = document.getId();
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
+            @Override
+            public Task<JSONObject> then(Task<Session> task) throws Exception {
+                final Session session = task.getResult();
+                return mApiCommunicator.getLayoutForDocument(documentId, session);
+            }
+        });
+    }
+
+    /**
      * Helper method which takes the JSON response of the Gini API as input and returns a mapping where the key is the
      * name of the candidates list (e.g. "amounts" or "dates") and the value is a list of extraction instances.
      *

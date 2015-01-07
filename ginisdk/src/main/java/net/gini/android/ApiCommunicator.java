@@ -87,7 +87,7 @@ public class ApiCommunicator {
 
     public Task<JSONObject> getExtractions(final String documentId, final Session session) {
         final String url = mBaseUri.buildUpon().path(String.format("documents/%s/extractions",
-                checkNotNull(documentId))).toString();
+                                                                   checkNotNull(documentId))).toString();
         final RequestTaskCompletionSource<JSONObject> completionSource =
                 RequestTaskCompletionSource.newCompletionSource();
         final BearerJsonObjectRequest request =
@@ -184,6 +184,17 @@ public class ApiCommunicator {
         };
         mRequestQueue.add(imageRequest);
 
+        return completionSource.getTask();
+    }
+
+    public Task<JSONObject> getLayoutForDocument(final String documentId, final Session session) {
+        final String url =
+                mBaseUri.buildUpon().path(String.format("/documents/%s/layout", checkNotNull(documentId))).toString();
+        final RequestTaskCompletionSource<JSONObject> completionSource =
+                RequestTaskCompletionSource.newCompletionSource();
+        final BearerJsonObjectRequest layoutRequest =
+                new BearerJsonObjectRequest(GET, url, null, checkNotNull(session), completionSource, completionSource);
+        mRequestQueue.add(layoutRequest);
         return completionSource.getTask();
     }
 
