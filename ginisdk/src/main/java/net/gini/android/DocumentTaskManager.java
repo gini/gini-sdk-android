@@ -295,7 +295,7 @@ public class DocumentTaskManager {
     public Task<String> reportDocument(final Document document, final @Nullable String summary,
                                        final @Nullable String description) {
         final String documentId = document.getId();
-        return mSessionManager.getSession().continueWithTask(new Continuation<Session, Task<JSONObject>>() {
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
             @Override
             public Task<JSONObject> then(Task<Session> task) throws Exception {
                 final Session session = task.getResult();
