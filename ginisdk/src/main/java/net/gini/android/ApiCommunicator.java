@@ -76,13 +76,7 @@ public class ApiCommunicator {
 
     public Task<JSONObject> getDocument(final Uri documentUri, final Session session) {
         final String url = uriRelativeToBaseUri(documentUri).toString();
-        final RequestTaskCompletionSource<JSONObject> completionSource =
-                RequestTaskCompletionSource.newCompletionSource();
-        final BearerJsonObjectRequest request =
-                new BearerJsonObjectRequest(GET, url, null, checkNotNull(session), completionSource, completionSource);
-        mRequestQueue.add(request);
-
-        return completionSource.getTask();
+        return doRequestWithJsonResponse(url, GET, session);
     }
 
     public Task<JSONObject> getExtractions(final String documentId, final Session session) {
@@ -141,13 +135,7 @@ public class ApiCommunicator {
         requestParams.put("description", description);
         final String url = mBaseUri.buildUpon().path("documents/" + checkNotNull(documentId) + "/errorreport")
                 .encodedQuery(mapToUrlEncodedString(requestParams)).toString();
-        final RequestTaskCompletionSource<JSONObject> completionSource =
-                RequestTaskCompletionSource.newCompletionSource();
-        final BearerJsonObjectRequest request =
-                new BearerJsonObjectRequest(POST, url, null, checkNotNull(session), completionSource, completionSource);
-        mRequestQueue.add(request);
-
-        return completionSource.getTask();
+        return doRequestWithJsonResponse(url, POST, session);
     }
 
     public Task<JSONObject> sendFeedback(final String documentId, final JSONObject extractions, final Session session)
@@ -190,20 +178,39 @@ public class ApiCommunicator {
     public Task<JSONObject> getLayoutForDocument(final String documentId, final Session session) {
         final String url =
                 mBaseUri.buildUpon().path(String.format("/documents/%s/layout", checkNotNull(documentId))).toString();
-        final RequestTaskCompletionSource<JSONObject> completionSource =
-                RequestTaskCompletionSource.newCompletionSource();
-        final BearerJsonObjectRequest layoutRequest =
-                new BearerJsonObjectRequest(GET, url, null, checkNotNull(session), completionSource, completionSource);
-        mRequestQueue.add(layoutRequest);
-        return completionSource.getTask();
+        return doRequestWithJsonResponse(url, GET, session);
     }
 
     public Task<JSONObject> getDocumentList(final Session session) {
         final String url = mBaseUri.buildUpon().path("/documents").toString();
+        return doRequestWithJsonResponse(url, GET, session);
+    }
+
+    public Task<JSONObject> searchDocuments(final String searchTerm, @Nullable final String docType, final int offset,
+                                            final int limit, final Session session) {
+        final Uri.Builder url = mBaseUri.buildUpon().path("/search").appendQueryParameter("q", searchTerm)
+                .appendQueryParameter("offset", Integer.toString(offset))
+                .appendQueryParameter("limit", Integer.toString(limit));
+        if (docType != null) {
+            url.appendQueryParameter("docType", docType);
+        }
+        return doRequestWithJsonResponse(url.toString(), GET, checkNotNull(session));
+    }
+
+    /**
+     * Helper method to do a request that returns JSON data. The request is wrapped in a Task that will resolve to a
+     * JSONObject.
+     *
+     * @param url       The full URL of the request.
+     * @param method    The HTTP method of the request.
+     * @param session   A valid session for the Gini API.
+     * @return          A Task which will resolve to a JSONObject representing the response of the Gini API.
+     */
+    private Task<JSONObject> doRequestWithJsonResponse(final String url, int method, final Session session) {
         final RequestTaskCompletionSource<JSONObject> completionSource =
                 RequestTaskCompletionSource.newCompletionSource();
         final BearerJsonObjectRequest documentsRequest =
-                new BearerJsonObjectRequest(GET, url, null, checkNotNull(session), completionSource, completionSource);
+                new BearerJsonObjectRequest(method, url, null, checkNotNull(session), completionSource, completionSource);
         mRequestQueue.add(documentsRequest);
         return completionSource.getTask();
     }
