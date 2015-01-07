@@ -638,8 +638,8 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
-        assertEquals(request.getUrl(), "https://api.gini.net/documents/1234-4321/layout");
-        assertEquals(request.getMethod(), GET);
+        assertEquals("https://api.gini.net/documents/1234-4321/layout", request.getUrl());
+        assertEquals(GET, request.getMethod());
     }
 
     public void testGetLayoutHasCorrectAcceptHeader() throws AuthFailureError {
@@ -658,6 +658,41 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         final Session session = createSession("9999-8888-7777");
 
         mApiCommunicator.getLayoutForDocument("1234-4321", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("BEARER 9999-8888-7777", request.getHeaders().get("Authorization"));
+    }
+
+    public void testGetDocumentListLayoutHasCorrectUrl() {
+        final Session session = createSession();
+
+        mApiCommunicator.getDocumentList(session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("https://api.gini.net/documents", request.getUrl());
+        assertEquals(GET, request.getMethod());
+    }
+
+    public void testGetDocumentListHasCorrectAcceptHeader() throws AuthFailureError {
+        final Session session = createSession();
+
+        mApiCommunicator.getDocumentList(session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        final String acceptHeader = (String) request.getHeaders().get("Accept");
+        assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V1));
+    }
+
+    public void testGetDocumentListHasCorrectAuthorizationHeader() throws AuthFailureError {
+        final Session session = createSession("9999-8888-7777");
+
+        mApiCommunicator.getDocumentList(session);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());

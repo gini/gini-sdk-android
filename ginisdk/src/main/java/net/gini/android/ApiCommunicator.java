@@ -198,6 +198,16 @@ public class ApiCommunicator {
         return completionSource.getTask();
     }
 
+    public Task<JSONObject> getDocumentList(final Session session) {
+        final String url = mBaseUri.buildUpon().path("/documents").toString();
+        final RequestTaskCompletionSource<JSONObject> completionSource =
+                RequestTaskCompletionSource.newCompletionSource();
+        final BearerJsonObjectRequest documentsRequest =
+                new BearerJsonObjectRequest(GET, url, null, checkNotNull(session), completionSource, completionSource);
+        mRequestQueue.add(documentsRequest);
+        return completionSource.getTask();
+    }
+
     private Uri uriRelativeToBaseUri(Uri uri) {
 
         return mBaseUri.buildUpon().path(uri.getPath()).query(uri.getQuery()).build();
