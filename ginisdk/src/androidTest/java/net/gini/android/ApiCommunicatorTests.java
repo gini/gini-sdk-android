@@ -629,4 +629,121 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         final Request request = requestCaptor.getValue();
         assertEquals(MediaTypes.IMAGE_JPEG, request.getHeaders().get("Accept"));
     }
+
+    public void testGetLayoutHasCorrectUrl() {
+        final Session session = createSession();
+
+        mApiCommunicator.getLayoutForDocument("1234-4321", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("https://api.gini.net/documents/1234-4321/layout", request.getUrl());
+        assertEquals(GET, request.getMethod());
+    }
+
+    public void testGetLayoutHasCorrectAcceptHeader() throws AuthFailureError {
+        final Session session = createSession();
+
+        mApiCommunicator.getLayoutForDocument("1234-4321", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        final String acceptHeader = (String) request.getHeaders().get("Accept");
+        assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V1));
+    }
+
+    public void testGetLayoutHasCorrectAuthorizationHeader() throws AuthFailureError {
+        final Session session = createSession("9999-8888-7777");
+
+        mApiCommunicator.getLayoutForDocument("1234-4321", session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("BEARER 9999-8888-7777", request.getHeaders().get("Authorization"));
+    }
+
+    public void testGetDocumentListHasCorrectUrl() {
+        final Session session = createSession();
+
+        mApiCommunicator.getDocumentList(0, 23, session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("https://api.gini.net/documents?offset=0&limit=23", request.getUrl());
+        assertEquals(GET, request.getMethod());
+    }
+
+    public void testGetDocumentListHasCorrectAcceptHeader() throws AuthFailureError {
+        final Session session = createSession();
+
+        mApiCommunicator.getDocumentList(0, 20, session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        final String acceptHeader = (String) request.getHeaders().get("Accept");
+        assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V1));
+    }
+
+    public void testGetDocumentListHasCorrectAuthorizationHeader() throws AuthFailureError {
+        final Session session = createSession("9999-8888-7777");
+
+        mApiCommunicator.getDocumentList(0, 20, session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("BEARER 9999-8888-7777", request.getHeaders().get("Authorization"));
+    }
+
+    public void testSearchDocumentsHasCorrectUrl() {
+        final Session session = createSession();
+
+        mApiCommunicator.searchDocuments("foo bär", null, 0, 20, session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("https://api.gini.net/search?q=foo%20b%C3%A4r&offset=0&limit=20", request.getUrl());
+        assertEquals(GET, request.getMethod());
+    }
+
+    public void testSearchDocumentsWithDoctypeHasCorrectUrl() {
+        final Session session = createSession();
+
+        mApiCommunicator.searchDocuments("foo bär", "invoice", 0, 20, session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("https://api.gini.net/search?q=foo%20b%C3%A4r&offset=0&limit=20&docType=invoice", request.getUrl());
+        assertEquals(GET, request.getMethod());
+    }
+
+    public void testSearchDocumentsHasCorrectAcceptHeader() throws AuthFailureError {
+        final Session session = createSession();
+
+        mApiCommunicator.searchDocuments("foobar", null, 0, 20, session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        final String acceptHeader = (String) request.getHeaders().get("Accept");
+        assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V1));
+    }
+
+    public void testSearchDocumentsHasCorrectAuthorizationHeader() throws AuthFailureError {
+        final Session session = createSession("9999-8888-7777");
+
+        mApiCommunicator.searchDocuments("foobar", null, 0, 20, session);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+        assertEquals("BEARER 9999-8888-7777", request.getHeaders().get("Authorization"));
+    }
 }

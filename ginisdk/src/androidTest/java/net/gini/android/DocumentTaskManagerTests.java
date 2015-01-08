@@ -59,44 +59,32 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         return BitmapFactory.decodeStream(inputStream);
     }
 
-    private Task<JSONObject> createDocumentJSONTask(final String documentId) throws IOException, JSONException {
-        InputStream inputStream = getInstrumentation().getContext().getResources().getAssets().open("document.json");
+    private JSONObject readJSONFile(final String filename) throws IOException, JSONException{
+        InputStream inputStream = getInstrumentation().getContext().getResources().getAssets().open(filename);
         int size = inputStream.available();
         byte[] buffer = new byte[size];
         @SuppressWarnings("unused")
         int read = inputStream.read(buffer);
         inputStream.close();
+        return new JSONObject(new String(buffer));
+    }
 
-        final JSONObject responseData = new JSONObject(new String(buffer));
+    private Task<JSONObject> createDocumentJSONTask(final String documentId) throws IOException, JSONException {
+        final JSONObject responseData = readJSONFile("document.json");
         responseData.put("id", documentId);
         return Task.forResult(responseData);
     }
 
     private Task<JSONObject> createDocumentJSONTask(final String documentId, final String processingState)
             throws IOException, JSONException {
-        InputStream inputStream = getInstrumentation().getContext().getResources().getAssets().open("document.json");
-        int size = inputStream.available();
-        byte[] buffer = new byte[size];
-        @SuppressWarnings("unused")
-        int read = inputStream.read(buffer);
-        inputStream.close();
-
-        final JSONObject responseData = new JSONObject(new String(buffer));
+        final JSONObject responseData = readJSONFile("document.json");
         responseData.put("id", documentId);
         responseData.put("progress", processingState);
         return Task.forResult(responseData);
     }
 
     private Task<JSONObject> createExtractionsJSONTask() throws IOException, JSONException {
-        InputStream inputStream = getInstrumentation().getContext().getResources().getAssets().open("extractions.json");
-        int size = inputStream.available();
-        byte[] buffer = new byte[size];
-        @SuppressWarnings("unused")
-        int read = inputStream.read(buffer);
-        inputStream.close();
-
-        final JSONObject responseData = new JSONObject(new String(buffer));
-        return Task.forResult(responseData);
+        return Task.forResult(readJSONFile("extractions.json"));
     }
 
     private Task<JSONObject> createErrorReportJSONTask(final String errorId) throws JSONException {
@@ -104,6 +92,10 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         responseData.put("errorId", errorId);
         responseData.put("message", "error was reported, please refer to the given error id");
         return Task.forResult(responseData);
+    }
+
+    private Task<JSONObject> createLayoutJSONTask() throws IOException, JSONException {
+        return Task.forResult(readJSONFile("layout.json"));
     }
 
     public void testThatConstructorChecksForNull() {
@@ -387,5 +379,30 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         reportTask.waitForCompletion();
 
         assertEquals("4444-3333", reportTask.getResult());
+    }
+
+    public void testGetLayoutThrowsWithNullArgument() {
+        try {
+            mDocumentTaskManager.getLayout(null);
+            fail("Exception not thrown");
+        } catch (NullPointerException ignored) {}
+    }
+
+    public void testGetLayoutReturnsTask() {
+        final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
+                                               Document.SourceClassification.NATIVE);
+
+        assertNotNull(mDocumentTaskManager.getLayout(document));
+    }
+
+    public void testGetLayoutResolvesToJSON() throws IOException, JSONException {
+        when(mApiCommunicator.getLayoutForDocument(eq("1234"), any(Session.class))).thenReturn(createLayoutJSONTask());
+        final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
+                                               Document.SourceClassification.NATIVE);
+
+        final Task<JSONObject> layoutTask = mDocumentTaskManager.getLayout(document);
+        final JSONObject responseData = layoutTask.getResult();
+
+        assertNotNull(responseData);
     }
 }
