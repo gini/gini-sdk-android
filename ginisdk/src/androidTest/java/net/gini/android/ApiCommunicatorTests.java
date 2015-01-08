@@ -668,19 +668,19 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
     public void testGetDocumentListHasCorrectUrl() {
         final Session session = createSession();
 
-        mApiCommunicator.getDocumentList(session);
+        mApiCommunicator.getDocumentList(0, 23, session);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
-        assertEquals("https://api.gini.net/documents", request.getUrl());
+        assertEquals("https://api.gini.net/documents?offset=0&limit=23", request.getUrl());
         assertEquals(GET, request.getMethod());
     }
 
     public void testGetDocumentListHasCorrectAcceptHeader() throws AuthFailureError {
         final Session session = createSession();
 
-        mApiCommunicator.getDocumentList(session);
+        mApiCommunicator.getDocumentList(0, 20, session);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
@@ -692,7 +692,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
     public void testGetDocumentListHasCorrectAuthorizationHeader() throws AuthFailureError {
         final Session session = createSession("9999-8888-7777");
 
-        mApiCommunicator.getDocumentList(session);
+        mApiCommunicator.getDocumentList(0, 20, session);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());

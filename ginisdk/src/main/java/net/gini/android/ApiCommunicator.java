@@ -181,8 +181,10 @@ public class ApiCommunicator {
         return doRequestWithJsonResponse(url, GET, session);
     }
 
-    public Task<JSONObject> getDocumentList(final Session session) {
-        final String url = mBaseUri.buildUpon().path("/documents").toString();
+    public Task<JSONObject> getDocumentList(final int offset, final int limit, final Session session) {
+        final String url = mBaseUri.buildUpon().path("/documents")
+                .appendQueryParameter("offset", Integer.toString(offset))
+                .appendQueryParameter("limit", Integer.toString(limit)).toString();
         return doRequestWithJsonResponse(url, GET, session);
     }
 
