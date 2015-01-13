@@ -33,6 +33,10 @@ dependencies {
     androidTestCompile "com.google.dexmaker:dexmaker-mockito:1.1"
 }
 
+def fullDocumentationDir(variant) {
+    return buildDir.getPath() + "/docs-$variant.name-${android.defaultConfig.versionName}/";
+}
+
 android.libraryVariants.all { variant ->
     task("jar${variant.name.capitalize()}", type: Jar) {
         dependsOn variant.javaCompile
@@ -45,12 +49,12 @@ android.libraryVariants.all { variant ->
     task("generate${variant.name.capitalize()}Javadoc", type: Javadoc) {
         description "Generates Javadoc for $variant.name."
         source = variant.javaCompile.source
-        destinationDir = file(buildDir.getPath() + "/docs-$variant.name/docs/")
+        destinationDir = file(fullDocumentationDir(variant))
         ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
         classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
         exclude '**/BuildConfig.java'
         exclude '**/R.java'
-	options.encoding = 'UTF-8'
+	    options.encoding = 'UTF-8'
     }
 }
 
@@ -61,14 +65,21 @@ android.libraryVariants.all { variant ->
         dependsOn "generate${variant.name.capitalize()}Javadoc"
 
         baseName "ginisdk"
-        appendix variant.name
-        from files(buildDir, buildDir.getPath() + '/libs', buildDir.getPath() + "/docs-$variant.name/")
-        include 'docs/**/*.html'
-        include "ginisdk-${variant.name}.jar"
+        version android.defaultConfig.versionName
+        classifier variant.name
+        from files(buildDir, buildDir.getPath() + '/libs')
+        include("ginisdk-${variant.name}.jar")
         include 'LICENSE'
+        rename("ginisdk-${variant.name}.jar", "ginisdk-${android.defaultConfig.versionName}.jar");
+
+        from (fullDocumentationDir(variant)) {
+            into "doc-" + android.defaultConfig.versionName;
+            include "**/*.html"
+            include "**/*.css"
+            include "**/*.js"
+        }
 
         from rootDir
         include 'LICENSE'
     }
-
 }
