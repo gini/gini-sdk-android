@@ -134,13 +134,18 @@ public class DocumentTaskManager {
                         while (extractionsNameIterator.hasNext()) {
                             final String extractionName = extractionsNameIterator.next();
                             final JSONObject extractionData = extractionsData.getJSONObject(extractionName);
-                            // TODO discuss with Andy.
                             final Extraction extraction = extractionFromApiResponse(extractionData);
-                            final String candidatesName = extractionData.getString("candidates");
+                            List<Extraction> candidatesForExtraction = new ArrayList<Extraction>();
+                            if (extractionData.has("candidates")) {
+                                final String candidatesName = extractionData.getString("candidates");
+                                if (candidates.containsKey(candidatesName)) {
+                                    candidatesForExtraction = candidates.get(candidatesName);
+                                }
+                            }
                             final SpecificExtraction specificExtraction =
                                     new SpecificExtraction(extractionName, extraction.getValue(),
                                                            extraction.getEntity(), extraction.getBox(),
-                                                           candidates.get(candidatesName));
+                                                           candidatesForExtraction);
                             extractionsByName.put(extractionName, specificExtraction);
                         }
 
