@@ -11,6 +11,17 @@
             "entity": "amount",
             "value": "24.99:EUR",
             "candidates": "amounts"
+        },
+        "recipient": {
+            "entity": "recipient",
+            "value": "Foo Bar Beispielstraße 23 80331 München",
+            "box": {
+                "page": 1,
+                "left": 60.0,
+                "top": 169.0,
+                "width": 67.0,
+                "height": 34.0
+            }
         }
       },
       "candidates": {
