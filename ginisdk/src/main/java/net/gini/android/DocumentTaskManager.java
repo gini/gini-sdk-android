@@ -21,9 +21,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import bolts.Continuation;
 import bolts.Task;
@@ -37,8 +34,8 @@ import static net.gini.android.Utils.checkNotNull;
  */
 public class DocumentTaskManager {
 
-    /** The time in seconds between HTTP requests when a document is polled. */
-    public static long POLLING_INTERVAL = 1;
+    /** The time in milliseconds between HTTP requests when a document is polled. */
+    public static long POLLING_INTERVAL = 1000;
 
     /** The default compression rate which is used for JPEG compression in per cent. */
     public final static int DEFAULT_COMPRESSION = 90;
@@ -47,9 +44,6 @@ public class DocumentTaskManager {
     private final ApiCommunicator mApiCommunicator;
     /** The SessionManager instance which is used to create the documents. */
     private final SessionManager mSessionManager;
-
-    /** The worker which is used to schedule the polling of documents. */
-    private static final ScheduledExecutorService mWorker = Executors.newSingleThreadScheduledExecutor();
 
     public DocumentTaskManager(final ApiCommunicator apiCommunicator, final SessionManager sessionManager) {
         mApiCommunicator = checkNotNull(apiCommunicator);
@@ -152,8 +146,8 @@ public class DocumentTaskManager {
     /**
      * Get the document with the given unique identifier.
      *
-     * @param documentId        The unique identifier of the document.
-     * @return                  A document instance representing all the document's metadata.
+     * @param documentId The unique identifier of the document.
+     * @return A document instance representing all the document's metadata.
      */
     public Task<Document> getDocument(final String documentId) {
         checkNotNull(documentId);
@@ -199,41 +193,28 @@ public class DocumentTaskManager {
      * <b>This method returns a Task which will resolve to a new document instance. It does not update the given
      * document instance.</b>
      *
-     * @param document          The document which will be polled.
+     * @param document The document which will be polled.
      */
     public Task<Document> pollDocument(final Document document) {
         if (document.getState() != Document.ProcessingState.PENDING) {
             return Task.forResult(document);
         }
         final String documentId = document.getId();
-        final Task<Document>.TaskCompletionSource completionSource = Task.create();
-        final Runnable completionRunner = new Runnable() {
+        return getDocument(documentId).continueWithTask(new Continuation<Document, Task<Document>>() {
             @Override
-            public void run() {
-                final Runnable that = this;
-                getDocument(documentId).continueWith(new Continuation<Document, Object>() {
-                    @Override
-                    public Object then(Task<Document> task) throws Exception {
-                        if (task.isFaulted()) {
-                            completionSource.setError(task.getError());
-                        } else if (task.isCancelled()) {
-                            completionSource.setCancelled();
-                        } else {
-                            Document polledDocument = task.getResult();
-                            if (polledDocument.getState() == Document.ProcessingState.PENDING) {
-                                mWorker.schedule(that, POLLING_INTERVAL, TimeUnit.SECONDS);
-                            } else {
-                                completionSource.setResult(polledDocument);
-                            }
-                        }
-                        return null;
-                    }
-                });
+            public Task<Document> then(Task<Document> task) throws Exception {
+                if (task.isFaulted() || task.isCancelled()
+                    || task.getResult().getState() != Document.ProcessingState.PENDING) {
+                    return task;
+                } else {
+                    // The continuation is executed in a background thread by Bolts, so it does not block the UI
+                    // when we sleep here. Infinite recursions are also prevented by Bolts (the task will then resolve
+                    // to a failure).
+                    Thread.sleep(POLLING_INTERVAL);
+                    return pollDocument(document);
+                }
             }
-        };
-        mWorker.execute(completionRunner);
-
-        return completionSource.getTask();
+        });
     }
 
     /**
