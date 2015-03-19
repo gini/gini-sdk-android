@@ -320,7 +320,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
                         new SpecificExtraction("senderName", "blah", "senderName", null, new ArrayList<Extraction>()));
 
         extractions.get("amountToPay").setValue("23:EUR");
-        mDocumentTaskManager.saveDocumentUpdates(document, extractions);
+        mDocumentTaskManager.saveDocumentUpdates(document, extractions).waitForCompletion();
 
         ArgumentCaptor<JSONObject> dataCaptor = ArgumentCaptor.forClass(JSONObject.class);
         verify(mApiCommunicator).sendFeedback(eq("1234"), dataCaptor.capture(), any(Session.class));
@@ -395,13 +395,15 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         assertNotNull(mDocumentTaskManager.getLayout(document));
     }
 
-    public void testGetLayoutResolvesToJSON() throws IOException, JSONException {
+    public void testGetLayoutResolvesToJSON() throws IOException, JSONException, InterruptedException {
         when(mApiCommunicator.getLayoutForDocument(eq("1234"), any(Session.class))).thenReturn(createLayoutJSONTask());
         final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
                                                Document.SourceClassification.NATIVE);
 
         final Task<JSONObject> layoutTask = mDocumentTaskManager.getLayout(document);
+        layoutTask.waitForCompletion();
         final JSONObject responseData = layoutTask.getResult();
+
 
         assertNotNull(responseData);
     }

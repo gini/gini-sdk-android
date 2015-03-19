@@ -43,14 +43,14 @@ public class UserCenterManager {
                     public Task<Uri> then(Task<Session> sessionTask) throws Exception {
                         return mUserCenterAPICommunicator.createUser(userCredentials, sessionTask.getResult());
                     }
-                })
+                }, Task.BACKGROUND_EXECUTOR)
                 // And then create the user object from the API response.
                 .onSuccessTask(new Continuation<Uri, Task<User>>() {
                     @Override
                     public Task<User> then(Task<Uri> task) throws Exception {
                         return getUser(task.getResult());
                     }
-                });
+                }, Task.BACKGROUND_EXECUTOR);
     }
 
     public Task<User> getUser(final Uri userUri) {
@@ -61,12 +61,12 @@ public class UserCenterManager {
                 final Session userCenterSession = task.getResult();
                 return mUserCenterAPICommunicator.getUserInfo(userUri, userCenterSession);
             }
-        }).onSuccess(new Continuation<JSONObject, User>() {
+        }, Task.BACKGROUND_EXECUTOR).onSuccess(new Continuation<JSONObject, User>() {
             @Override
             public User then(Task<JSONObject> task) throws Exception {
                 return User.fromApiResponse(task.getResult());
             }
-        });
+        }, Task.BACKGROUND_EXECUTOR);
     }
 
 
@@ -84,7 +84,7 @@ public class UserCenterManager {
             public Session then(Task<JSONObject> task) throws Exception {
                 return Session.fromAPIResponse(task.getResult());
             }
-        });
+        }, Task.BACKGROUND_EXECUTOR);
     }
 
     /**
@@ -112,6 +112,6 @@ public class UserCenterManager {
                 }
                 return session;
             }
-        });
+        }, Task.BACKGROUND_EXECUTOR);
     }
 }
