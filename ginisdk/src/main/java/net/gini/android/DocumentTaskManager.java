@@ -84,12 +84,12 @@ public class DocumentTaskManager {
                 return mApiCommunicator
                         .uploadDocument(uploadData, MediaTypes.IMAGE_JPEG, filename, documentType, session);
             }
-        }).onSuccessTask(new Continuation<Uri, Task<Document>>() {
+        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
             @Override
             public Task<Document> then(Task<Uri> uploadTask) throws Exception {
                 return getDocument(uploadTask.getResult());
             }
-        });
+        }, Task.BACKGROUND_EXECUTOR);
     }
 
     /**
@@ -110,7 +110,7 @@ public class DocumentTaskManager {
                         final Session session = sessionTask.getResult();
                         return mApiCommunicator.getExtractions(documentId, session);
                     }
-                })
+                }, Task.BACKGROUND_EXECUTOR)
                 .onSuccess(new Continuation<JSONObject, Map<String, SpecificExtraction>>() {
                     @Override
                     public Map<String, SpecificExtraction> then(Task<JSONObject> task) throws Exception {
@@ -145,7 +145,7 @@ public class DocumentTaskManager {
 
                         return extractionsByName;
                     }
-                });
+                }, Task.BACKGROUND_EXECUTOR);
     }
 
     /**
@@ -163,8 +163,8 @@ public class DocumentTaskManager {
                         final Session session = sessionTask.getResult();
                         return mApiCommunicator.getDocument(documentId, session);
                     }
-                })
-                .onSuccess(DOCUMENT_FROM_RESPONSE);
+                }, Task.BACKGROUND_EXECUTOR)
+                .onSuccess(DOCUMENT_FROM_RESPONSE, Task.BACKGROUND_EXECUTOR);
     }
 
     /**
@@ -186,8 +186,8 @@ public class DocumentTaskManager {
                         final Session session = sessionTask.getResult();
                         return mApiCommunicator.getDocument(documentUri, session);
                     }
-                })
-                .onSuccess(DOCUMENT_FROM_RESPONSE);
+                }, Task.BACKGROUND_EXECUTOR)
+                .onSuccess(DOCUMENT_FROM_RESPONSE, Task.BACKGROUND_EXECUTOR);
     }
 
     /**
@@ -219,7 +219,7 @@ public class DocumentTaskManager {
                     return pollDocument(document);
                 }
             }
-        });
+        }, Task.BACKGROUND_EXECUTOR);
     }
 
     /**
@@ -254,7 +254,7 @@ public class DocumentTaskManager {
                 final Session session = task.getResult();
                 return mApiCommunicator.sendFeedback(documentId, changedExtractions, session);
             }
-        }).onSuccess(new Continuation<JSONObject, Document>() {
+        }, Task.BACKGROUND_EXECUTOR).onSuccess(new Continuation<JSONObject, Document>() {
             @Override
             public Document then(Task<JSONObject> task) throws Exception {
                 for (Map.Entry<String, SpecificExtraction> entry : extractions.entrySet()) {
@@ -262,7 +262,7 @@ public class DocumentTaskManager {
                 }
                 return document;
             }
-        });
+        }, Task.BACKGROUND_EXECUTOR);
     }
 
     /**
@@ -287,13 +287,13 @@ public class DocumentTaskManager {
                 final Session session = task.getResult();
                 return mApiCommunicator.errorReportForDocument(documentId, summary, description, session);
             }
-        }).onSuccess(new Continuation<JSONObject, String>() {
+        }, Task.BACKGROUND_EXECUTOR).onSuccess(new Continuation<JSONObject, String>() {
             @Override
             public String then(Task<JSONObject> task) throws Exception {
                 final JSONObject responseData = task.getResult();
                 return responseData.getString("errorId");
             }
-        });
+        }, Task.BACKGROUND_EXECUTOR);
     }
 
     /**
@@ -311,7 +311,7 @@ public class DocumentTaskManager {
                 final Session session = task.getResult();
                 return mApiCommunicator.getLayoutForDocument(documentId, session);
             }
-        });
+        }, Task.BACKGROUND_EXECUTOR);
     }
 
     /**

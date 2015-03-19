@@ -59,20 +59,24 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
         assertNotNull(mUserCenterManager.loginClient());
     }
 
-    public void testLoginClientResolvesToCorrectSession() throws JSONException {
+    public void testLoginClientResolvesToCorrectSession() throws JSONException, InterruptedException {
         when(mMockUserCenterAPICommunicator.loginClient())
                 .thenReturn(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6"));
 
-        Session session = mUserCenterManager.loginClient().getResult();
+        final Task<Session> sessionTask = mUserCenterManager.loginClient();
+        sessionTask.waitForCompletion();
+        final Session session = sessionTask.getResult();
 
         assertEquals("74c1e7fe-e464-451f-a6eb-8f0998c46ff6", session.getAccessToken());
     }
 
-    public void testGetSessionReusesSession() throws JSONException {
+    public void testGetSessionReusesSession() throws JSONException, InterruptedException {
         // First try which sets the first session.
         when(mMockUserCenterAPICommunicator.loginClient())
                 .thenReturn(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6"));
-        Session firstSession = mUserCenterManager.getUserCenterSession().getResult();
+        final Task<Session> firstSessionTask = mUserCenterManager.getUserCenterSession();
+        firstSessionTask.waitForCompletion();
+        final Session firstSession = firstSessionTask.getResult();
 
         // Second try which should reuse the old session.
         final JSONObject secondResponseData = new JSONObject() {{
@@ -81,7 +85,9 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
             put("expires_in", 3599);
         }};
         when(mMockUserCenterAPICommunicator.loginClient()).thenReturn(Task.forResult(secondResponseData));
-        Session secondSession = mUserCenterManager.getUserCenterSession().getResult();
+        final Task<Session> secondSessionTask = mUserCenterManager.getUserCenterSession();
+        secondSessionTask.waitForCompletion();
+        final Session secondSession = secondSessionTask.getResult();
 
         assertEquals(firstSession, secondSession);
     }
@@ -94,12 +100,14 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
         assertNotNull(mUserCenterManager.loginUser(userCredentials));
     }
 
-    public void testLoginUserShouldReturnCorrectSession() throws JSONException {
+    public void testLoginUserShouldReturnCorrectSession() throws JSONException, InterruptedException {
         UserCredentials userCredentials = new UserCredentials("foobar", "1234");
         when(mMockUserCenterAPICommunicator.loginUser(userCredentials))
                 .thenReturn(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6"));
 
-        Session session = mUserCenterManager.loginUser(userCredentials).getResult();
+        final Task<Session> sessionTask = mUserCenterManager.loginUser(userCredentials);
+        sessionTask.waitForCompletion();
+        final Session session = sessionTask.getResult();
         assertNotNull(session);
         assertEquals("74c1e7fe-e464-451f-a6eb-8f0998c46ff6", session.getAccessToken());
     }
