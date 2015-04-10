@@ -1,6 +1,9 @@
 package net.gini.android.models;
 
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -8,15 +11,15 @@ import java.util.Date;
 
 import static net.gini.android.Utils.checkNotNull;
 
-public class Document {
+public class Document implements Parcelable {
 
     /**
      * The possible processing states of a document.
      */
     public enum ProcessingState {
         /**
-         * Gini is currently processing the document. The document exists, but some resources (e.g. extractions) may not
-         * exist.
+         * Gini is currently processing the document. The document exists, but some resources (e.g.
+         * extractions) may not exist.
          */
         PENDING,
         /**
@@ -42,7 +45,8 @@ public class Document {
     private final Date mCreationDate;
     private final SourceClassification mSourceClassification;
 
-    public Document(final String id, final ProcessingState state, final String filename, final Integer pageCount,
+    public Document(final String id, final ProcessingState state, final String filename,
+                    final Integer pageCount,
                     final Date creationDate, final SourceClassification sourceClassification) {
         mId = checkNotNull(id);
         mState = checkNotNull(state);
@@ -102,13 +106,53 @@ public class Document {
      */
     public static Document fromApiResponse(JSONObject responseData) throws JSONException {
         final String documentId = responseData.getString("id");
-        final ProcessingState processingState = ProcessingState.valueOf(responseData.getString("progress"));
+        final ProcessingState processingState =
+                ProcessingState.valueOf(responseData.getString("progress"));
         final Integer pageCount = responseData.getInt("pageCount");
         final String fileName = responseData.getString("name");
         final Date creationDate = new Date(responseData.getLong("creationDate"));
         final SourceClassification sourceClassification =
                 SourceClassification.valueOf(responseData.getString("sourceClassification"));
 
-        return new Document(documentId, processingState, fileName, pageCount, creationDate, sourceClassification);
+        return new Document(documentId, processingState, fileName, pageCount, creationDate,
+                            sourceClassification);
     }
+
+    private static Document fromParcel(final Parcel in) {
+        final String documentId = in.readString();
+        final ProcessingState processingState = ProcessingState.valueOf(in.readString());
+        final int pageCount = in.readInt();
+        final String fileName = in.readString();
+        final Date creationDate = (Date) in.readSerializable();
+        final SourceClassification sourceClassification = SourceClassification.valueOf(
+                in.readString());
+        return new Document(documentId, processingState, fileName, pageCount, creationDate,
+                            sourceClassification);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(final Parcel dest, final int flags) {
+        dest.writeString(getId());
+        dest.writeString(getState().toString());
+        dest.writeInt(getPageCount());
+        dest.writeString(getFilename());
+        dest.writeSerializable(getCreationDate());
+        dest.writeString(getSourceClassification().toString());
+    }
+
+    public static final Parcelable.Creator<Document> CREATOR = new Parcelable.Creator<Document>() {
+
+        public Document createFromParcel(final Parcel in) {
+            return Document.fromParcel(in);
+        }
+
+        public Document[] newArray(int size) {
+            return new Document[size];
+        }
+    };
 }

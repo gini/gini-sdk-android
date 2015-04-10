@@ -1,10 +1,13 @@
 package net.gini.android.models;
 
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Box {
+public class Box implements Parcelable {
     private final int mPageNumber;
     private final double mLeft;
     private final double mTop;
@@ -48,4 +51,34 @@ public class Box {
         final double height = responseData.getDouble("height");
         return new Box(pageNumber, left, top, width, height);
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(mPageNumber);
+        dest.writeDouble(mLeft);
+        dest.writeDouble(mTop);
+        dest.writeDouble(mWidth);
+        dest.writeDouble(mHeight);
+    }
+
+    public static final Parcelable.Creator<Box> CREATOR = new Parcelable.Creator<Box>() {
+
+        public Box createFromParcel(Parcel in) {
+            final int pageNumber = in.readInt();
+            final double left = in.readDouble();
+            final double top = in.readDouble();
+            final double width = in.readDouble();
+            final double height = in.readDouble();
+            return new Box(pageNumber, left, top, width, height);
+        }
+
+        public Box[] newArray(int size) {
+            return new Box[size];
+        }
+    };
 }

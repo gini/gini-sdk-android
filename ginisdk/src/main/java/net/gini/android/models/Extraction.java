@@ -1,10 +1,13 @@
 package net.gini.android.models;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import org.jetbrains.annotations.Nullable;
 
 import static net.gini.android.Utils.checkNotNull;
 
-public class Extraction {
+public class Extraction implements Parcelable {
     private String mValue;
     private final String mEntity;
     private Box mBox;
@@ -23,6 +26,13 @@ public class Extraction {
         mEntity = checkNotNull(entity);
         mBox = box;
         mIsDirty = false;
+    }
+
+    protected Extraction(final Parcel in) {
+        mEntity = in.readString();
+        mValue = in.readString();
+        mBox = in.readParcelable(Box.class.getClassLoader());
+        mIsDirty = in.readInt() != 0;
     }
 
     public synchronized String getValue() {
@@ -54,4 +64,29 @@ public class Extraction {
     public void setIsDirty(boolean isDirty) {
         mIsDirty = isDirty;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(mEntity);
+        dest.writeString(mValue);
+        dest.writeParcelable(mBox, flags);
+        dest.writeInt(mIsDirty ? 1 : 0);
+    }
+
+    public static final Parcelable.Creator<Extraction> CREATOR = new Parcelable.Creator<Extraction>() {
+
+        public Extraction createFromParcel(Parcel in) {
+            return new Extraction(in);
+        }
+
+        public Extraction[] newArray(int size) {
+            return new Extraction[size];
+        }
+
+    };
 }
