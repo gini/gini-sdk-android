@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
+import static net.gini.android.helpers.ParcelHelper.doRoundTrip;
 
 public class DocumentTests extends AndroidTestCase {
 
@@ -17,6 +18,7 @@ public class DocumentTests extends AndroidTestCase {
 
         int size = is.available();
         byte[] buffer = new byte[size];
+        //noinspection ResultOfMethodCallIgnored
         is.read(buffer);
         is.close();
 
@@ -24,13 +26,17 @@ public class DocumentTests extends AndroidTestCase {
     }
 
     public void testDocumentIdGetter() {
-        Document document = new Document("1234-5678-9012-3456", Document.ProcessingState.COMPLETED, "foobar.jpg", 1, new Date(), Document.SourceClassification.NATIVE);
+        Document document = new Document("1234-5678-9012-3456", Document.ProcessingState.COMPLETED,
+                                         "foobar.jpg", 1, new Date(),
+                                         Document.SourceClassification.NATIVE);
 
         assertEquals("1234-5678-9012-3456", document.getId());
     }
 
     public void testDocumentState() {
-        Document document = new Document("1234-5678-9012-3456", Document.ProcessingState.COMPLETED, "foobar.jpg", 1, new Date(), Document.SourceClassification.NATIVE);
+        Document document = new Document("1234-5678-9012-3456", Document.ProcessingState.COMPLETED,
+                                         "foobar.jpg", 1, new Date(),
+                                         Document.SourceClassification.NATIVE);
 
         assertEquals(Document.ProcessingState.COMPLETED, document.getState());
     }
@@ -47,5 +53,23 @@ public class DocumentTests extends AndroidTestCase {
         assertEquals(Document.SourceClassification.SCANNED, document.getSourceClassification());
         // Tue Feb 12 2013 00:04:27 GMT+0100 (CET)
         assertEquals(1360623867402L, document.getCreationDate().getTime());
+    }
+
+    public void testShouldBeParcelable() {
+        final Date date = new Date();
+        final Document originalDocument =
+                new Document("1234-5678-9012-3456", Document.ProcessingState.COMPLETED,
+                             "foobar.jpg", 1, date,
+                             Document.SourceClassification.NATIVE);
+
+        final Document restoredDocument = doRoundTrip(originalDocument, Document.CREATOR);
+
+        assertEquals("1234-5678-9012-3456", restoredDocument.getId());
+        assertEquals(Document.ProcessingState.COMPLETED, restoredDocument.getState());
+        assertEquals("foobar.jpg", restoredDocument.getFilename());
+        assertEquals(1, restoredDocument.getPageCount());
+        assertEquals(date, restoredDocument.getCreationDate());
+        assertEquals(Document.SourceClassification.NATIVE,
+                     restoredDocument.getSourceClassification());
     }
 }
