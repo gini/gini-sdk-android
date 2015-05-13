@@ -181,17 +181,19 @@ public class SdkBuilder {
     }
 
     /**
-     * Helper method to create the instance of the used SessionManager implementation which is used to organize the
-     * token sessions for the Gini API.
+     * Return the {@link SessionManager} set via #setSessionManager. If no SessionManager has been set, default to
+     * {@link AnonymousSessionManager}.
      *
-     * <b>Currently, this always create an AnonymousSessionManager instance.</b>
-     *
-     * @return                      The DocumentTaskManager instance.
+     * @return                      The SessionManager instance.
      */
-    private synchronized SessionManager getSessionManager() {
+    public synchronized SessionManager getSessionManager() {
         if (mSessionManager == null) {
             mSessionManager = new AnonymousSessionManager(mEmailDomain, getUserCenterManager(), getCredentialsStore());
         }
         return mSessionManager;
+    }
+
+    public synchronized void setSessionManager(final SessionManager sessionManager) {
+        mSessionManager = sessionManager;
     }
 }
