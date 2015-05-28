@@ -1,5 +1,8 @@
 apply plugin: 'com.android.library'
 
+configurations {
+    upload
+}
 
 android {
     compileSdkVersion 19
@@ -33,6 +36,9 @@ dependencies {
     androidTestCompile "com.google.dexmaker:dexmaker-mockito:1.1"
 }
 
+group = groupId
+version = buildNumber == 'SNAPSHOT' ? "${baseVersion}-${buildNumber}" : "${baseVersion}.${buildNumber}"
+apply from: file("repository.gradle")
 def fullDocumentationDir(variant) {
     return buildDir.getPath() + "/docs-$variant.name-${android.defaultConfig.versionName}/";
 }
@@ -56,6 +62,10 @@ android.libraryVariants.all { variant ->
         exclude '**/R.java'
 	    options.encoding = 'UTF-8'
     }
+}
+
+artifacts {
+    upload file('build/outputs/aar/ginisdk-release.aar')
 }
 
 android.libraryVariants.all { variant ->
