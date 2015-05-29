@@ -53,6 +53,18 @@ public class SdkBuilder {
     }
 
     /**
+     * Constructor to initialize a new builder instance. The created Gini instance will use the given
+     * {@link SessionManager} for session management.
+     *
+     * @param context               Your application's Context instance (Android).
+     * @param sessionManager        The SessionManager to use.
+     */
+    public SdkBuilder(final Context context, final SessionManager sessionManager) {
+        mContext = context;
+        mSessionManager = sessionManager;
+    }
+
+    /**
      * Set the base URL of the Gini API. Handy for tests. <b>Usually, you do not use this method</b>.
      *
      * @param newUrl                The URL of the Gini API which is used by the requests of the Gini SDK.
@@ -191,9 +203,5 @@ public class SdkBuilder {
             mSessionManager = new AnonymousSessionManager(mEmailDomain, getUserCenterManager(), getCredentialsStore());
         }
         return mSessionManager;
-    }
-
-    public synchronized void setSessionManager(final SessionManager sessionManager) {
-        mSessionManager = sessionManager;
     }
 }
