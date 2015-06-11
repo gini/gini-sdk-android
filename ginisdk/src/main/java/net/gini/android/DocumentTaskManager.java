@@ -223,7 +223,7 @@ public class DocumentTaskManager {
     }
 
     /**
-     * Saves changes of the extractions for the given document. This is called "submitting feedback on extractions" in
+     * Sends approved and conceivably corrected extractions for the given document. This is called "submitting feedback on extractions" in
      * the Gini API documentation.
      *
      * @param document          The document for which the extractions should be updated.
@@ -234,25 +234,24 @@ public class DocumentTaskManager {
      *                          extractions was successful.
      * @throws JSONException    When a value of an extraction is not JSON serializable.
      */
-    public Task<Document> saveDocumentUpdates(final Document document,
-                                              final Map<String, SpecificExtraction> extractions)
+    public Task<Document> sendFeedbackForExtractions(final Document document,
+                                                     final Map<String, SpecificExtraction> extractions)
             throws JSONException {
         final String documentId = document.getId();
-        final JSONObject changedExtractions = new JSONObject();
+        final JSONObject feedbackForExtractions = new JSONObject();
         for (Map.Entry<String, SpecificExtraction> entry : extractions.entrySet()) {
             final Extraction extraction = entry.getValue();
-            if (extraction.isDirty()) {
-                final JSONObject extractionData = new JSONObject();
-                extractionData.put("value", extraction.getValue());
-                extractionData.put("box", extraction.getBox());
-                changedExtractions.put(entry.getKey(), extractionData);
-            }
+            final JSONObject extractionData = new JSONObject();
+            extractionData.put("value", extraction.getValue());
+            extractionData.put("box", extraction.getBox());
+            feedbackForExtractions.put(entry.getKey(), extractionData);
         }
+
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
             @Override
             public Task<JSONObject> then(Task<Session> task) throws Exception {
                 final Session session = task.getResult();
-                return mApiCommunicator.sendFeedback(documentId, changedExtractions, session);
+                return mApiCommunicator.sendFeedback(documentId, feedbackForExtractions, session);
             }
         }, Task.BACKGROUND_EXECUTOR).onSuccess(new Continuation<JSONObject, Document>() {
             @Override
