@@ -131,7 +131,6 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         documentTask.waitForCompletion();
 
         assertNotNull(documentTask.getResult());
-
     }
 
     public void testThatCreateDocumentsSubmitsTheFileNameAndDocumentType()
@@ -270,47 +269,47 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         assertEquals(Document.ProcessingState.ERROR, polledDocument.getState());
     }
 
-    public void testSaveDocumentUpdatesThrowsWithNullArguments() throws JSONException {
+    public void testSendFeedbackThrowsWithNullArguments() throws JSONException {
         final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
                                                Document.SourceClassification.NATIVE);
 
         try {
-            mDocumentTaskManager.saveDocumentUpdates(null, null);
+            mDocumentTaskManager.sendFeedbackForExtractions(null, null);
             fail("Exception not thrown");
         } catch (NullPointerException ignored) {}
 
         try {
-            mDocumentTaskManager.saveDocumentUpdates(document, null);
+            mDocumentTaskManager.sendFeedbackForExtractions(document, null);
             fail("Exception not thrown");
         } catch (NullPointerException ignored) {}
 
         try {
-            mDocumentTaskManager.saveDocumentUpdates(null, new HashMap<String, SpecificExtraction>());
+            mDocumentTaskManager.sendFeedbackForExtractions(null, new HashMap<String, SpecificExtraction>());
             fail("Exception not thrown");
         } catch (NullPointerException ignored) {}
     }
 
-    public void testSaveDocumentReturnsTask() throws JSONException {
+    public void testSendFeedbackReturnsTask() throws JSONException {
         final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
                                                Document.SourceClassification.NATIVE);
         final HashMap<String, SpecificExtraction> extractions = new HashMap<String, SpecificExtraction>();
 
-        assertNotNull(mDocumentTaskManager.saveDocumentUpdates(document, extractions));
+        assertNotNull(mDocumentTaskManager.sendFeedbackForExtractions(document, extractions));
     }
 
-    public void testSaveDocumentResolvesToDocumentInstance() throws JSONException, InterruptedException {
+    public void testSendFeedbackResolvesToDocumentInstance() throws JSONException, InterruptedException {
         final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
                                                Document.SourceClassification.NATIVE);
         final HashMap<String, SpecificExtraction> extractions = new HashMap<String, SpecificExtraction>();
         when(mApiCommunicator.sendFeedback(eq("1234"), any(JSONObject.class), any(Session.class))).thenReturn(
                 Task.forResult(new JSONObject()));
 
-        Task<Document> updateTask = mDocumentTaskManager.saveDocumentUpdates(document, extractions);
+        Task<Document> updateTask = mDocumentTaskManager.sendFeedbackForExtractions(document, extractions);
         updateTask.waitForCompletion();
         assertNotNull(updateTask.getResult());
     }
 
-    public void testSaveDocumentSavesExtractions() throws JSONException, InterruptedException {
+    public void testSendFeedbackSavesExtractions() throws JSONException, InterruptedException {
         final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
                                                Document.SourceClassification.NATIVE);
         final HashMap<String, SpecificExtraction> extractions = new HashMap<String, SpecificExtraction>();
@@ -320,7 +319,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
                         new SpecificExtraction("senderName", "blah", "senderName", null, new ArrayList<Extraction>()));
 
         extractions.get("amountToPay").setValue("23:EUR");
-        mDocumentTaskManager.saveDocumentUpdates(document, extractions).waitForCompletion();
+        mDocumentTaskManager.sendFeedbackForExtractions(document, extractions).waitForCompletion();
 
         ArgumentCaptor<JSONObject> dataCaptor = ArgumentCaptor.forClass(JSONObject.class);
         verify(mApiCommunicator).sendFeedback(eq("1234"), dataCaptor.capture(), any(Session.class));
@@ -329,11 +328,10 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         assertTrue(updateData.has("amountToPay"));
         final JSONObject amountToPay = updateData.getJSONObject("amountToPay");
         assertEquals("23:EUR", amountToPay.getString("value"));
-        // Should not update the senderName, since isDirty() is false.
-        assertFalse(updateData.has("senderName"));
+        assertTrue(updateData.has("senderName"));
     }
 
-    public void testSaveDocumentMarksExtractionsAsNotDirty() throws JSONException, InterruptedException {
+    public void testSendFeedbackMarksExtractionsAsNotDirty() throws JSONException, InterruptedException {
         when(mApiCommunicator.sendFeedback(eq("1234"), any(JSONObject.class), any(Session.class))).thenReturn(
                 Task.forResult(new JSONObject()));
         final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
@@ -345,7 +343,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
                         new SpecificExtraction("senderName", "blah", "senderName", null, new ArrayList<Extraction>()));
 
         extractions.get("amountToPay").setValue("23:EUR");
-        Task<Document> updateTask = mDocumentTaskManager.saveDocumentUpdates(document, extractions);
+        Task<Document> updateTask = mDocumentTaskManager.sendFeedbackForExtractions(document, extractions);
 
         updateTask.waitForCompletion();
         assertFalse(extractions.get("amountToPay").isDirty());
