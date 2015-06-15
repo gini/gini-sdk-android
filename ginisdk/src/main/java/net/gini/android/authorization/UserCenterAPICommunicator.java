@@ -4,6 +4,7 @@ import android.net.Uri;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.RetryPolicy;
 
 import net.gini.android.RequestTaskCompletionSource;
 import net.gini.android.authorization.requests.BearerJsonObjectRequest;
@@ -31,13 +32,15 @@ public class UserCenterAPICommunicator {
     final private String mBaseUrl;
     final private String mClientId;
     final private String mClientSecret;
+    final private RetryPolicy retryPolicy;
 
     public UserCenterAPICommunicator(final RequestQueue requestQueue, final String baseUrl,
-                                     final String clientId, final String clientSecret) {
+                                     final String clientId, final String clientSecret, final RetryPolicy retryPolicy) {
         mRequestQueue = requestQueue;
         mBaseUrl = baseUrl;
         mClientId = clientId;
         mClientSecret = clientSecret;
+        this.retryPolicy = retryPolicy;
     }
 
     /**
@@ -104,7 +107,7 @@ public class UserCenterAPICommunicator {
         }};
         BearerLocationRequest request =
                 new BearerLocationRequest(POST, url, data, userCenterApiSession, completionSource,
-                                          completionSource);
+                                          completionSource, retryPolicy);
         mRequestQueue.add(request);
 
         return completionSource.getTask();

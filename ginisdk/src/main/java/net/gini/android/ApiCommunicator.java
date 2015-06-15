@@ -5,6 +5,7 @@ import android.net.Uri;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.RequestQueue;
+import com.android.volley.RetryPolicy;
 import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.StringRequest;
 
@@ -40,9 +41,10 @@ public class ApiCommunicator {
 
     private final Uri mBaseUri;
     private final RequestQueue mRequestQueue;
+    final RetryPolicy mRetryPolicy;
 
-
-    public ApiCommunicator(final String baseUriString, final RequestQueue mRequestQueue) {
+    public ApiCommunicator(final String baseUriString, final RequestQueue mRequestQueue, final RetryPolicy retryPolicy) {
+        this.mRetryPolicy = retryPolicy;
         mBaseUri = Uri.parse(checkNotNull(baseUriString));
         this.mRequestQueue = checkNotNull(mRequestQueue);
     }
@@ -63,7 +65,7 @@ public class ApiCommunicator {
         final RequestTaskCompletionSource<Uri> completionSource = RequestTaskCompletionSource.newCompletionSource();
         final BearerUploadRequest request =
                 new BearerUploadRequest(POST, url, checkNotNull(documentData), checkNotNull(contentType), session,
-                        completionSource, completionSource);
+                        completionSource, completionSource, mRetryPolicy);
         mRequestQueue.add(request);
 
         return completionSource.getTask();
