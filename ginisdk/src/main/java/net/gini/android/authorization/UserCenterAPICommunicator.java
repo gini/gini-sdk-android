@@ -2,7 +2,6 @@ package net.gini.android.authorization;
 
 import android.net.Uri;
 
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.RetryPolicy;
 
@@ -32,7 +31,7 @@ public class UserCenterAPICommunicator {
     final private String mBaseUrl;
     final private String mClientId;
     final private String mClientSecret;
-    final private RetryPolicy retryPolicy;
+    final private RetryPolicy mRetryPolicy;
 
     public UserCenterAPICommunicator(final RequestQueue requestQueue, final String baseUrl,
                                      final String clientId, final String clientSecret, final RetryPolicy retryPolicy) {
@@ -40,7 +39,7 @@ public class UserCenterAPICommunicator {
         mBaseUrl = baseUrl;
         mClientId = clientId;
         mClientSecret = clientSecret;
-        this.retryPolicy = retryPolicy;
+        this.mRetryPolicy = retryPolicy;
     }
 
     /**
@@ -58,7 +57,7 @@ public class UserCenterAPICommunicator {
                 RequestTaskCompletionSource.newCompletionSource();
         final String url = mBaseUrl + "oauth/token?grant_type=client_credentials";
         TokenRequest loginRequest =
-                new TokenRequest(mClientId, mClientSecret, url, null, completionSource, completionSource);
+                new TokenRequest(mClientId, mClientSecret, url, null, completionSource, completionSource, mRetryPolicy);
         mRequestQueue.add(loginRequest);
 
         return completionSource.getTask();
@@ -80,7 +79,7 @@ public class UserCenterAPICommunicator {
         data.put("username", userCredentials.getUsername());
         data.put("password", userCredentials.getPassword());
         TokenRequest loginRequest =
-                new TokenRequest(mClientId, mClientSecret, url, data, completionSource, completionSource);
+                new TokenRequest(mClientId, mClientSecret, url, data, completionSource, completionSource, mRetryPolicy);
         mRequestQueue.add(loginRequest);
 
         return completionSource.getTask();
@@ -107,7 +106,7 @@ public class UserCenterAPICommunicator {
         }};
         BearerLocationRequest request =
                 new BearerLocationRequest(POST, url, data, userCenterApiSession, completionSource,
-                                          completionSource, retryPolicy);
+                                          completionSource, mRetryPolicy);
         mRequestQueue.add(request);
 
         return completionSource.getTask();
@@ -118,7 +117,7 @@ public class UserCenterAPICommunicator {
                 RequestTaskCompletionSource.newCompletionSource();
         final BearerJsonObjectRequest request = new BearerJsonObjectRequest(GET, userUri.toString(), null,
                                                                             userCenterApiSession, completionSource,
-                                                                            completionSource);
+                                                                            completionSource, mRetryPolicy);
 
         mRequestQueue.add(request);
         return completionSource.getTask();

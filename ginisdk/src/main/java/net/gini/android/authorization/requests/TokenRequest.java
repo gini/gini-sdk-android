@@ -4,6 +4,7 @@ package net.gini.android.authorization.requests;
 import android.util.Base64;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.RetryPolicy;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.Response;
 
@@ -28,12 +29,13 @@ public class TokenRequest extends JsonObjectRequest {
     private final Map<String, String> mRequestData;
 
     public TokenRequest(String clientId, String clientSecret, String url, @Nullable Map<String, String> requestData,
-                        Response.Listener<JSONObject> listener, Response.ErrorListener errorListener) {
+                        Response.Listener<JSONObject> listener, Response.ErrorListener errorListener, RetryPolicy retryPolicy) {
         super(Method.POST, url, null, listener, errorListener);
 
         mAuthorizationCredentials =
                 Base64.encodeToString(String.format("%s:%s", clientId, clientSecret).getBytes(Utils.CHARSET_UTF8),
                                       Base64.NO_WRAP);
+        setRetryPolicy(retryPolicy);
         mRequestData = requestData;
     }
 

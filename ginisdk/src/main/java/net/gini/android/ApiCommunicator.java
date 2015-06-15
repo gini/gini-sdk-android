@@ -87,7 +87,7 @@ public class ApiCommunicator {
         final RequestTaskCompletionSource<JSONObject> completionSource =
                 RequestTaskCompletionSource.newCompletionSource();
         final BearerJsonObjectRequest request =
-                new BearerJsonObjectRequest(GET, url, null, checkNotNull(session), completionSource, completionSource);
+                new BearerJsonObjectRequest(GET, url, null, checkNotNull(session), completionSource, completionSource, mRetryPolicy);
         mRequestQueue.add(request);
 
         return completionSource.getTask();
@@ -99,7 +99,7 @@ public class ApiCommunicator {
         final RequestTaskCompletionSource<JSONObject> completionSource = RequestTaskCompletionSource
                 .newCompletionSource();
         final BearerJsonObjectRequest request = new BearerJsonObjectRequest(GET, url, null, checkNotNull(session),
-                completionSource, completionSource) {
+                completionSource, completionSource, mRetryPolicy) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> headers = super.getHeaders();
@@ -150,7 +150,7 @@ public class ApiCommunicator {
         requestData.put("feedback", checkNotNull(extractions));
         final BearerJsonObjectRequest request =
                 new BearerJsonObjectRequest(PUT, url, requestData, checkNotNull(session),
-                        completionSource, completionSource);
+                        completionSource, completionSource, mRetryPolicy);
         mRequestQueue.add(request);
 
         return completionSource.getTask();
@@ -214,7 +214,7 @@ public class ApiCommunicator {
         final RequestTaskCompletionSource<JSONObject> completionSource =
                 RequestTaskCompletionSource.newCompletionSource();
         final BearerJsonObjectRequest documentsRequest =
-                new BearerJsonObjectRequest(method, url, null, checkNotNull(session), completionSource, completionSource);
+                new BearerJsonObjectRequest(method, url, null, checkNotNull(session), completionSource, completionSource, mRetryPolicy);
         mRequestQueue.add(documentsRequest);
         return completionSource.getTask();
     }
