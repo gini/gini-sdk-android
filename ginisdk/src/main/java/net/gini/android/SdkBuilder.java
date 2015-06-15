@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.RequestQueue;
-import com.android.volley.RetryPolicy;
 import com.android.volley.toolbox.Volley;
 
 import net.gini.android.authorization.AnonymousSessionManager;
@@ -15,6 +14,8 @@ import net.gini.android.authorization.SessionManager;
 import net.gini.android.authorization.SharedPreferencesCredentialsStore;
 import net.gini.android.authorization.UserCenterAPICommunicator;
 import net.gini.android.authorization.UserCenterManager;
+import net.gini.android.requests.DefaultRetryPolicyFactory;
+import net.gini.android.requests.RetryPolicyFactory;
 
 import static net.gini.android.Utils.checkNotNull;
 
@@ -39,7 +40,7 @@ public class SdkBuilder {
     private int mTimeoutInMs = DefaultRetryPolicy.DEFAULT_TIMEOUT_MS;
     private int mMaxRetries = DefaultRetryPolicy.DEFAULT_MAX_RETRIES;
     private float mBackOffMultiplier = DefaultRetryPolicy.DEFAULT_BACKOFF_MULT;
-    private RetryPolicy mRetryPolicy;
+    private RetryPolicyFactory mRetryPolicyFactory;
 
     /**
      * Constructor to initialize a new builder instance where anonymous Gini users are used. <b>This requires access to
@@ -106,7 +107,7 @@ public class SdkBuilder {
      */
     public SdkBuilder setConnectionTimeoutInMs(final int connectionTimeoutInMs){
         if (connectionTimeoutInMs < 0) {
-            throw new IllegalArgumentException("connectionTimeoutInMs can't be less then 0");
+            throw new IllegalArgumentException("connectionTimeoutInMs can't be less than 0");
         }
         mTimeoutInMs = connectionTimeoutInMs;
         return this;
@@ -119,7 +120,7 @@ public class SdkBuilder {
      */
     public SdkBuilder setConnectionMaxNumberOfRetries(final int connectionMaxNumberOfRetries){
         if (connectionMaxNumberOfRetries < 0) {
-            throw new IllegalArgumentException("connectionMaxNumberOfRetries can't be less then 0");
+            throw new IllegalArgumentException("connectionMaxNumberOfRetries can't be less than 0");
         }
         mMaxRetries = connectionMaxNumberOfRetries;
         return this;
@@ -134,7 +135,7 @@ public class SdkBuilder {
      */
     public SdkBuilder setConnectionBackOffMultiplier(final float backOffMultiplier){
         if (backOffMultiplier < 0.0) {
-            throw new IllegalArgumentException("backOffMultiplier can't be less then 0");
+            throw new IllegalArgumentException("backOffMultiplier can't be less than 0");
         }
         mBackOffMultiplier = backOffMultiplier;
         return this;
@@ -181,7 +182,7 @@ public class SdkBuilder {
      */
     private synchronized ApiCommunicator getApiCommunicator() {
         if (mApiCommunicator == null) {
-            mApiCommunicator = new ApiCommunicator(mApiBaseUrl, getRequestQueue(), getRetryPolicy());
+            mApiCommunicator = new ApiCommunicator(mApiBaseUrl, getRequestQueue(), getRetryPolicyFactory());
         }
         return mApiCommunicator;
     }
@@ -211,20 +212,23 @@ public class SdkBuilder {
     private synchronized UserCenterAPICommunicator getUserCenterAPICommunicator() {
         if (mUserCenterApiCommunicator == null) {
             mUserCenterApiCommunicator =
-                    new UserCenterAPICommunicator(getRequestQueue(), mUserCenterApiBaseUrl, mClientId, mClientSecret, getRetryPolicy());
+                    new UserCenterAPICommunicator(getRequestQueue(), mUserCenterApiBaseUrl, mClientId, mClientSecret,
+                                                  getRetryPolicyFactory());
         }
         return mUserCenterApiCommunicator;
     }
 
     /**
-     * Helper method to create a RetryPolicy instance which is used for each request.
-     * @return  The RetryPolicy instance.
+     * Helper method to create a {@link RetryPolicyFactory} instance which is used to create a
+     * {@link com.android.volley.RetryPolicy} for each request.
+     *
+     * @return  The RetryPolicyFactory instance.
      */
-    private synchronized RetryPolicy getRetryPolicy() {
-        if (mRetryPolicy == null) {
-            mRetryPolicy = new DefaultRetryPolicy(mTimeoutInMs, mMaxRetries, mBackOffMultiplier);
+    private synchronized RetryPolicyFactory getRetryPolicyFactory() {
+        if (mRetryPolicyFactory == null) {
+            mRetryPolicyFactory = new DefaultRetryPolicyFactory(mTimeoutInMs, mMaxRetries, mBackOffMultiplier);
         }
-        return mRetryPolicy;
+        return mRetryPolicyFactory;
     }
 
     /**

@@ -4,10 +4,11 @@ import android.os.SystemClock;
 import android.test.InstrumentationTestCase;
 
 import com.android.volley.AuthFailureError;
-import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.RetryPolicy;
+
+import net.gini.android.requests.DefaultRetryPolicyFactory;
+import net.gini.android.requests.RetryPolicyFactory;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -18,15 +19,16 @@ import static org.mockito.Mockito.verify;
 public class UserCenterAPICommunicatorTest extends InstrumentationTestCase {
     private UserCenterAPICommunicator apiManager;
     private RequestQueue mRequestQueue;
+    private RetryPolicyFactory retryPolicyFactory;
 
-    private RetryPolicy retryPolicy;
     @Override
     public void setUp() {
         // https://code.google.com/p/dexmaker/issues/detail?id=2
         System.setProperty("dexmaker.dexcache", getInstrumentation().getTargetContext().getCacheDir().getPath());
-        retryPolicy = new DefaultRetryPolicy();
+        retryPolicyFactory = new DefaultRetryPolicyFactory();
         mRequestQueue = Mockito.mock(RequestQueue.class);
-        apiManager = new UserCenterAPICommunicator(mRequestQueue, "https://user.gini.net/", "foobar", "1234", retryPolicy);
+        apiManager = new UserCenterAPICommunicator(mRequestQueue, "https://user.gini.net/", "foobar", "1234",
+                                                   retryPolicyFactory);
     }
 
     /**

@@ -9,8 +9,6 @@ import net.gini.android.authorization.SessionManager;
 
 import bolts.Task;
 
-import static org.mockito.Mockito.verify;
-
 public class SdkBuilderTest extends AndroidTestCase {
 
     public void testBuilderReturnsSdkInstance() {
@@ -68,8 +66,10 @@ public class SdkBuilderTest extends AndroidTestCase {
         builder.setConnectionBackOffMultiplier(1.3636f);
         Gini gini = builder.build();
 
-        RetryPolicy retryPolicy = gini.getDocumentTaskManager().mApiCommunicator.mRetryPolicy;
+        final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
+        final RetryPolicy retryPolicy = documentTaskManager.mApiCommunicator.mRetryPolicyFactory.newRetryPolicy();
         assertEquals(3333, retryPolicy.getCurrentTimeout());
+        assertEquals(0, retryPolicy.getCurrentRetryCount());
     }
 
     private class NullSessionManager implements SessionManager {
