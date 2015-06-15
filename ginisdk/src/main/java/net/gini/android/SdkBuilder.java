@@ -114,15 +114,16 @@ public class SdkBuilder {
     }
 
     /**
-     * Sets the maximal number of retries for each request.
-     * @param connectionMaxNumberOfRetries maximal number of retries.
+     * Sets the maximal number of retries for each network request.
+     *
+     * @param maxNumberOfRetries maximal number of retries.
      * @return The builder instance to enable chaining.
      */
-    public SdkBuilder setConnectionMaxNumberOfRetries(final int connectionMaxNumberOfRetries){
-        if (connectionMaxNumberOfRetries < 0) {
-            throw new IllegalArgumentException("connectionMaxNumberOfRetries can't be less than 0");
+    public SdkBuilder setMaxNumberOfRetries(final int maxNumberOfRetries){
+        if (maxNumberOfRetries < 0) {
+            throw new IllegalArgumentException("maxNumberOfRetries can't be less than 0");
         }
-        mMaxRetries = connectionMaxNumberOfRetries;
+        mMaxRetries = maxNumberOfRetries;
         return this;
     }
 

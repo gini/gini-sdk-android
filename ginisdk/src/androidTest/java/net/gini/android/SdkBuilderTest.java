@@ -46,7 +46,7 @@ public class SdkBuilderTest extends AndroidTestCase {
     public void testSetWrongConnectionMaxNumberOfRetries(){
         SdkBuilder builder = new SdkBuilder(getContext(), "clientId", "clientSecret", "@example.com");
         try {
-            builder.setConnectionMaxNumberOfRetries(-1);
+            builder.setMaxNumberOfRetries(-1);
             fail("IllegalArgumentException should be thrown");
         } catch (IllegalArgumentException exc){}
     }
@@ -62,7 +62,7 @@ public class SdkBuilderTest extends AndroidTestCase {
     public void testRetryPolicyWiring(){
         SdkBuilder builder = new SdkBuilder(getContext(), "clientId", "clientSecret", "@example.com");
         builder.setConnectionTimeoutInMs(3333);
-        builder.setConnectionMaxNumberOfRetries(66);
+        builder.setMaxNumberOfRetries(66);
         builder.setConnectionBackOffMultiplier(1.3636f);
         Gini gini = builder.build();
 
