@@ -4,6 +4,9 @@ configurations {
     upload
 }
 
+group = groupId
+version = buildNumber == 'SNAPSHOT' ? "${baseVersion}-${buildNumber}" : "${baseVersion}.${buildNumber}"
+
 android {
     compileSdkVersion 19
     buildToolsVersion '20.0.0'
@@ -12,7 +15,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 19
         versionCode 1
-        versionName "1.0"
+        versionName version
     }
     buildTypes {
         release {
@@ -36,8 +39,6 @@ dependencies {
     androidTestCompile "com.google.dexmaker:dexmaker-mockito:1.1"
 }
 
-group = groupId
-version = buildNumber == 'SNAPSHOT' ? "${baseVersion}-${buildNumber}" : "${baseVersion}.${buildNumber}"
 apply from: file("repository.gradle")
 def fullDocumentationDir(variant) {
     return buildDir.getPath() + "/docs-$variant.name-${android.defaultConfig.versionName}/";
