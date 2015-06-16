@@ -3,6 +3,7 @@ package net.gini.android.requests;
 import android.net.Uri;
 
 import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
 
 import net.gini.android.MediaTypes;
 import net.gini.android.authorization.Session;
@@ -19,8 +20,9 @@ public class BearerUploadRequest extends BearerLocationRequest{
     public BearerUploadRequest(int method, String url, byte[] uploadData, String contentType,
                                final Session session,
                                Response.Listener<Uri> listener,
-                               Response.ErrorListener errorListener) {
-        super(method, url, null, session, listener, errorListener);
+                               Response.ErrorListener errorListener,
+                               RetryPolicy retryPolicy) {
+        super(method, url, null, session, listener, errorListener, retryPolicy);
 
         mUploadData = uploadData;
         mContentType = contentType;

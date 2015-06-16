@@ -2,13 +2,14 @@ package net.gini.android.authorization;
 
 import android.net.Uri;
 
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.RetryPolicy;
 
 import net.gini.android.RequestTaskCompletionSource;
 import net.gini.android.authorization.requests.BearerJsonObjectRequest;
 import net.gini.android.authorization.requests.TokenRequest;
 import net.gini.android.requests.BearerLocationRequest;
+import net.gini.android.requests.RetryPolicyFactory;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -31,13 +32,16 @@ public class UserCenterAPICommunicator {
     final private String mBaseUrl;
     final private String mClientId;
     final private String mClientSecret;
+    final private RetryPolicyFactory mRetryPolicyFactory;
 
     public UserCenterAPICommunicator(final RequestQueue requestQueue, final String baseUrl,
-                                     final String clientId, final String clientSecret) {
+                                     final String clientId, final String clientSecret,
+                                     final RetryPolicyFactory retryPolicyFactory) {
         mRequestQueue = requestQueue;
         mBaseUrl = baseUrl;
         mClientId = clientId;
         mClientSecret = clientSecret;
+        this.mRetryPolicyFactory = retryPolicyFactory;
     }
 
     /**
@@ -55,7 +59,8 @@ public class UserCenterAPICommunicator {
                 RequestTaskCompletionSource.newCompletionSource();
         final String url = mBaseUrl + "oauth/token?grant_type=client_credentials";
         TokenRequest loginRequest =
-                new TokenRequest(mClientId, mClientSecret, url, null, completionSource, completionSource);
+                new TokenRequest(mClientId, mClientSecret, url, null, completionSource, completionSource,
+                                 mRetryPolicyFactory.newRetryPolicy());
         mRequestQueue.add(loginRequest);
 
         return completionSource.getTask();
@@ -77,7 +82,8 @@ public class UserCenterAPICommunicator {
         data.put("username", userCredentials.getUsername());
         data.put("password", userCredentials.getPassword());
         TokenRequest loginRequest =
-                new TokenRequest(mClientId, mClientSecret, url, data, completionSource, completionSource);
+                new TokenRequest(mClientId, mClientSecret, url, data, completionSource, completionSource,
+                                 mRetryPolicyFactory.newRetryPolicy());
         mRequestQueue.add(loginRequest);
 
         return completionSource.getTask();
@@ -104,7 +110,7 @@ public class UserCenterAPICommunicator {
         }};
         BearerLocationRequest request =
                 new BearerLocationRequest(POST, url, data, userCenterApiSession, completionSource,
-                                          completionSource);
+                                          completionSource, mRetryPolicyFactory.newRetryPolicy());
         mRequestQueue.add(request);
 
         return completionSource.getTask();
@@ -113,9 +119,9 @@ public class UserCenterAPICommunicator {
     public Task<JSONObject> getUserInfo(Uri userUri, Session userCenterApiSession) {
         final RequestTaskCompletionSource<JSONObject> completionSource =
                 RequestTaskCompletionSource.newCompletionSource();
-        final BearerJsonObjectRequest request = new BearerJsonObjectRequest(GET, userUri.toString(), null,
-                                                                            userCenterApiSession, completionSource,
-                                                                            completionSource);
+        final BearerJsonObjectRequest request =
+                new BearerJsonObjectRequest(GET, userUri.toString(), null, userCenterApiSession, completionSource,
+                                            completionSource, mRetryPolicyFactory.newRetryPolicy());
 
         mRequestQueue.add(request);
         return completionSource.getTask();

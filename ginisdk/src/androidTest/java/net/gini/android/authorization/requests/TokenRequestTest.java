@@ -4,8 +4,10 @@ package net.gini.android.authorization.requests;
 import android.test.AndroidTestCase;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkResponse;
 import com.android.volley.RequestQueue;
+import com.android.volley.RetryPolicy;
 import com.android.volley.toolbox.NoCache;
 import com.android.volley.toolbox.RequestFuture;
 
@@ -25,11 +27,14 @@ public class TokenRequestTest extends AndroidTestCase {
     public TokenRequest loginRequest;
     public RequestQueue requestQueue;
     public MockNetwork mockNetwork;
+    private RetryPolicy retryPolicy;
+
 
     @Override
     public void setUp() {
+        retryPolicy = new DefaultRetryPolicy();
         requestFuture = RequestFuture.newFuture();
-        loginRequest = new TokenRequest("foobar", "1234", "https://user.gini.net/oauth/token?grant_type=client_credentials", null, requestFuture, requestFuture);
+        loginRequest = new TokenRequest("foobar", "1234", "https://user.gini.net/oauth/token?grant_type=client_credentials", null, requestFuture, requestFuture, retryPolicy);
         mockNetwork = new MockNetwork();
         requestQueue = new RequestQueue(new NoCache(), mockNetwork);
         requestQueue.start();
@@ -59,7 +64,7 @@ public class TokenRequestTest extends AndroidTestCase {
         HashMap<String, String> data = new HashMap<String, String>();
         data.put("foo", "bar");
         data.put("bar", "foo");
-        loginRequest = new TokenRequest("foobar", "1234", "https://user.gini.net", data, null, null);
+        loginRequest = new TokenRequest("foobar", "1234", "https://user.gini.net", data, null, null, retryPolicy);
 
         // TODO: Remove all the flakiness.
         assertEquals("foo=bar&bar=foo", new String(loginRequest.getBody()));
@@ -69,7 +74,7 @@ public class TokenRequestTest extends AndroidTestCase {
         HashMap<String, String> data = new HashMap<String, String>();
         data.put("foo", "bar");
         data.put("bar", "foo");
-        loginRequest = new TokenRequest("foobar", "1234", "https://user.gini.net", data, null, null);
+        loginRequest = new TokenRequest("foobar", "1234", "https://user.gini.net", data, null, null, retryPolicy);
 
         assertEquals(MediaTypes.APPLICATION_FORM_URLENCODED, loginRequest.getBodyContentType());
     }

@@ -9,6 +9,8 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 
 import net.gini.android.authorization.Session;
+import net.gini.android.requests.DefaultRetryPolicyFactory;
+import net.gini.android.requests.RetryPolicyFactory;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,14 +29,15 @@ import static org.mockito.Mockito.verify;
 public class ApiCommunicatorTests extends InstrumentationTestCase {
     private ApiCommunicator mApiCommunicator;
     private RequestQueue mRequestQueue;
+    private RetryPolicyFactory retryPolicyFactory;
 
     @Override
     public void setUp() {
         // https://code.google.com/p/dexmaker/issues/detail?id=2
         System.setProperty("dexmaker.dexcache", getInstrumentation().getTargetContext().getCacheDir().getPath());
-
+        retryPolicyFactory = new DefaultRetryPolicyFactory();
         mRequestQueue = Mockito.mock(RequestQueue.class);
-        mApiCommunicator = new ApiCommunicator("https://api.gini.net/", mRequestQueue);
+        mApiCommunicator = new ApiCommunicator("https://api.gini.net/", mRequestQueue, retryPolicyFactory);
     }
 
     public byte[] createUploadData() {
@@ -51,13 +54,13 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
 
     public void testConstructionThrowsNullPointerExceptionWithNullArguments() {
         try {
-            new ApiCommunicator(null, null);
+            new ApiCommunicator(null, null, retryPolicyFactory);
             fail("NullPointerException not thrown");
         } catch (NullPointerException ignored) {
         }
 
         try {
-            new ApiCommunicator("https://api.gini.net", null);
+            new ApiCommunicator("https://api.gini.net", null, retryPolicyFactory);
             fail("NullPointerException not thrown");
         } catch (NullPointerException ignored) {
         }

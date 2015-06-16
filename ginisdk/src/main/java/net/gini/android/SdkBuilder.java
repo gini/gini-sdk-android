@@ -4,6 +4,7 @@ package net.gini.android;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 
@@ -13,6 +14,8 @@ import net.gini.android.authorization.SessionManager;
 import net.gini.android.authorization.SharedPreferencesCredentialsStore;
 import net.gini.android.authorization.UserCenterAPICommunicator;
 import net.gini.android.authorization.UserCenterManager;
+import net.gini.android.requests.DefaultRetryPolicyFactory;
+import net.gini.android.requests.RetryPolicyFactory;
 
 import static net.gini.android.Utils.checkNotNull;
 
@@ -34,6 +37,10 @@ public class SdkBuilder {
     private CredentialsStore mCredentialsStore;
     private UserCenterManager mUserCenterManager;
     private UserCenterAPICommunicator mUserCenterApiCommunicator;
+    private int mTimeoutInMs = DefaultRetryPolicy.DEFAULT_TIMEOUT_MS;
+    private int mMaxRetries = DefaultRetryPolicy.DEFAULT_MAX_RETRIES;
+    private float mBackOffMultiplier = DefaultRetryPolicy.DEFAULT_BACKOFF_MULT;
+    private RetryPolicyFactory mRetryPolicyFactory;
 
     /**
      * Constructor to initialize a new builder instance where anonymous Gini users are used. <b>This requires access to
@@ -93,6 +100,49 @@ public class SdkBuilder {
     }
 
     /**
+     * Sets the (initial) timeout for each request. A timeout error will occur if nothing is received from the underlying socket in the given time span.
+     * The initial timeout will be altered depending on the #backoffMultiplier and failed retries.
+     * @param connectionTimeoutInMs initial timeout
+     * @return The builder instance to enable chaining.
+     */
+    public SdkBuilder setConnectionTimeoutInMs(final int connectionTimeoutInMs){
+        if (connectionTimeoutInMs < 0) {
+            throw new IllegalArgumentException("connectionTimeoutInMs can't be less than 0");
+        }
+        mTimeoutInMs = connectionTimeoutInMs;
+        return this;
+    }
+
+    /**
+     * Sets the maximal number of retries for each network request.
+     *
+     * @param maxNumberOfRetries maximal number of retries.
+     * @return The builder instance to enable chaining.
+     */
+    public SdkBuilder setMaxNumberOfRetries(final int maxNumberOfRetries){
+        if (maxNumberOfRetries < 0) {
+            throw new IllegalArgumentException("maxNumberOfRetries can't be less than 0");
+        }
+        mMaxRetries = maxNumberOfRetries;
+        return this;
+    }
+
+    /**
+     * Sets the backoff multiplication factor for connection retries.
+     * In case of failed retries the timeout of the last request attempt is multiplied with this factor
+     *
+     * @param backOffMultiplier the backoff multiplication factor
+     * @return The builder instance to enable chaining.
+     */
+    public SdkBuilder setConnectionBackOffMultiplier(final float backOffMultiplier){
+        if (backOffMultiplier < 0.0) {
+            throw new IllegalArgumentException("backOffMultiplier can't be less than 0");
+        }
+        mBackOffMultiplier = backOffMultiplier;
+        return this;
+    }
+
+    /**
      * Set the credentials store which is used by the Gini SDK to store user credentials. If no credentials store is
      * set, the net.gini.android.authorization.SharedPreferencesCredentialsStore is used by default.
      *
@@ -133,7 +183,7 @@ public class SdkBuilder {
      */
     private synchronized ApiCommunicator getApiCommunicator() {
         if (mApiCommunicator == null) {
-            mApiCommunicator = new ApiCommunicator(mApiBaseUrl, getRequestQueue());
+            mApiCommunicator = new ApiCommunicator(mApiBaseUrl, getRequestQueue(), getRetryPolicyFactory());
         }
         return mApiCommunicator;
     }
@@ -163,9 +213,23 @@ public class SdkBuilder {
     private synchronized UserCenterAPICommunicator getUserCenterAPICommunicator() {
         if (mUserCenterApiCommunicator == null) {
             mUserCenterApiCommunicator =
-                    new UserCenterAPICommunicator(getRequestQueue(), mUserCenterApiBaseUrl, mClientId, mClientSecret);
+                    new UserCenterAPICommunicator(getRequestQueue(), mUserCenterApiBaseUrl, mClientId, mClientSecret,
+                                                  getRetryPolicyFactory());
         }
         return mUserCenterApiCommunicator;
+    }
+
+    /**
+     * Helper method to create a {@link RetryPolicyFactory} instance which is used to create a
+     * {@link com.android.volley.RetryPolicy} for each request.
+     *
+     * @return  The RetryPolicyFactory instance.
+     */
+    private synchronized RetryPolicyFactory getRetryPolicyFactory() {
+        if (mRetryPolicyFactory == null) {
+            mRetryPolicyFactory = new DefaultRetryPolicyFactory(mTimeoutInMs, mMaxRetries, mBackOffMultiplier);
+        }
+        return mRetryPolicyFactory;
     }
 
     /**

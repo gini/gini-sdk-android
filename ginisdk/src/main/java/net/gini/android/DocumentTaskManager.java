@@ -41,7 +41,7 @@ public class DocumentTaskManager {
     public final static int DEFAULT_COMPRESSION = 90;
 
     /** The ApiCommunicator instance which is used to communicate with the Gini API. */
-    private final ApiCommunicator mApiCommunicator;
+    final ApiCommunicator mApiCommunicator;  // Visible for testing
     /** The SessionManager instance which is used to create the documents. */
     private final SessionManager mSessionManager;
 

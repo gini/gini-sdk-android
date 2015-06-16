@@ -5,6 +5,7 @@ import android.net.Uri;
 
 import com.android.volley.NetworkResponse;
 import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonRequest;
 
@@ -21,9 +22,11 @@ public class BearerLocationRequest extends JsonRequest<Uri> {
     public BearerLocationRequest(int method, String url, JSONObject jsonRequest,
                                  Session session,
                                  Response.Listener<Uri> listener,
-                                 Response.ErrorListener errorListener) {
+                                 Response.ErrorListener errorListener,
+                                 RetryPolicy retryPolicy) {
         super(method, url, (jsonRequest == null) ? null : jsonRequest.toString(), listener, errorListener);
         mAccessToken = session.getAccessToken();
+        setRetryPolicy(retryPolicy);
     }
 
     @Override

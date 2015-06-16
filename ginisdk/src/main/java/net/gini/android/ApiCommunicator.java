@@ -11,6 +11,7 @@ import com.android.volley.toolbox.StringRequest;
 import net.gini.android.authorization.Session;
 import net.gini.android.authorization.requests.BearerJsonObjectRequest;
 import net.gini.android.requests.BearerUploadRequest;
+import net.gini.android.requests.RetryPolicyFactory;
 
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
@@ -40,9 +41,12 @@ public class ApiCommunicator {
 
     private final Uri mBaseUri;
     private final RequestQueue mRequestQueue;
+    // Visible for testing
+    final RetryPolicyFactory mRetryPolicyFactory;
 
-
-    public ApiCommunicator(final String baseUriString, final RequestQueue mRequestQueue) {
+    public ApiCommunicator(final String baseUriString, final RequestQueue mRequestQueue,
+                           final RetryPolicyFactory retryPolicyFactory) {
+        this.mRetryPolicyFactory = retryPolicyFactory;
         mBaseUri = Uri.parse(checkNotNull(baseUriString));
         this.mRequestQueue = checkNotNull(mRequestQueue);
     }
@@ -63,7 +67,7 @@ public class ApiCommunicator {
         final RequestTaskCompletionSource<Uri> completionSource = RequestTaskCompletionSource.newCompletionSource();
         final BearerUploadRequest request =
                 new BearerUploadRequest(POST, url, checkNotNull(documentData), checkNotNull(contentType), session,
-                        completionSource, completionSource);
+                        completionSource, completionSource, mRetryPolicyFactory.newRetryPolicy());
         mRequestQueue.add(request);
 
         return completionSource.getTask();
@@ -85,7 +89,8 @@ public class ApiCommunicator {
         final RequestTaskCompletionSource<JSONObject> completionSource =
                 RequestTaskCompletionSource.newCompletionSource();
         final BearerJsonObjectRequest request =
-                new BearerJsonObjectRequest(GET, url, null, checkNotNull(session), completionSource, completionSource);
+                new BearerJsonObjectRequest(GET, url, null, checkNotNull(session), completionSource, completionSource,
+                                            mRetryPolicyFactory.newRetryPolicy());
         mRequestQueue.add(request);
 
         return completionSource.getTask();
@@ -97,7 +102,7 @@ public class ApiCommunicator {
         final RequestTaskCompletionSource<JSONObject> completionSource = RequestTaskCompletionSource
                 .newCompletionSource();
         final BearerJsonObjectRequest request = new BearerJsonObjectRequest(GET, url, null, checkNotNull(session),
-                completionSource, completionSource) {
+                completionSource, completionSource, mRetryPolicyFactory.newRetryPolicy()) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> headers = super.getHeaders();
@@ -123,6 +128,7 @@ public class ApiCommunicator {
                 return headers;
             }
         };
+        request.setRetryPolicy(mRetryPolicyFactory.newRetryPolicy());
         mRequestQueue.add(request);
 
         return completionSource.getTask();
@@ -148,7 +154,7 @@ public class ApiCommunicator {
         requestData.put("feedback", checkNotNull(extractions));
         final BearerJsonObjectRequest request =
                 new BearerJsonObjectRequest(PUT, url, requestData, checkNotNull(session),
-                        completionSource, completionSource);
+                        completionSource, completionSource, mRetryPolicyFactory.newRetryPolicy());
         mRequestQueue.add(request);
 
         return completionSource.getTask();
@@ -170,6 +176,7 @@ public class ApiCommunicator {
                 return headers;
             }
         };
+        imageRequest.setRetryPolicy(mRetryPolicyFactory.newRetryPolicy());
         mRequestQueue.add(imageRequest);
 
         return completionSource.getTask();
@@ -212,7 +219,8 @@ public class ApiCommunicator {
         final RequestTaskCompletionSource<JSONObject> completionSource =
                 RequestTaskCompletionSource.newCompletionSource();
         final BearerJsonObjectRequest documentsRequest =
-                new BearerJsonObjectRequest(method, url, null, checkNotNull(session), completionSource, completionSource);
+                new BearerJsonObjectRequest(method, url, null, checkNotNull(session), completionSource, completionSource,
+                                            mRetryPolicyFactory.newRetryPolicy());
         mRequestQueue.add(documentsRequest);
         return completionSource.getTask();
     }
