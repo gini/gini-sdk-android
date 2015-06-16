@@ -128,6 +128,7 @@ public class ApiCommunicator {
                 return headers;
             }
         };
+        request.setRetryPolicy(mRetryPolicyFactory.newRetryPolicy());
         mRequestQueue.add(request);
 
         return completionSource.getTask();
@@ -175,6 +176,7 @@ public class ApiCommunicator {
                 return headers;
             }
         };
+        imageRequest.setRetryPolicy(mRetryPolicyFactory.newRetryPolicy());
         mRequestQueue.add(imageRequest);
 
         return completionSource.getTask();
