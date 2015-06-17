@@ -49,11 +49,15 @@ task createTestPropertyFile << {
     def propertyFile = new File("$projectDir/src/androidTest/assets/test.properties")
     if (!propertyFile.exists()) propertyFile.createNewFile()
     def props = new Properties()
+
     if (project.hasProperty('testClientId')) props['testClientId'] = testClientId
     if (project.hasProperty('testClientSecret')) props['testClientSecret'] = testClientSecret
     if (project.hasProperty('testApiUri')) props['testApiUri'] = testApiUri
     if (project.hasProperty('testUserCenterUri')) props['testUserCenterUri'] = testUserCenterUri
-    props.store(propertyFile.newWriter(), "test properties")
+
+    propertyFile.withWriter("utf-8") {
+        props.store(it, "test properties")
+    }
 }
 
 assembleDebug.dependsOn.add(createTestPropertyFile)
