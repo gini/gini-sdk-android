@@ -81,6 +81,7 @@ public class SdkIntegrationTest extends AndroidTestCase{
         assertEquals("BIC should be found", "DEUTDEMM760", extractions.get("bic").getValue());
         assertEquals("Payee should be found", "Hetzner Online AG", extractions.get("senderName").getValue());
 
+        // all extractions are correct, that means we have nothing to correct and will only send positive feedback
         final Task<Document> sendFeedback = documentTaskManager.sendFeedbackForExtractions(upload.getResult(), retrieveExtractions.getResult());
         sendFeedback.waitForCompletion();
         assertTrue("Sending feedback should be successful", sendFeedback.isCompleted());
