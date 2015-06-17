@@ -51,7 +51,7 @@ public class SdkIntegrationTest extends AndroidTestCase{
     public void testProcessDocument() throws IOException, InterruptedException, JSONException {
         final AssetManager assetManager = getContext().getResources().getAssets();
         final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull(testDocumentAsStream);
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
 
         final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
         final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
