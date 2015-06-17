@@ -26,15 +26,15 @@ public class SdkIntegrationTest extends AndroidTestCase{
 
     @Override
     protected void setUp() throws Exception {
-        AssetManager assetManager = getContext().getResources().getAssets();
+        final AssetManager assetManager = getContext().getResources().getAssets();
         final InputStream testPropertiesInput = assetManager.open("test.properties");
         assertNotNull("test.properties not found", testPropertiesInput);
-        Properties testProperties = new Properties();
+        final Properties testProperties = new Properties();
         testProperties.load(testPropertiesInput);
-        String clientId = getProperty(testProperties, "testClientId");
-        String clientSecret = getProperty(testProperties, "testClientSecret");
-        String apiUrl = getProperty(testProperties, "testApiUri");
-        String userCenterUrl = getProperty(testProperties, "testUserCenterUri");
+        final String clientId = getProperty(testProperties, "testClientId");
+        final String clientSecret = getProperty(testProperties, "testClientSecret");
+        final String apiUrl = getProperty(testProperties, "testApiUri");
+        final String userCenterUrl = getProperty(testProperties, "testUserCenterUri");
 
         gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUrl).
@@ -49,7 +49,7 @@ public class SdkIntegrationTest extends AndroidTestCase{
     }
 
     public void testProcessDocument() throws IOException, InterruptedException, JSONException {
-        AssetManager assetManager = getContext().getResources().getAssets();
+        final AssetManager assetManager = getContext().getResources().getAssets();
         final InputStream testDocumentAsStream = assetManager.open("test.jpg");
         assertNotNull(testDocumentAsStream);
 
@@ -75,7 +75,7 @@ public class SdkIntegrationTest extends AndroidTestCase{
 
         retrieveExtractions.waitForCompletion();
         assertTrue("extractions should be returned", retrieveExtractions.isCompleted());
-        Map<String, SpecificExtraction> extractions = retrieveExtractions.getResult();
+        final Map<String, SpecificExtraction> extractions = retrieveExtractions.getResult();
         assertEquals("IBAN should be found", "DE92760700120750007700", extractions.get("iban").getValue());
         assertEquals("Amount to pay should be found", "29.00:EUR", extractions.get("amountToPay").getValue());
         assertEquals("BIC should be found", "DEUTDEMM760", extractions.get("bic").getValue());
