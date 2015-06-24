@@ -14,6 +14,7 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -82,7 +83,14 @@ public class SdkIntegrationTest extends AndroidTestCase{
         assertEquals("Payee should be found", "Hetzner Online AG", extractions.get("senderName").getValue());
 
         // all extractions are correct, that means we have nothing to correct and will only send positive feedback
-        final Task<Document> sendFeedback = documentTaskManager.sendFeedbackForExtractions(upload.getResult(), retrieveExtractions.getResult());
+        // we should send only send feedback for extractions we have seen and accepted
+        Map<String, SpecificExtraction> feedback = new HashMap<String, SpecificExtraction>();
+        feedback.put("iban", extractions.get("iban"));
+        feedback.put("amountToPay", extractions.get("amountToPay"));
+        feedback.put("bic", extractions.get("bic"));
+        feedback.put("senderName", extractions.get("senderName"));
+
+        final Task<Document> sendFeedback = documentTaskManager.sendFeedbackForExtractions(upload.getResult(), feedback);
         sendFeedback.waitForCompletion();
         assertTrue("Sending feedback should be successful", sendFeedback.isCompleted());
     }
