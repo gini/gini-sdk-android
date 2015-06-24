@@ -17,11 +17,11 @@ The Gini Android SDK has only two dependencies:
 Integration
 -----------
 
-See the [integration guide](https://github.com/gini/gini-sdk-android/wiki/Integration-Guide) for detailed guidance how to 
+See the [integration guide](http://developer.gini.net/gini-sdk-android/) for detailed guidance how to 
 integrate the Gini SDK into your app.
 
 See the [Gini Android SDK documentation](http://developer.gini.net/gini-sdk-android/index.html?net/gini/android/DocumentTaskManager.html)
 for more details how to use the `DocumentTaskManager`.
 
 
-Copyright (c) 2014, [Gini GmbH](https://www.gini.net/)
+Copyright (c) 2014-2015, [Gini GmbH](https://www.gini.net/)
