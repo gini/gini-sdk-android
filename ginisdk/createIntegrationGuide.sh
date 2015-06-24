@@ -8,7 +8,7 @@ fi
 DOC_DIR=$1
 BUILD_DIR=$2
 
-mkdir $BUILD_DIR/integration-guide
+mkdir -p $BUILD_DIR/integration-guide
 cp -r $DOC_DIR/* $BUILD_DIR/integration-guide/
 cd $BUILD_DIR/integration-guide
 virtualenv ./virtualenv
