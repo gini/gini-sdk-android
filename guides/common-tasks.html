@@ -1,0 +1,310 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Working with Tasks &mdash; Gini SDK for Android v1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href="http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,400italic,600italic|Source+Code+Pro|Roboto+Slab:400,700" rel="stylesheet" type="text/css" />
+
+  
+  
+
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:'../',
+        VERSION:'v1',
+        COLLAPSE_INDEX:false,
+        FILE_SUFFIX:'.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+    <script type="text/javascript">
+        jQuery(function () {
+            SphinxRtdTheme.StickyNav.enable();
+        });
+    </script>
+  
+
+  
+    <link rel="top" title="Gini SDK for Android v1 documentation" href="../index.html"/>
+        <link rel="next" title="See also" href="../see_also.html"/>
+        <link rel="prev" title="Getting started" href="getting-started.html"/> 
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="../index.html" id="gini-logo">gini API</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#first-of-all-add-the-library-to-your-build">First of all: Add the Library to your Build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#integrating-the-gini-sdk">Integrating the Gini SDK</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#creating-the-gini-sdk-instance">Creating the Gini SDK instance</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Working with Tasks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#upload-a-document">Upload a document</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#working-with-optional-arguments">Working with optional arguments</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-extractions">Getting extractions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sending-feedback">Sending feedback</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#report-an-extraction-error-to-gini">Report an extraction error to Gini</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#handling-sdk-errors">Handling SDK errors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../see_also.html">See also</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Gini SDK for Android</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Working with Tasks</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="working-with-tasks">
+<h1>Working with Tasks<a class="headerlink" href="#working-with-tasks" title="Permalink to this headline">¶</a></h1>
+<p>The Gini Android SDK makes heavy use of the concept of tasks. Tasks are convenient when you want to
+do a series of tasks in a row, each one waiting waiting for the previous to finish (comparable to
+Promises in JavaScript). This is a common pattern when working with Gini&#8217;s remote API.
+The Gini Android SDK uses <a class="reference external" href="https://github.com/BoltsFramework/Bolts-Android">facebook&#8217;s task implementation, which is called bolts</a>.
+Before you continue reading this guide, we strongly encourage you to read the <a class="reference external" href="https://github.com/BoltsFramework/Bolts-Android/blob/master/Readme.md#tasks">short guide for the Bolts
+framework</a>.</p>
+<div class="section" id="upload-a-document">
+<h2>Upload a document<a class="headerlink" href="#upload-a-document" title="Permalink to this headline">¶</a></h2>
+<p>As the key aspect of the Gini API is to provide information extraction for analyzing documents, the
+API is mainly built around the concept of documents. A document can be any written representation
+of information, usually such as invoices, reminders, contracts and so on.</p>
+<p>The Gini Android SDK supports creating documents from images, usually a picture of a paper document
+which was taken with the device&#8217;s camera. The following example shows how to create a new
+document from a bitmap.</p>
+<div class="highlight-java"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">net.gini.android.Gini</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">net.gini.android.DocumentTaskManager</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">net.gini.android.models.Document</span><span class="o">;</span>
+
+<span class="o">...</span>
+
+<span class="c1">// Assuming that `gini` is an instance of the `Gini` facade class and `bitmap` is an instance of Android&#39;s</span>
+<span class="c1">// Bitmap class, e.g. from a picture taken by the camera.</span>
+
+<span class="n">DocumentTaskManager</span> <span class="n">documentTaskManager</span> <span class="o">=</span> <span class="n">gini</span><span class="o">.</span><span class="na">getDocumentTaskManager</span><span class="o">();</span>
+<span class="n">documentTaskManager</span><span class="o">.</span><span class="na">createDocument</span><span class="o">(</span><span class="n">bitmap</span><span class="o">,</span> <span class="s">&quot;myFirstDocument.jpg&quot;</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="mi">1</span><span class="o">).</span><span class="na">onSuccess</span><span class="o">(</span><span class="k">new</span> <span class="n">Continuation</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">,</span> <span class="n">Void</span><span class="o">&gt;()</span> <span class="o">{</span>
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="n">Void</span> <span class="nf">then</span><span class="o">(</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;</span> <span class="n">task</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+                <span class="n">Document</span> <span class="n">document</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="na">getResult</span><span class="o">();</span>
+                <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="s">&quot;gini&quot;</span><span class="o">,</span> <span class="s">&quot;Created document with ID &quot;</span> <span class="o">+</span> <span class="n">document</span><span class="o">.</span><span class="na">getId</span><span class="o">());</span>
+                <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+            <span class="o">}</span>
+<span class="o">});</span>
+</pre></div>
+</div>
+<div class="section" id="working-with-optional-arguments">
+<h3>Working with optional arguments<a class="headerlink" href="#working-with-optional-arguments" title="Permalink to this headline">¶</a></h3>
+<p>You may have noticed that we used <tt class="docutils literal"><span class="pre">null</span></tt> as the argument for the document&#8217;s doctype in the example
+above. This is a completely valid thing to do since the argument is annoted with the <tt class="docutils literal"><span class="pre">Nullable</span></tt>
+annotation (<tt class="docutils literal"><span class="pre">&#64;org.jetbrains.annotations.Nullable</span></tt>). All methods that accept null arguments use the
+<tt class="docutils literal"><span class="pre">&#64;Nullable</span></tt> annotation for those arguments. Consider all arguments which do not have the <tt class="docutils literal"><span class="pre">&#64;Nullable</span></tt>
+annotation as mandatory. The method will raise a <tt class="docutils literal"><span class="pre">NullPointerException</span></tt> if you pass null to such
+arguments.</p>
+<p>Read on to find out how to get the extractions from a document.</p>
+</div>
+</div>
+<div class="section" id="getting-extractions">
+<h2>Getting extractions<a class="headerlink" href="#getting-extractions" title="Permalink to this headline">¶</a></h2>
+<p>After you have successfully created a new document, you most likely want to get the extractions for
+the document. Gini needs to process your document first before you can fetch the document&#8217;s
+extractions. Effectively this means that you won&#8217;t get any extractions before the document is fully
+processed. The processing time may vary, usually it is in the range of a couple of seconds, but
+blurred or slightly rotated images are known to drasticly increase the processing time.</p>
+<p>The DocumentTaskManager provides the <tt class="docutils literal"><span class="pre">pollDocument</span></tt> and <tt class="docutils literal"><span class="pre">getExtractions</span></tt> methods which can be used
+to fetch the extractions after the processing of the document is completed. The following example shows
+how to achieve this in detail.</p>
+<div class="highlight-java"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">net.gini.android.Gini</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">net.gini.android.DocumentTaskManager</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">net.gini.android.models.Document</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">net.gini.android.models.SpecificExtraction</span><span class="o">;</span>
+
+
+<span class="o">...</span>
+
+
+<span class="c1">// Assuming that `gini` is an instance of the `Gini` facade class and `document` is an instance</span>
+<span class="c1">// of the `Document` class as returned by `createDocument(...)`.</span>
+<span class="kd">final</span> <span class="n">DocumentTaskManager</span> <span class="n">documentTaskManager</span> <span class="o">=</span> <span class="n">gini</span><span class="o">.</span><span class="na">getDocumentTaskManager</span><span class="o">();</span>
+<span class="n">documentTaskManager</span><span class="o">.</span><span class="na">pollDocument</span><span class="o">(</span><span class="n">document</span><span class="o">).</span>
+<span class="n">onSuccessTask</span><span class="o">(</span><span class="k">new</span> <span class="n">Continuation</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">,</span> <span class="n">Task</span><span class="o">&lt;</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;&gt;&gt;()</span> <span class="o">{</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">Object</span> <span class="nf">then</span><span class="o">(</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;</span> <span class="n">task</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="n">Document</span> <span class="n">document</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="na">getResult</span><span class="o">();</span>
+        <span class="k">return</span> <span class="n">documentTaskManager</span><span class="o">.</span><span class="na">getExtractions</span><span class="o">(</span><span class="n">document</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}).</span>
+<span class="n">onSuccess</span><span class="o">(</span><span class="k">new</span> <span class="n">Continuation</span><span class="o">&lt;</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;,</span> <span class="n">Void</span><span class="o">&gt;()</span> <span class="o">{</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">Void</span> <span class="nf">then</span><span class="o">(</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;&gt;</span> <span class="n">task</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;</span> <span class="n">extractions</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="na">getResult</span><span class="o">();</span>
+        <span class="c1">// Do something with the extractions.</span>
+        <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">});</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sending-feedback">
+<h2>Sending feedback<a class="headerlink" href="#sending-feedback" title="Permalink to this headline">¶</a></h2>
+<p>Depending on your use case your app probably presents the extractions to the user and give her the opportunity to correct them. Yes, there <em>could be errors</em>.
+We do our best to prevent them - but It&#8217;s more unlikely to happen if your app is sending us feedback for the extractions we have delivered. Your app should send feedback
+only for the extractions the <em>user has seen and accepted</em>. Feedback should be send for corrected extractions <strong>and</strong> for <em>correct extractions</em>.
+The code example below shows how to correct extractions and send feedback.</p>
+<div class="highlight-java"><div class="highlight"><pre><span class="kd">final</span> <span class="n">Task</span><span class="o">&lt;</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;&gt;</span> <span class="n">retrievedExtractions</span> <span class="c1">// provided</span>
+<span class="kd">final</span> <span class="n">Document</span> <span class="n">document</span> <span class="c1">// provided</span>
+
+<span class="kd">final</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;</span> <span class="n">extractions</span> <span class="o">=</span> <span class="n">retrieveExtractions</span><span class="o">.</span><span class="na">getResult</span><span class="o">();</span>
+<span class="c1">// amounTo pay was wrong, we&#39;ll correct it</span>
+<span class="n">SpecificExtraction</span> <span class="n">amountToPay</span> <span class="o">=</span> <span class="n">extractions</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;amountToPay&quot;</span><span class="o">);</span>
+<span class="n">amountToPay</span><span class="o">.</span><span class="na">setValue</span><span class="o">(</span><span class="s">&quot;31:00&quot;</span><span class="o">);</span>
+
+<span class="c1">// we should send only feedback for extractions we have seen and accepted</span>
+<span class="c1">// all extractions we&#39;ve seen were correct except amountToPay</span>
+<span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;</span> <span class="n">feedback</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;();</span>
+<span class="n">feedback</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;iban&quot;</span><span class="o">,</span> <span class="n">extractions</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;iban&quot;</span><span class="o">));</span>
+<span class="n">feedback</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;amountToPay&quot;</span><span class="o">,</span> <span class="n">amountToPay</span><span class="o">);</span>
+<span class="n">feedback</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;bic&quot;</span><span class="o">,</span> <span class="n">extractions</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;bic&quot;</span><span class="o">));</span>
+<span class="n">feedback</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;senderName&quot;</span><span class="o">,</span> <span class="n">extractions</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;senderName&quot;</span><span class="o">));</span>
+
+<span class="kd">final</span> <span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;</span> <span class="n">sendFeedback</span> <span class="o">=</span> <span class="n">documentTaskManager</span><span class="o">.</span><span class="na">sendFeedbackForExtractions</span><span class="o">(</span><span class="n">document</span><span class="o">,</span> <span class="n">feedback</span><span class="o">);</span>
+<span class="n">sendFeedback</span><span class="o">.</span><span class="na">waitForCompletion</span><span class="o">();</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="report-an-extraction-error-to-gini">
+<h2>Report an extraction error to Gini<a class="headerlink" href="#report-an-extraction-error-to-gini" title="Permalink to this headline">¶</a></h2>
+<p>If the processing result for a document was not satisfactory for the user, your app can give her the opportunity to report a error directly to Gini. Gini will return
+a error identifier which can be used to refer to it towards the Gini support. The user must agree that Gini can use this document for debugging and error analysis.
+The code example below shows how to send the error report to Gini.</p>
+<div class="highlight-java"><div class="highlight"><pre><span class="kd">final</span> <span class="n">Document</span> <span class="n">document</span> <span class="c1">// provided</span>
+<span class="n">documentTaskManager</span><span class="o">.</span><span class="na">reportDocument</span><span class="o">(</span><span class="n">document</span><span class="o">,</span> <span class="s">&quot;short summary&quot;</span><span class="o">,</span> <span class="s">&quot;detailed description&quot;</span><span class="o">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="handling-sdk-errors">
+<h2>Handling SDK errors<a class="headerlink" href="#handling-sdk-errors" title="Permalink to this headline">¶</a></h2>
+<p>Currently, the Gini Android SDK doesn&#8217;t have intelligent error-handling mechanisms. All errors that
+occure during executing a task are handed over transparently. You can react on those errors in the
+<tt class="docutils literal"><span class="pre">onError(...)</span></tt> method of the task. We may add better error-handling mechanisms in the future. At
+the moment we recommend checking the network status when a task failed and retrying the task.</p>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../see_also.html" class="btn btn-neutral float-right" title="See also">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="getting-started.html" class="btn btn-neutral" title="Getting started"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    </p>
+  </div>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+  <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+          (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-19408970-13', 'gini.net');
+      ga('send', 'pageview');
+  </script>
+  
+</body>
+</html>
