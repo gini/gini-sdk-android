@@ -1,12 +1,12 @@
 #! /bin/bash
 
-if [[ $# < 1 ]]; then
-   echo "doc dir required"
+if [[ $# < 2 ]]; then
+   echo "doc dir and build dir required"
    exit 1
 fi
 
 DOC_DIR=$1
-BUILD_DIR="$DOC_DIR/../../build"
+BUILD_DIR=$2
 
 mkdir $BUILD_DIR/integration-guide
 cp -r $DOC_DIR/* $BUILD_DIR/integration-guide/

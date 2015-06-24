@@ -61,7 +61,7 @@ task createTestPropertyFile << {
 }
 
 task createIntegrationGuide(type: Exec) {
-    commandLine './createIntegrationGuide.sh', "${project.projectDir}/src/doc"
+    commandLine './createIntegrationGuide.sh', "${project.projectDir}/src/doc", project.buildDir
 }
 
 assembleDebug.dependsOn.add(createTestPropertyFile)
