@@ -17,10 +17,29 @@ The Gini Android SDK has only two dependencies:
 Integration
 -----------
 
+You can easily integrate the Gini Android SDK into your app using Gradle and our Maven repository.
+
+```
+    repositories {
+        maven {
+            url "https://repo.gini.net/nexus/content/repositories/public"
+        }
+        ...
+    }
+    
+    dependencies {
+        compile ('net.gini:gini-sdk-android:1.1.11@aar'){
+            transitive = true
+        }
+        ...
+    }
+
+```
+
 See the [integration guide](http://developer.gini.net/gini-sdk-android/) for detailed guidance how to 
 integrate the Gini SDK into your app.
 
-See the [Gini Android SDK documentation](http://developer.gini.net/gini-sdk-android/index.html?net/gini/android/DocumentTaskManager.html)
+See the [Gini Android SDK documentation](http://developer.gini.net/gini-sdk-android/java-docs-release/net/gini/android/DocumentTaskManager.html)
 for more details how to use the `DocumentTaskManager`.
 
 
