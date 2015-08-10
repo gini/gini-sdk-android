@@ -75,7 +75,7 @@ public class SdkIntegrationTest extends AndroidTestCase{
         });
 
         retrieveExtractions.waitForCompletion();
-        assertTrue("extractions should be returned", retrieveExtractions.isCompleted());
+        assertFalse("extractions should have succeeded", retrieveExtractions.isFaulted());
         final Map<String, SpecificExtraction> extractions = retrieveExtractions.getResult();
         assertEquals("IBAN should be found", "DE92760700120750007700", extractions.get("iban").getValue());
         assertEquals("Amount to pay should be found", "29.00:EUR", extractions.get("amountToPay").getValue());
