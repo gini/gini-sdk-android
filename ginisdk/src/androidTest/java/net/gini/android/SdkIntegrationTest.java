@@ -5,6 +5,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.test.AndroidTestCase;
+import android.util.Log;
 
 import net.gini.android.DocumentTaskManager.DocumentUploadBuilder;
 import net.gini.android.models.Document;
@@ -36,6 +37,11 @@ public class SdkIntegrationTest extends AndroidTestCase{
         final String clientSecret = getProperty(testProperties, "testClientSecret");
         final String apiUrl = getProperty(testProperties, "testApiUri");
         final String userCenterUrl = getProperty(testProperties, "testUserCenterUri");
+
+        Log.d("TEST", "testClientId " + clientId);
+        Log.d("TEST", "testClientSecret " + clientSecret);
+        Log.d("TEST", "testApiUri " + apiUrl);
+        Log.d("TEST", "testUserCenterUrl" + userCenterUrl);
 
         gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUrl).
@@ -77,6 +83,7 @@ public class SdkIntegrationTest extends AndroidTestCase{
         retrieveExtractions.waitForCompletion();
         assertTrue("extractions should be returned", retrieveExtractions.isCompleted());
         final Map<String, SpecificExtraction> extractions = retrieveExtractions.getResult();
+
         assertEquals("IBAN should be found", "DE92760700120750007700", extractions.get("iban").getValue());
         assertEquals("Amount to pay should be found", "29.00:EUR", extractions.get("amountToPay").getValue());
         assertEquals("BIC should be found", "DEUTDEMM760", extractions.get("bic").getValue());
