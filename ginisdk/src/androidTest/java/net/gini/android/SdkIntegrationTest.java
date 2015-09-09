@@ -81,7 +81,12 @@ public class SdkIntegrationTest extends AndroidTestCase{
         });
 
         retrieveExtractions.waitForCompletion();
+        if (retrieveExtractions.isFaulted()){
+            Log.e("TEST", Log.getStackTraceString(retrieveExtractions.getError()));
+        }
+
         assertFalse("extractions should have succeeded", retrieveExtractions.isFaulted());
+
         final Map<String, SpecificExtraction> extractions = retrieveExtractions.getResult();
 
         assertEquals("IBAN should be found", "DE92760700120750007700", extractions.get("iban").getValue());
@@ -99,6 +104,10 @@ public class SdkIntegrationTest extends AndroidTestCase{
 
         final Task<Document> sendFeedback = documentTaskManager.sendFeedbackForExtractions(upload.getResult(), feedback);
         sendFeedback.waitForCompletion();
-        assertTrue("Sending feedback should be successful", sendFeedback.isCompleted());
+        if (sendFeedback.isFaulted()){
+            Log.e("TEST", Log.getStackTraceString(sendFeedback.getError()));
+        }
+        assertTrue("Sending feedback should be completed", sendFeedback.isCompleted());
+        assertFalse("Sending feedback should be successful", sendFeedback.isFaulted());
     }
 }

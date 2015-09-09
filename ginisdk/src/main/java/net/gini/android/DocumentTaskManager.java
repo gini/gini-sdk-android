@@ -243,7 +243,7 @@ public class DocumentTaskManager {
             final Extraction extraction = entry.getValue();
             final JSONObject extractionData = new JSONObject();
             extractionData.put("value", extraction.getValue());
-            extractionData.put("box", extraction.getBox());
+            extractionData.put("entity", extraction.getEntity());
             feedbackForExtractions.put(entry.getKey(), extractionData);
         }
 
