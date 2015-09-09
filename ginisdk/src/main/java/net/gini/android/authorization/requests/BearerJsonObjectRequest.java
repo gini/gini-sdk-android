@@ -12,6 +12,7 @@ import net.gini.android.MediaTypes;
 import net.gini.android.authorization.Session;
 
 import org.apache.http.protocol.HTTP;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -27,7 +28,7 @@ public class BearerJsonObjectRequest extends JsonObjectRequest {
         this(method, url, jsonRequest, session, listener, errorListener, retryPolicy, null);
     }
 
-    public BearerJsonObjectRequest(int method, String url, JSONObject jsonRequest, Session session, Response.Listener<JSONObject> listener, Response.ErrorListener errorListener, RetryPolicy retryPolicy, String contentType) {
+    public BearerJsonObjectRequest(int method, String url, JSONObject jsonRequest, Session session, Response.Listener<JSONObject> listener, Response.ErrorListener errorListener, RetryPolicy retryPolicy, @Nullable String contentType) {
         super(method, url, jsonRequest, listener, errorListener);
         setRetryPolicy(retryPolicy);
         mSession = session;
