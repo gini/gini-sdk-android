@@ -50,7 +50,6 @@ public class BearerJsonObjectRequest extends JsonObjectRequest {
     @Override
     protected Response<JSONObject> parseNetworkResponse(NetworkResponse response) {
         try {
-            // The Gini API always uses UTF-8.
             final JSONObject jsonObject = createJSONObject(response);
             return Response.success(jsonObject,
                                     HttpHeaderParser.parseCacheHeaders(response));
@@ -62,6 +61,7 @@ public class BearerJsonObjectRequest extends JsonObjectRequest {
     }
 
     private JSONObject createJSONObject(NetworkResponse response) throws UnsupportedEncodingException, JSONException {
+        // The Gini API always uses UTF-8.
         final String jsonString = new String(response.data, HTTP.UTF_8);
         if (jsonString.length() > 0) {
             return new JSONObject(jsonString);
