@@ -7,6 +7,7 @@ import com.android.volley.RetryPolicy;
 
 import junit.framework.TestCase;
 
+import net.gini.android.MediaTypes;
 import net.gini.android.authorization.Session;
 
 import org.json.JSONException;
@@ -39,5 +40,14 @@ public class BearerJsonObjectRequestTest extends TestCase {
         BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com", payload, session, null, null, retryPolicy);
 
         assertEquals("application/json; charset=utf-8", request.getBodyContentType());
+    }
+
+    public void testCustomContentTypeHeader() throws AuthFailureError, JSONException {
+        Session session = new Session("1234-5678-9012", new Date());
+        JSONObject payload = new JSONObject();
+        payload.put("foo", "bar");
+        BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com", payload, session, null, null, retryPolicy, MediaTypes.GINI_JSON_V1);
+
+        assertEquals(MediaTypes.GINI_JSON_V1, request.getBodyContentType());
     }
 }

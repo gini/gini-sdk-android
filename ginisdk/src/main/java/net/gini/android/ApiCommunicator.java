@@ -154,7 +154,7 @@ public class ApiCommunicator {
         requestData.put("feedback", checkNotNull(extractions));
         final BearerJsonObjectRequest request =
                 new BearerJsonObjectRequest(PUT, url, requestData, checkNotNull(session),
-                        completionSource, completionSource, mRetryPolicyFactory.newRetryPolicy());
+                        completionSource, completionSource, mRetryPolicyFactory.newRetryPolicy(), MediaTypes.GINI_JSON_V1);
         mRequestQueue.add(request);
 
         return completionSource.getTask();
