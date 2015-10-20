@@ -37,9 +37,13 @@ public class BearerUploadRequest extends BearerLocationRequest{
     @Override
     public Map<String, String> getHeaders() {
         HashMap<String, String> headers = new HashMap<String, String>();
-        headers.put("Content-Type", mContentType);
         headers.put("Accept", String.format("%s, %s", MediaTypes.APPLICATION_JSON, MediaTypes.GINI_JSON_V1));
         headers.put("Authorization", "BEARER " + mAccessToken);
         return headers;
+    }
+
+    @Override
+    public String getBodyContentType() {
+        return mContentType;
     }
 }

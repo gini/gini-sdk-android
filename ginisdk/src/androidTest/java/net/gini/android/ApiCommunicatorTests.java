@@ -122,8 +122,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
-        Map headers = requestCaptor.getValue().getHeaders();
-        assertEquals(MediaTypes.IMAGE_JPEG, headers.get("Content-Type"));
+        assertEquals(MediaTypes.IMAGE_JPEG, requestCaptor.getValue().getBodyContentType());
     }
 
     public void testUploadDocumentHasCorrectAcceptHeader() throws AuthFailureError {
