@@ -8,6 +8,7 @@ import android.test.InstrumentationTestCase;
 
 import net.gini.android.authorization.Session;
 import net.gini.android.authorization.SessionManager;
+import net.gini.android.helpers.TestUtils;
 import net.gini.android.models.Document;
 import net.gini.android.models.Extraction;
 import net.gini.android.models.SpecificExtraction;
@@ -57,6 +58,13 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         InputStream inputStream;
         inputStream = assetManager.open("yoda.jpg");
         return BitmapFactory.decodeStream(inputStream);
+    }
+
+    private byte[] createByteArray() throws IOException {
+        AssetManager assetManager = getInstrumentation().getContext().getResources().getAssets();
+
+        InputStream inputStream = assetManager.open("yoda.jpg");
+        return TestUtils.createByteArray(inputStream);
     }
 
     private JSONObject readJSONFile(final String filename) throws IOException, JSONException{
@@ -147,7 +155,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
         verify(mApiCommunicator)
                 .uploadDocument(any(byte[].class), eq(MediaTypes.IMAGE_JPEG), eq("foobar.jpg"), eq("invoice"),
-                                eq(mSession));
+                        eq(mSession));
     }
 
     public void testDocumentBuilderPassesThroughArguments() throws IOException {
@@ -155,10 +163,43 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
         Bitmap bitmap = createBitmap();
         DocumentTaskManager.DocumentUploadBuilder documentUploadBuilder =
-                new DocumentTaskManager.DocumentUploadBuilder(bitmap);
-        documentUploadBuilder.setDocumentType("invoice");
-        documentUploadBuilder.setFilename("foobar.jpg");
-        documentUploadBuilder.setCompressionRate(12);
+                new DocumentTaskManager.DocumentUploadBuilder()
+                        .setDocumentBitmap(bitmap)
+                        .setDocumentType("invoice")
+                        .setFilename("foobar.jpg")
+                        .setCompressionRate(12);
+        documentUploadBuilder.upload(documentTaskManager);
+
+        verify(documentTaskManager).createDocument(bitmap, "foobar.jpg", "invoice", 12);
+    }
+
+    public void testDocumentBuilderPassesThroughByteArray() throws IOException {
+        final DocumentTaskManager documentTaskManager = Mockito.mock(DocumentTaskManager.class);
+
+        byte[] byteArray = createByteArray();
+        DocumentTaskManager.DocumentUploadBuilder documentUploadBuilder =
+                new DocumentTaskManager.DocumentUploadBuilder()
+                        .setDocumentBytes(byteArray)
+                        .setDocumentType("invoice")
+                        .setFilename("foobar.jpg")
+                        .setCompressionRate(12);
+        documentUploadBuilder.upload(documentTaskManager);
+
+        verify(documentTaskManager).createDocument(byteArray, "foobar.jpg", "invoice");
+    }
+
+    public void testDocumentBuilderPassesBitmapInsteadOfByteArray() throws IOException {
+        final DocumentTaskManager documentTaskManager = Mockito.mock(DocumentTaskManager.class);
+
+        byte[] byteArray = createByteArray();
+        Bitmap bitmap = createBitmap();
+        DocumentTaskManager.DocumentUploadBuilder documentUploadBuilder =
+                new DocumentTaskManager.DocumentUploadBuilder()
+                        .setDocumentBytes(byteArray)
+                        .setDocumentBitmap(bitmap)
+                        .setDocumentType("invoice")
+                        .setFilename("foobar.jpg")
+                        .setCompressionRate(12);
         documentUploadBuilder.upload(documentTaskManager);
 
         verify(documentTaskManager).createDocument(bitmap, "foobar.jpg", "invoice", 12);
@@ -168,7 +209,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         final DocumentTaskManager documentTaskManager = Mockito.mock(DocumentTaskManager.class);
 
         Bitmap bitmap = createBitmap();
-        new DocumentTaskManager.DocumentUploadBuilder(bitmap).upload(documentTaskManager);
+        new DocumentTaskManager.DocumentUploadBuilder().setDocumentBitmap(bitmap).upload(documentTaskManager);
 
         verify(documentTaskManager).createDocument(bitmap, null, null, DocumentTaskManager.DEFAULT_COMPRESSION);
     }

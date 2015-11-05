@@ -64,6 +64,32 @@ public class DocumentTaskManager {
     /**
      * Uploads the given photo of a document and creates a new Gini document.
      *
+     * @param document          A byte array representing the image
+     * @param filename          Optional the filename of the given document.
+     * @param documentType      Optional a document type hint. See the documentation for the document type hints for
+     *                          possible values.
+     * @return                  A Task which will resolve to the Document instance of the freshly created document.
+     */
+    public Task<Document> createDocument(final byte[] document, @Nullable final String filename,
+                                         @Nullable final String documentType) {
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(Task<Session> sessionTask) throws Exception {
+                final Session session = sessionTask.getResult();
+                return mApiCommunicator
+                        .uploadDocument(document, MediaTypes.IMAGE_JPEG, filename, documentType, session);
+            }
+        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
+            @Override
+            public Task<Document> then(Task<Uri> uploadTask) throws Exception {
+                return getDocument(uploadTask.getResult());
+            }
+        }, Task.BACKGROUND_EXECUTOR);
+    }
+
+    /**
+     * Uploads the given photo of a document and creates a new Gini document.
+     *
      * @param document          A Bitmap representing the image
      * @param filename          Optional the filename of the given document.
      * @param documentType      Optional a document type hint. See the documentation for the document type hints for
@@ -364,14 +390,30 @@ public class DocumentTaskManager {
      */
     public static class DocumentUploadBuilder {
 
-        private final Bitmap mDocumentBitmap;
+        private byte[] mDocumentBytes;
+        private Bitmap mDocumentBitmap;
         private String mFilename;
         private String mDocumentType;
         private int mCompressionRate;
 
-        public DocumentUploadBuilder(final Bitmap documentBitmap) {
-            mDocumentBitmap = documentBitmap;
+        public DocumentUploadBuilder() {
             mCompressionRate = DocumentTaskManager.DEFAULT_COMPRESSION;
+        }
+
+        /**
+         * Set the document as a byte array. If a {@link Bitmap} was also set, the bitmap will be used.
+         */
+        public DocumentUploadBuilder setDocumentBytes(byte[] documentBytes) {
+            this.mDocumentBytes = documentBytes;
+            return this;
+        }
+
+        /**
+         * Set the document as a {@link Bitmap}. This bitmap will be used instead of the byte array, if both were set.
+         */
+        public DocumentUploadBuilder setDocumentBitmap(Bitmap documentBitmap) {
+            this.mDocumentBitmap = documentBitmap;
+            return this;
         }
 
         /**
@@ -392,7 +434,7 @@ public class DocumentTaskManager {
         }
 
         /**
-         * The bitmap will be converted into a JPEG representation. Set the compression rate for the JPEG
+         * The bitmap (if set) will be converted into a JPEG representation. Set the compression rate for the JPEG
          * representation.
          */
         public DocumentUploadBuilder setCompressionRate(final int compressionRate) {
@@ -408,7 +450,11 @@ public class DocumentTaskManager {
          * @return A task which will resolve to a Document instance.
          */
         public Task<Document> upload(final DocumentTaskManager documentTaskManager) {
-            return documentTaskManager.createDocument(mDocumentBitmap, mFilename, mDocumentType, mCompressionRate);
+            if (mDocumentBitmap!=null) {
+                return documentTaskManager.createDocument(mDocumentBitmap, mFilename, mDocumentType, mCompressionRate);
+            } else {
+                return documentTaskManager.createDocument(mDocumentBytes, mFilename, mDocumentType);
+            }
         }
     }
 }
