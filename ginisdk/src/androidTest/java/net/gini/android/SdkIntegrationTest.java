@@ -56,13 +56,23 @@ public class SdkIntegrationTest extends AndroidTestCase{
         return value.toString();
     }
 
+    public void testDeprecatedProcessDocumentBitmap() throws IOException, InterruptedException, JSONException {
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
+
+        final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder(testDocument).setDocumentType("RemittanceSlip");
+        uploadDocument(uploadBuilder);
+    }
+
     public void testProcessDocumentBitmap() throws IOException, InterruptedException, JSONException {
         final AssetManager assetManager = getContext().getResources().getAssets();
         final InputStream testDocumentAsStream = assetManager.open("test.jpg");
         assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
 
         final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType("RemittanceSlip");
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
         uploadDocument(uploadBuilder);
     }
 
@@ -72,7 +82,7 @@ public class SdkIntegrationTest extends AndroidTestCase{
         assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
 
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType("RemittanceSlip");
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
         uploadDocument(uploadBuilder);
     }
 

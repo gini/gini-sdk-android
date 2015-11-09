@@ -158,6 +158,20 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
                         eq(mSession));
     }
 
+    public void testDeprecatedDocumentBuilderPassesThroughArguments() throws IOException {
+        final DocumentTaskManager documentTaskManager = Mockito.mock(DocumentTaskManager.class);
+
+        Bitmap bitmap = createBitmap();
+        DocumentTaskManager.DocumentUploadBuilder documentUploadBuilder =
+                new DocumentTaskManager.DocumentUploadBuilder(bitmap);
+        documentUploadBuilder.setDocumentType("invoice");
+        documentUploadBuilder.setFilename("foobar.jpg");
+        documentUploadBuilder.setCompressionRate(12);
+        documentUploadBuilder.upload(documentTaskManager);
+
+        verify(documentTaskManager).createDocument(bitmap, "foobar.jpg", "invoice", 12);
+    }
+
     public void testDocumentBuilderPassesThroughArguments() throws IOException {
         final DocumentTaskManager documentTaskManager = Mockito.mock(DocumentTaskManager.class);
 
@@ -165,12 +179,11 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         DocumentTaskManager.DocumentUploadBuilder documentUploadBuilder =
                 new DocumentTaskManager.DocumentUploadBuilder()
                         .setDocumentBitmap(bitmap)
-                        .setDocumentType("invoice")
-                        .setFilename("foobar.jpg")
-                        .setCompressionRate(12);
+                        .setDocumentType(DocumentTaskManager.DocumentType.INVOICE)
+                        .setFilename("foobar.jpg");
         documentUploadBuilder.upload(documentTaskManager);
 
-        verify(documentTaskManager).createDocument(bitmap, "foobar.jpg", "invoice", 12);
+        verify(documentTaskManager).createDocument(bitmap, "foobar.jpg", DocumentTaskManager.DocumentType.INVOICE);
     }
 
     public void testDocumentBuilderPassesThroughByteArray() throws IOException {
@@ -180,12 +193,11 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         DocumentTaskManager.DocumentUploadBuilder documentUploadBuilder =
                 new DocumentTaskManager.DocumentUploadBuilder()
                         .setDocumentBytes(byteArray)
-                        .setDocumentType("invoice")
-                        .setFilename("foobar.jpg")
-                        .setCompressionRate(12);
+                        .setDocumentType(DocumentTaskManager.DocumentType.INVOICE)
+                        .setFilename("foobar.jpg");
         documentUploadBuilder.upload(documentTaskManager);
 
-        verify(documentTaskManager).createDocument(byteArray, "foobar.jpg", "invoice");
+        verify(documentTaskManager).createDocument(byteArray, "foobar.jpg", DocumentTaskManager.DocumentType.INVOICE);
     }
 
     public void testDocumentBuilderPassesBitmapInsteadOfByteArray() throws IOException {
@@ -197,12 +209,11 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
                 new DocumentTaskManager.DocumentUploadBuilder()
                         .setDocumentBytes(byteArray)
                         .setDocumentBitmap(bitmap)
-                        .setDocumentType("invoice")
-                        .setFilename("foobar.jpg")
-                        .setCompressionRate(12);
+                        .setDocumentType(DocumentTaskManager.DocumentType.INVOICE)
+                        .setFilename("foobar.jpg");
         documentUploadBuilder.upload(documentTaskManager);
 
-        verify(documentTaskManager).createDocument(bitmap, "foobar.jpg", "invoice", 12);
+        verify(documentTaskManager).createDocument(bitmap, "foobar.jpg", DocumentTaskManager.DocumentType.INVOICE);
     }
 
     public void testDocumentBuilderHasDefaultValues() throws IOException {
