@@ -18,10 +18,10 @@ As the key aspect of the Gini API is to provide information extraction for analy
 API is mainly built around the concept of documents. A document can be any written representation
 of information, usually such as invoices, reminders, contracts and so on.
 
-The Gini Android SDK supports creating documents from images, usually a picture of a paper document
-which was taken with the device's camera. The following example shows how to create a new
-document from a bitmap.
+The Gini Android SDK supports creating documents from images, PDFs or UTF-8 encoded text. Images are usually a picture of a paper document
+which was taken with the device's camera.
 
+The following example shows how to create a new document from a bitmap.
 
 .. code-block:: java
 
@@ -35,7 +35,7 @@ document from a bitmap.
     // Bitmap class, e.g. from a picture taken by the camera.
     
     DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
-    documentTaskManager.createDocument(bitmap, "myFirstDocument.jpg", null, 1).onSuccess(new Continuation<Document, Void>() {
+    documentTaskManager.createDocument(bitmap, "myFirstDocument.jpg", null).onSuccess(new Continuation<Document, Void>() {
                 @Override
                 public Void then(Task<Document> task) throws Exception {
                     Document document = task.getResult();
@@ -44,17 +44,59 @@ document from a bitmap.
                 }
     });
 
+.. note::
+    
+    ``createDocument(document, filename, documentType, compressionRate)`` was deprecated and should be replaced with
+    ``createDocument(document, filename, documentType)``. We use a compression rate optimized to get the best extractions
+    for the smallest image byte size. Also note that document type is now a `DocumentType` enum instead of a `String`. See 
+    `Setting the document type hint`_ for details.
+
+
+To create a document from a PDF or text, these have to be uploaded as a byte array as seen in the following example.
+
+.. code-block:: java
+
+    import net.gini.android.Gini;
+    import net.gini.android.DocumentTaskManager;
+    import net.gini.android.models.Document;
+    
+    ...
+    
+    // Assuming that `gini` is an instance of the `Gini` facade class and `bytes` is a byte array containing a PDF or UTF-8
+    // encoded text
+
+    DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
+    documentTaskManager.createDocument(bytes, "myFirstDocument.pdf", DocumentType.INVOICE).onSuccess(new Continuation<Document, Void>() {
+                @Override
+                public Void then(Task<Document> task) throws Exception {
+                    Document document = task.getResult();
+                    Log.d("gini", "Created document with ID " + document.getId());
+                    return null;
+                }
+    });
+
+.. note::
+    
+    The filename (``myFirstDocument.pdf`` in the example) is not required, it could be ``null``, but setting a filename is a good praxis
+    for human readable document identification.
+
+
 Working with optional arguments
 -------------------------------
 
-You may have noticed that we used ``null`` as the argument for the document's doctype in the example
-above. This is a completely valid thing to do since the argument is annoted with the ``Nullable``
+You may have noticed that we used ``null`` as the argument for the document's doctype in the first example. 
+This is a completely valid thing to do since the argument is annoted with the ``Nullable``
 annotation (``@org.jetbrains.annotations.Nullable``). All methods that accept null arguments use the
 ``@Nullable`` annotation for those arguments. Consider all arguments which do not have the ``@Nullable``
 annotation as mandatory. The method will raise a ``NullPointerException`` if you pass null to such
 arguments.
 
-Read on to find out how to get the extractions from a document.
+Setting the document type hint
+------------------------------
+
+To easily set the document type hint we introduced the ``DocumentType`` enum. It is safer and easier to
+use than a ``String``. For more details about the document type hints see the 
+`Document Type Hints in the Gini API documentation <http://developer.gini.net/gini-api/html/documents.html#document-type-hints>`_.
 
 Getting extractions
 ===================
