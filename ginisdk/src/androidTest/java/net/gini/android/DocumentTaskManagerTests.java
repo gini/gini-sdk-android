@@ -8,6 +8,7 @@ import android.test.InstrumentationTestCase;
 
 import net.gini.android.authorization.Session;
 import net.gini.android.authorization.SessionManager;
+import net.gini.android.helpers.TestUtils;
 import net.gini.android.models.Document;
 import net.gini.android.models.Extraction;
 import net.gini.android.models.SpecificExtraction;
@@ -57,6 +58,13 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         InputStream inputStream;
         inputStream = assetManager.open("yoda.jpg");
         return BitmapFactory.decodeStream(inputStream);
+    }
+
+    private byte[] createByteArray() throws IOException {
+        AssetManager assetManager = getInstrumentation().getContext().getResources().getAssets();
+
+        InputStream inputStream = assetManager.open("yoda.jpg");
+        return TestUtils.createByteArray(inputStream);
     }
 
     private JSONObject readJSONFile(final String filename) throws IOException, JSONException{
@@ -147,10 +155,10 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
         verify(mApiCommunicator)
                 .uploadDocument(any(byte[].class), eq(MediaTypes.IMAGE_JPEG), eq("foobar.jpg"), eq("invoice"),
-                                eq(mSession));
+                        eq(mSession));
     }
 
-    public void testDocumentBuilderPassesThroughArguments() throws IOException {
+    public void testDeprecatedDocumentBuilderPassesThroughArguments() throws IOException {
         final DocumentTaskManager documentTaskManager = Mockito.mock(DocumentTaskManager.class);
 
         Bitmap bitmap = createBitmap();
@@ -164,11 +172,55 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         verify(documentTaskManager).createDocument(bitmap, "foobar.jpg", "invoice", 12);
     }
 
+    public void testDocumentBuilderPassesThroughArguments() throws IOException {
+        final DocumentTaskManager documentTaskManager = Mockito.mock(DocumentTaskManager.class);
+
+        Bitmap bitmap = createBitmap();
+        DocumentTaskManager.DocumentUploadBuilder documentUploadBuilder =
+                new DocumentTaskManager.DocumentUploadBuilder()
+                        .setDocumentBitmap(bitmap)
+                        .setDocumentType(DocumentTaskManager.DocumentType.INVOICE)
+                        .setFilename("foobar.jpg");
+        documentUploadBuilder.upload(documentTaskManager);
+
+        verify(documentTaskManager).createDocument(bitmap, "foobar.jpg", DocumentTaskManager.DocumentType.INVOICE);
+    }
+
+    public void testDocumentBuilderPassesThroughByteArray() throws IOException {
+        final DocumentTaskManager documentTaskManager = Mockito.mock(DocumentTaskManager.class);
+
+        byte[] byteArray = createByteArray();
+        DocumentTaskManager.DocumentUploadBuilder documentUploadBuilder =
+                new DocumentTaskManager.DocumentUploadBuilder()
+                        .setDocumentBytes(byteArray)
+                        .setDocumentType(DocumentTaskManager.DocumentType.INVOICE)
+                        .setFilename("foobar.jpg");
+        documentUploadBuilder.upload(documentTaskManager);
+
+        verify(documentTaskManager).createDocument(byteArray, "foobar.jpg", DocumentTaskManager.DocumentType.INVOICE);
+    }
+
+    public void testDocumentBuilderPassesBitmapInsteadOfByteArray() throws IOException {
+        final DocumentTaskManager documentTaskManager = Mockito.mock(DocumentTaskManager.class);
+
+        byte[] byteArray = createByteArray();
+        Bitmap bitmap = createBitmap();
+        DocumentTaskManager.DocumentUploadBuilder documentUploadBuilder =
+                new DocumentTaskManager.DocumentUploadBuilder()
+                        .setDocumentBytes(byteArray)
+                        .setDocumentBitmap(bitmap)
+                        .setDocumentType(DocumentTaskManager.DocumentType.INVOICE)
+                        .setFilename("foobar.jpg");
+        documentUploadBuilder.upload(documentTaskManager);
+
+        verify(documentTaskManager).createDocument(bitmap, "foobar.jpg", DocumentTaskManager.DocumentType.INVOICE);
+    }
+
     public void testDocumentBuilderHasDefaultValues() throws IOException {
         final DocumentTaskManager documentTaskManager = Mockito.mock(DocumentTaskManager.class);
 
         Bitmap bitmap = createBitmap();
-        new DocumentTaskManager.DocumentUploadBuilder(bitmap).upload(documentTaskManager);
+        new DocumentTaskManager.DocumentUploadBuilder().setDocumentBitmap(bitmap).upload(documentTaskManager);
 
         verify(documentTaskManager).createDocument(bitmap, null, null, DocumentTaskManager.DEFAULT_COMPRESSION);
     }

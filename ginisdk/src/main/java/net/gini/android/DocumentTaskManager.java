@@ -34,15 +34,46 @@ import static net.gini.android.Utils.checkNotNull;
  */
 public class DocumentTaskManager {
 
-    /** The time in milliseconds between HTTP requests when a document is polled. */
+    /**
+     * The available document type hints. See the documentation for more information.
+     */
+    public enum DocumentType {
+        BANK_STATEMENT("BankStatement"),
+        CONTRACT("Contract"),
+        INVOICE("Invoice"),
+        REMINDER("Reminder"),
+        REMITTANCE_SLIP("RemittanceSlip"),
+        TRAVEL_EXPENSE_REPORT("TravelExpenseReport"),
+        OTHER("Other");
+
+        private final String apiDoctypeHint;
+
+        DocumentType(String apiDoctypeHint) {
+            this.apiDoctypeHint = apiDoctypeHint;
+        }
+
+        public String getApiDoctypeHint() {
+            return apiDoctypeHint;
+        }
+    }
+
+    /**
+     * The time in milliseconds between HTTP requests when a document is polled.
+     */
     public static long POLLING_INTERVAL = 1000;
 
-    /** The default compression rate which is used for JPEG compression in per cent. */
-    public final static int DEFAULT_COMPRESSION = 90;
+    /**
+     * The default compression rate which is used for JPEG compression in per cent.
+     */
+    public final static int DEFAULT_COMPRESSION = 50;
 
-    /** The ApiCommunicator instance which is used to communicate with the Gini API. */
+    /**
+     * The ApiCommunicator instance which is used to communicate with the Gini API.
+     */
     final ApiCommunicator mApiCommunicator;  // Visible for testing
-    /** The SessionManager instance which is used to create the documents. */
+    /**
+     * The SessionManager instance which is used to create the documents.
+     */
     private final SessionManager mSessionManager;
 
     public DocumentTaskManager(final ApiCommunicator apiCommunicator, final SessionManager sessionManager) {
@@ -62,18 +93,76 @@ public class DocumentTaskManager {
             };
 
     /**
+     * Uploads raw data and creates a new Gini document.
+     *
+     * @param document     A byte array representing an image, a pdf or UTF-8 encoded text
+     * @param filename     Optional the filename of the given document.
+     * @param documentType Optional a document type hint. See the documentation for the document type hints for
+     *                     possible values.
+     *
+     * @return A Task which will resolve to the Document instance of the freshly created document.
+     */
+    public Task<Document> createDocument(final byte[] document, @Nullable final String filename,
+                                         @Nullable final DocumentType documentType) {
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(Task<Session> sessionTask) throws Exception {
+                String apiDoctypeHint = null;
+                if (documentType != null) {
+                    apiDoctypeHint = documentType.getApiDoctypeHint();
+                }
+                final Session session = sessionTask.getResult();
+                return mApiCommunicator
+                        .uploadDocument(document, MediaTypes.IMAGE_JPEG, filename, apiDoctypeHint, session);
+            }
+        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
+            @Override
+            public Task<Document> then(Task<Uri> uploadTask) throws Exception {
+                return getDocument(uploadTask.getResult());
+            }
+        }, Task.BACKGROUND_EXECUTOR);
+    }
+
+    /**
      * Uploads the given photo of a document and creates a new Gini document.
      *
-     * @param document          A Bitmap representing the image
-     * @param filename          Optional the filename of the given document.
-     * @param documentType      Optional a document type hint. See the documentation for the document type hints for
-     *                          possible values.
-     * @param compressionRate   Optional the compression rate of the created JPEG representation of the document.
-     *                          Between 0 and 90.
-     * @return                  A Task which will resolve to the Document instance of the freshly created document.
+     * @deprecated Use {@link #createDocument(Bitmap, String, DocumentType)} instead.
+     *
+     * @param document        A Bitmap representing the image
+     * @param filename        Optional the filename of the given document.
+     * @param documentType    Optional a document type hint. See the documentation for the document type hints for
+     *                        possible values.
+     * @param compressionRate Optional the compression rate of the created JPEG representation of the document.
+     *                        Between 0 and 90.
+     *
+     * @return A Task which will resolve to the Document instance of the freshly created document.
      */
+    @Deprecated
     public Task<Document> createDocument(final Bitmap document, @Nullable final String filename,
                                          @Nullable final String documentType, final int compressionRate) {
+        return createDocumentInternal(document, filename, documentType, compressionRate);
+    }
+
+    /**
+     * Uploads the given photo of a document and creates a new Gini document.
+     *
+     * @param document        A Bitmap representing the image
+     * @param filename        Optional the filename of the given document.
+     * @param documentType    Optional a document type hint.
+     *
+     * @return A Task which will resolve to the Document instance of the freshly created document.
+     */
+    public Task<Document> createDocument(final Bitmap document, @Nullable final String filename,
+                                          @Nullable final DocumentType documentType) {
+        String apiDoctypeHint = null;
+        if (documentType != null) {
+            apiDoctypeHint = documentType.getApiDoctypeHint();
+        }
+        return createDocumentInternal(document, filename, apiDoctypeHint, DEFAULT_COMPRESSION);
+    }
+
+    private Task<Document> createDocumentInternal(final Bitmap document, @Nullable final String filename,
+                                         @Nullable final String apiDoctypeHint, final int compressionRate) {
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
             @Override
             public Task<Uri> then(Task<Session> sessionTask) throws Exception {
@@ -82,7 +171,7 @@ public class DocumentTaskManager {
                 document.compress(JPEG, compressionRate, documentOutputStream);
                 final byte[] uploadData = documentOutputStream.toByteArray();
                 return mApiCommunicator
-                        .uploadDocument(uploadData, MediaTypes.IMAGE_JPEG, filename, documentType, session);
+                        .uploadDocument(uploadData, MediaTypes.IMAGE_JPEG, filename, apiDoctypeHint, session);
             }
         }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
             @Override
@@ -95,11 +184,12 @@ public class DocumentTaskManager {
     /**
      * Get the extractions for the given document.
      *
-     * @param document          The Document instance for whose document the extractions are returned.
-     * @return                  A Task which will resolve to a mapping, where the key is a String with the name of the
-     *                          specific. See the
-     *                          <a href="http://developer.gini.net/gini-api/html/document_extractions.html">Gini API documentation</a>
-     *                          for a list of the names of the specific extractions.
+     * @param document The Document instance for whose document the extractions are returned.
+     *
+     * @return A Task which will resolve to a mapping, where the key is a String with the name of the
+     * specific. See the
+     * <a href="http://developer.gini.net/gini-api/html/document_extractions.html">Gini API documentation</a>
+     * for a list of the names of the specific extractions.
      */
     public Task<Map<String, SpecificExtraction>> getExtractions(final Document document) {
         final String documentId = document.getId();
@@ -138,8 +228,8 @@ public class DocumentTaskManager {
                             }
                             final SpecificExtraction specificExtraction =
                                     new SpecificExtraction(extractionName, extraction.getValue(),
-                                                           extraction.getEntity(), extraction.getBox(),
-                                                           candidatesForExtraction);
+                                            extraction.getEntity(), extraction.getBox(),
+                                            candidatesForExtraction);
                             extractionsByName.put(extractionName, specificExtraction);
                         }
 
@@ -152,6 +242,7 @@ public class DocumentTaskManager {
      * Get the document with the given unique identifier.
      *
      * @param documentId The unique identifier of the document.
+     *
      * @return A document instance representing all the document's metadata.
      */
     public Task<Document> getDocument(final String documentId) {
@@ -174,8 +265,9 @@ public class DocumentTaskManager {
      * URI's host does not conform to the base URL of the Gini API). Therefore it is not possibly to use this method to
      * get a document from an arbitrary URI.</b>
      *
-     * @param documentUri       The URI of the document.
-     * @return                  A document instance representing all the document's metadata.
+     * @param documentUri The URI of the document.
+     *
+     * @return A document instance representing all the document's metadata.
      */
     public Task<Document> getDocument(final Uri documentUri) {
         checkNotNull(documentUri);
@@ -209,7 +301,7 @@ public class DocumentTaskManager {
             @Override
             public Task<Document> then(Task<Document> task) throws Exception {
                 if (task.isFaulted() || task.isCancelled()
-                    || task.getResult().getState() != Document.ProcessingState.PENDING) {
+                        || task.getResult().getState() != Document.ProcessingState.PENDING) {
                     return task;
                 } else {
                     // The continuation is executed in a background thread by Bolts, so it does not block the UI
@@ -223,16 +315,19 @@ public class DocumentTaskManager {
     }
 
     /**
-     * Sends approved and conceivably corrected extractions for the given document. This is called "submitting feedback on extractions" in
+     * Sends approved and conceivably corrected extractions for the given document. This is called "submitting feedback
+     * on extractions" in
      * the Gini API documentation.
      *
-     * @param document          The document for which the extractions should be updated.
-     * @param extractions       A Map where the key is the name of the specific extraction and the value is the
-     *                          SpecificExtraction object. This is the same structure as returned by the getExtractions
-     *                          method of this manager.
-     * @return                  A Task which will resolve to the same document instance when storing the updated
-     *                          extractions was successful.
-     * @throws JSONException    When a value of an extraction is not JSON serializable.
+     * @param document    The document for which the extractions should be updated.
+     * @param extractions A Map where the key is the name of the specific extraction and the value is the
+     *                    SpecificExtraction object. This is the same structure as returned by the getExtractions
+     *                    method of this manager.
+     *
+     * @return A Task which will resolve to the same document instance when storing the updated
+     * extractions was successful.
+     *
+     * @throws JSONException When a value of an extraction is not JSON serializable.
      */
     public Task<Document> sendFeedbackForExtractions(final Document document,
                                                      final Map<String, SpecificExtraction> extractions)
@@ -271,11 +366,12 @@ public class DocumentTaskManager {
      *
      * <b>The owner of this document must agree that Gini can use this document for debugging and error analysis.</b>
      *
-     * @param document      The erroneous document.
-     * @param summary       Optional a short summary of the occurred error.
-     * @param description   Optional a more detailed description of the occurred error.
-     * @return              A Task which will resolve to an error ID. This is a unique identifier for your error report
-     *                      and can be used to refer to the reported error towards the Gini support.
+     * @param document    The erroneous document.
+     * @param summary     Optional a short summary of the occurred error.
+     * @param description Optional a more detailed description of the occurred error.
+     *
+     * @return A Task which will resolve to an error ID. This is a unique identifier for your error report
+     * and can be used to refer to the reported error towards the Gini support.
      */
     public Task<String> reportDocument(final Document document, final @Nullable String summary,
                                        final @Nullable String description) {
@@ -299,8 +395,9 @@ public class DocumentTaskManager {
      * Gets the layout of a document. The layout of the document describes the textual content of a document with
      * positional information, based on the processed document.
      *
-     * @param document      The document for which the layouts is requested.
-     * @return              A task which will resolve to a string containing the layout xml.
+     * @param document The document for which the layouts is requested.
+     *
+     * @return A task which will resolve to a string containing the layout xml.
      */
     public Task<JSONObject> getLayout(final Document document) {
         final String documentId = document.getId();
@@ -317,9 +414,11 @@ public class DocumentTaskManager {
      * Helper method which takes the JSON response of the Gini API as input and returns a mapping where the key is the
      * name of the candidates list (e.g. "amounts" or "dates") and the value is a list of extraction instances.
      *
-     * @param responseData      The JSON data of the key candidates from the response of the Gini API.
-     * @return                  The created mapping as described above.
-     * @throws JSONException    If the JSON data does not have the expected structure or if there is invalid data.
+     * @param responseData The JSON data of the key candidates from the response of the Gini API.
+     *
+     * @return The created mapping as described above.
+     *
+     * @throws JSONException If the JSON data does not have the expected structure or if there is invalid data.
      */
     protected HashMap<String, List<Extraction>> extractionCandidatesFromApiResponse(final JSONObject responseData)
             throws JSONException {
@@ -343,9 +442,11 @@ public class DocumentTaskManager {
     /**
      * Helper method which creates an Extraction instance from the JSON data which is returned by the Gini API.
      *
-     * @param responseData      The JSON data.
-     * @return                  The created Extraction instance.
-     * @throws JSONException    If the JSON data does not have the expected structure or if there is invalid data.
+     * @param responseData The JSON data.
+     *
+     * @return The created Extraction instance.
+     *
+     * @throws JSONException If the JSON data does not have the expected structure or if there is invalid data.
      */
     protected Extraction extractionFromApiResponse(final JSONObject responseData) throws JSONException {
         final String entity = responseData.getString("entity");
@@ -364,14 +465,42 @@ public class DocumentTaskManager {
      */
     public static class DocumentUploadBuilder {
 
-        private final Bitmap mDocumentBitmap;
+        private byte[] mDocumentBytes;
+        private Bitmap mDocumentBitmap;
         private String mFilename;
         private String mDocumentType;
+        private DocumentType mDocumentTypeHint;
         private int mCompressionRate;
 
+        public DocumentUploadBuilder() {
+            mCompressionRate = DocumentTaskManager.DEFAULT_COMPRESSION;
+        }
+
+        /**
+         * @deprecated Use {@link #DocumentUploadBuilder()} instead.
+         *
+         * @param documentBitmap A Bitmap representing the image.
+         */
+        @Deprecated
         public DocumentUploadBuilder(final Bitmap documentBitmap) {
             mDocumentBitmap = documentBitmap;
             mCompressionRate = DocumentTaskManager.DEFAULT_COMPRESSION;
+        }
+
+        /**
+         * Set the document as a byte array. If a {@link Bitmap} was also set, the bitmap will be used.
+         */
+        public DocumentUploadBuilder setDocumentBytes(byte[] documentBytes) {
+            this.mDocumentBytes = documentBytes;
+            return this;
+        }
+
+        /**
+         * Set the document as a {@link Bitmap}. This bitmap will be used instead of the byte array, if both were set.
+         */
+        public DocumentUploadBuilder setDocumentBitmap(Bitmap documentBitmap) {
+            this.mDocumentBitmap = documentBitmap;
+            return this;
         }
 
         /**
@@ -385,16 +514,31 @@ public class DocumentTaskManager {
         /**
          * Set the document's type. (This feature is called document type hint in the Gini API documentation). By
          * providing the doctype, Gini’s document processing is optimized in many ways.
+         *
+         * @deprecated Use {@link #setDocumentType(DocumentType)} instead.
          */
+        @Deprecated
         public DocumentUploadBuilder setDocumentType(final String documentType) {
             mDocumentType = documentType;
             return this;
         }
 
         /**
-         * The bitmap will be converted into a JPEG representation. Set the compression rate for the JPEG
-         * representation.
+         * Set the document's type. (This feature is called document type hint in the Gini API documentation). By
+         * providing the doctype, Gini’s document processing is optimized in many ways.
          */
+        public DocumentUploadBuilder setDocumentType(final DocumentType documentType) {
+            mDocumentTypeHint = documentType;
+            return this;
+        }
+
+        /**
+         * The bitmap (if set) will be converted into a JPEG representation. Set the compression rate for the JPEG
+         * representation.
+         *
+         * @deprecated The default compression rate is set to get the best extractions for the smallest image byte size.
+         */
+        @Deprecated
         public DocumentUploadBuilder setCompressionRate(final int compressionRate) {
             mCompressionRate = compressionRate;
             return this;
@@ -405,10 +549,19 @@ public class DocumentTaskManager {
          * this builder.
          *
          * @param documentTaskManager The instance of a DocumentTaskManager whill will be used to upload the document.
+         *
          * @return A task which will resolve to a Document instance.
          */
         public Task<Document> upload(final DocumentTaskManager documentTaskManager) {
-            return documentTaskManager.createDocument(mDocumentBitmap, mFilename, mDocumentType, mCompressionRate);
+            if (mDocumentBitmap != null) {
+                if (mDocumentTypeHint != null) {
+                    return documentTaskManager.createDocument(mDocumentBitmap, mFilename, mDocumentTypeHint);
+                } else {
+                    return documentTaskManager.createDocument(mDocumentBitmap, mFilename, mDocumentType, mCompressionRate);
+                }
+            } else {
+                return documentTaskManager.createDocument(mDocumentBytes, mFilename, mDocumentTypeHint);
+            }
         }
     }
 }

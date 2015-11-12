@@ -8,6 +8,7 @@ import android.test.AndroidTestCase;
 import android.util.Log;
 
 import net.gini.android.DocumentTaskManager.DocumentUploadBuilder;
+import net.gini.android.helpers.TestUtils;
 import net.gini.android.models.Document;
 import net.gini.android.models.SpecificExtraction;
 
@@ -51,28 +52,52 @@ public class SdkIntegrationTest extends AndroidTestCase{
 
     public static String getProperty(Properties properties, String propertyName){
         Object value = properties.get(propertyName);
-        assertNotNull(propertyName +  " not set!", value);
+        assertNotNull(propertyName + " not set!", value);
         return value.toString();
     }
 
-    public void testProcessDocument() throws IOException, InterruptedException, JSONException {
+    public void testDeprecatedProcessDocumentBitmap() throws IOException, InterruptedException, JSONException {
         final AssetManager assetManager = getContext().getResources().getAssets();
         final InputStream testDocumentAsStream = assetManager.open("test.jpg");
         assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
 
         final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
-        final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder(testDocument).setDocumentType("RemittanceSlip");
+        uploadDocument(uploadBuilder);
+    }
+
+    public void testProcessDocumentBitmap() throws IOException, InterruptedException, JSONException {
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
+
+        final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        uploadDocument(uploadBuilder);
+    }
+
+    public void testProcessDocumentByteArray() throws IOException, InterruptedException, JSONException {
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
+
+        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        uploadDocument(uploadBuilder);
+    }
+
+    private void uploadDocument(DocumentUploadBuilder uploadBuilder) throws InterruptedException, JSONException {
+        final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
 
         final Task<Document> upload = uploadBuilder.upload(documentTaskManager);
         final Task<Document> processDocument = upload.onSuccessTask(new Continuation<Document, Task<Document>>() {
             @Override
             public Task<Document> then(Task<Document> task) throws Exception {
-                    Document document = task.getResult();
-                    return documentTaskManager.pollDocument(document);
+                Document document = task.getResult();
+                return documentTaskManager.pollDocument(document);
             }
         });
-        
+
         final Task<Map<String, SpecificExtraction>> retrieveExtractions = processDocument.onSuccessTask(new Continuation<Document, Task<Map<String, SpecificExtraction>>>() {
             @Override
             public Task<Map<String, SpecificExtraction>> then(Task<Document> task) throws Exception {
