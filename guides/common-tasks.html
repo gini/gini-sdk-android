@@ -92,6 +92,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="">Working with Tasks</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#upload-a-document">Upload a document</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#working-with-optional-arguments">Working with optional arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-the-document-type-hint">Setting the document type hint</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#getting-extractions">Getting extractions</a></li>
@@ -146,9 +147,9 @@ framework</a>.</p>
 <p>As the key aspect of the Gini API is to provide information extraction for analyzing documents, the
 API is mainly built around the concept of documents. A document can be any written representation
 of information, usually such as invoices, reminders, contracts and so on.</p>
-<p>The Gini Android SDK supports creating documents from images, usually a picture of a paper document
-which was taken with the device&#8217;s camera. The following example shows how to create a new
-document from a bitmap.</p>
+<p>The Gini Android SDK supports creating documents from images, PDFs or UTF-8 encoded text. Images are usually a picture of a paper document
+which was taken with the device&#8217;s camera.</p>
+<p>The following example shows how to create a new document from a bitmap.</p>
 <div class="highlight-java"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">net.gini.android.Gini</span><span class="o">;</span>
 <span class="kn">import</span> <span class="nn">net.gini.android.DocumentTaskManager</span><span class="o">;</span>
 <span class="kn">import</span> <span class="nn">net.gini.android.models.Document</span><span class="o">;</span>
@@ -159,7 +160,7 @@ document from a bitmap.</p>
 <span class="c1">// Bitmap class, e.g. from a picture taken by the camera.</span>
 
 <span class="n">DocumentTaskManager</span> <span class="n">documentTaskManager</span> <span class="o">=</span> <span class="n">gini</span><span class="o">.</span><span class="na">getDocumentTaskManager</span><span class="o">();</span>
-<span class="n">documentTaskManager</span><span class="o">.</span><span class="na">createDocument</span><span class="o">(</span><span class="n">bitmap</span><span class="o">,</span> <span class="s">&quot;myFirstDocument.jpg&quot;</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="mi">1</span><span class="o">).</span><span class="na">onSuccess</span><span class="o">(</span><span class="k">new</span> <span class="n">Continuation</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">,</span> <span class="n">Void</span><span class="o">&gt;()</span> <span class="o">{</span>
+<span class="n">documentTaskManager</span><span class="o">.</span><span class="na">createDocument</span><span class="o">(</span><span class="n">bitmap</span><span class="o">,</span> <span class="s">&quot;myFirstDocument.jpg&quot;</span><span class="o">,</span> <span class="kc">null</span><span class="o">).</span><span class="na">onSuccess</span><span class="o">(</span><span class="k">new</span> <span class="n">Continuation</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">,</span> <span class="n">Void</span><span class="o">&gt;()</span> <span class="o">{</span>
             <span class="nd">@Override</span>
             <span class="kd">public</span> <span class="n">Void</span> <span class="nf">then</span><span class="o">(</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;</span> <span class="n">task</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
                 <span class="n">Document</span> <span class="n">document</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="na">getResult</span><span class="o">();</span>
@@ -169,15 +170,53 @@ document from a bitmap.</p>
 <span class="o">});</span>
 </pre></div>
 </div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><tt class="docutils literal"><span class="pre">createDocument(document,</span> <span class="pre">filename,</span> <span class="pre">documentType,</span> <span class="pre">compressionRate)</span></tt> was deprecated and should be replaced with
+<tt class="docutils literal"><span class="pre">createDocument(document,</span> <span class="pre">filename,</span> <span class="pre">documentType)</span></tt>. We use a compression rate optimized to get the best extractions
+for the smallest image byte size. Also note that document type is now a <cite>DocumentType</cite> enum instead of a <cite>String</cite>. See
+<a class="reference internal" href="#setting-the-document-type-hint">Setting the document type hint</a> for details.</p>
+</div>
+<p>To create a document from a PDF or text, these have to be uploaded as a byte array as seen in the following example.</p>
+<div class="highlight-java"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">net.gini.android.Gini</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">net.gini.android.DocumentTaskManager</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">net.gini.android.models.Document</span><span class="o">;</span>
+
+<span class="o">...</span>
+
+<span class="c1">// Assuming that `gini` is an instance of the `Gini` facade class and `bytes` is a byte array containing a PDF or UTF-8</span>
+<span class="c1">// encoded text</span>
+
+<span class="n">DocumentTaskManager</span> <span class="n">documentTaskManager</span> <span class="o">=</span> <span class="n">gini</span><span class="o">.</span><span class="na">getDocumentTaskManager</span><span class="o">();</span>
+<span class="n">documentTaskManager</span><span class="o">.</span><span class="na">createDocument</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="s">&quot;myFirstDocument.pdf&quot;</span><span class="o">,</span> <span class="n">DocumentType</span><span class="o">.</span><span class="na">INVOICE</span><span class="o">).</span><span class="na">onSuccess</span><span class="o">(</span><span class="k">new</span> <span class="n">Continuation</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">,</span> <span class="n">Void</span><span class="o">&gt;()</span> <span class="o">{</span>
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="n">Void</span> <span class="nf">then</span><span class="o">(</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;</span> <span class="n">task</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+                <span class="n">Document</span> <span class="n">document</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="na">getResult</span><span class="o">();</span>
+                <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="s">&quot;gini&quot;</span><span class="o">,</span> <span class="s">&quot;Created document with ID &quot;</span> <span class="o">+</span> <span class="n">document</span><span class="o">.</span><span class="na">getId</span><span class="o">());</span>
+                <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+            <span class="o">}</span>
+<span class="o">});</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The filename (<tt class="docutils literal"><span class="pre">myFirstDocument.pdf</span></tt> in the example) is not required, it could be <tt class="docutils literal"><span class="pre">null</span></tt>, but setting a filename is a good praxis
+for human readable document identification.</p>
+</div>
 <div class="section" id="working-with-optional-arguments">
 <h3>Working with optional arguments<a class="headerlink" href="#working-with-optional-arguments" title="Permalink to this headline">¶</a></h3>
-<p>You may have noticed that we used <tt class="docutils literal"><span class="pre">null</span></tt> as the argument for the document&#8217;s doctype in the example
-above. This is a completely valid thing to do since the argument is annoted with the <tt class="docutils literal"><span class="pre">Nullable</span></tt>
+<p>You may have noticed that we used <tt class="docutils literal"><span class="pre">null</span></tt> as the argument for the document&#8217;s doctype in the first example.
+This is a completely valid thing to do since the argument is annoted with the <tt class="docutils literal"><span class="pre">Nullable</span></tt>
 annotation (<tt class="docutils literal"><span class="pre">&#64;org.jetbrains.annotations.Nullable</span></tt>). All methods that accept null arguments use the
 <tt class="docutils literal"><span class="pre">&#64;Nullable</span></tt> annotation for those arguments. Consider all arguments which do not have the <tt class="docutils literal"><span class="pre">&#64;Nullable</span></tt>
 annotation as mandatory. The method will raise a <tt class="docutils literal"><span class="pre">NullPointerException</span></tt> if you pass null to such
 arguments.</p>
-<p>Read on to find out how to get the extractions from a document.</p>
+</div>
+<div class="section" id="setting-the-document-type-hint">
+<h3>Setting the document type hint<a class="headerlink" href="#setting-the-document-type-hint" title="Permalink to this headline">¶</a></h3>
+<p>To easily set the document type hint we introduced the <tt class="docutils literal"><span class="pre">DocumentType</span></tt> enum. It is safer and easier to
+use than a <tt class="docutils literal"><span class="pre">String</span></tt>. For more details about the document type hints see the
+<a class="reference external" href="http://developer.gini.net/gini-api/html/documents.html#document-type-hints">Document Type Hints in the Gini API documentation</a>.</p>
 </div>
 </div>
 <div class="section" id="getting-extractions">
