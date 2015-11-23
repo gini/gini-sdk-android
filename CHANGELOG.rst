@@ -1,0 +1,1 @@
+ginisdk/src/doc/source/changelog.rst
