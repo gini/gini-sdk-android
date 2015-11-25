@@ -21,4 +21,5 @@ Table of contents
    guides/common-tasks
    changelog
    see_also
+   license
 .. todolist::
