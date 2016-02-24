@@ -52,7 +52,7 @@ The following example shows how to create a new document from a bitmap.
     `Setting the document type hint`_ for details.
 
 
-To create a document from a PDF or text, these have to be uploaded as a byte array as seen in the following example.
+To create a document from a jpeg, PDF or text these have to be uploaded as a byte array as seen in the following example.
 
 .. code-block:: java
 
