@@ -51,7 +51,6 @@ def fullDocumentationDir(variant) {
     return "${buildDir.getPath()}/docs/java-docs-$variant.name/";
 }
 
-
 task createTestPropertyFile << {
     def propertyFile = new File("$projectDir/src/androidTest/assets/test.properties")
     if (!propertyFile.exists()) propertyFile.createNewFile()
@@ -123,3 +122,5 @@ android.libraryVariants.all { variant ->
         include 'LICENSE'
     }
 }
+
+apply from: rootProject.file('gradle/javadoc_coverage.gradle')
