@@ -430,7 +430,7 @@ public class DocumentTaskManager {
             final String entityName = entityNameIterator.next();
             final JSONArray candidatesListData = responseData.getJSONArray(entityName);
             final ArrayList<Extraction> candidates = new ArrayList<Extraction>();
-            for (int i = 0, length = candidates.size(); i < length; i += 1) {
+            for (int i = 0, length = candidatesListData.length(); i < length; i += 1) {
                 final JSONObject extractionData = candidatesListData.getJSONObject(i);
                 candidates.add(extractionFromApiResponse(extractionData));
             }
