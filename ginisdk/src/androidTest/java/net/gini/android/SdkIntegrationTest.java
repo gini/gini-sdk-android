@@ -114,13 +114,13 @@ public class SdkIntegrationTest extends AndroidTestCase{
 
         final Map<String, SpecificExtraction> extractions = retrieveExtractions.getResult();
 
-        assertEquals("IBAN should be found", "DE92760700120750007700", extractions.get("iban").getValue());
-        assertEquals("Amount to pay should be found", "29.00:EUR", extractions.get("amountToPay").getValue());
-        assertEquals("BIC should be found", "DEUTDEMM760", extractions.get("bic").getValue());
-        assertEquals("Payee should be found", "Hetzner Online AG", extractions.get("senderName").getValue());
+        assertEquals("IBAN should be found", "DE78370501980020008850", extractions.get("iban").getValue());
+        assertEquals("Amount to pay should be found", "1.00:EUR", extractions.get("amountToPay").getValue());
+        assertEquals("BIC should be found", "COLSDE33XXX", extractions.get("bic").getValue());
+        assertEquals("Payee should be found", "Uno Flüchtlingshilfe", extractions.get("senderName").getValue());
 
         // all extractions are correct, that means we have nothing to correct and will only send positive feedback
-        // we should send only send feedback for extractions we have seen and accepted
+        // we should only send feedback for extractions we have seen and accepted
         Map<String, SpecificExtraction> feedback = new HashMap<String, SpecificExtraction>();
         feedback.put("iban", extractions.get("iban"));
         feedback.put("amountToPay", extractions.get("amountToPay"));
