@@ -243,7 +243,11 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         if (extractionsTask.isFaulted()) {
             throw extractionsTask.getError();
         }
-        assertNotNull(extractionsTask.getResult());
+        final Map<String, SpecificExtraction> extractions = extractionsTask.getResult();
+        assertNotNull(extractions);
+        final SpecificExtraction amountToPay = extractions.get("amountToPay");
+        assertNotNull(amountToPay);
+        assertEquals(2, amountToPay.getCandidate().size());
     }
 
     @SuppressWarnings("ConstantConditions")
