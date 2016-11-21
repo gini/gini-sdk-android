@@ -70,7 +70,11 @@ task createIntegrationGuide(type: Exec) {
     commandLine './createIntegrationGuide.sh', "${project.projectDir}/src/doc", project.buildDir
 }
 
-assembleDebug.dependsOn.add(createTestPropertyFile)
+tasks.whenTaskAdded { task ->
+    if (task.name.equals("assembleDebug")) {
+        task.dependsOn.add(createTestPropertyFile)
+    }
+}
 
 android.libraryVariants.all { variant ->
     task("jar${variant.name.capitalize()}", type: Jar) {
