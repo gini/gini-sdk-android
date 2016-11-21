@@ -2,6 +2,13 @@
 Changelog
 =========
 
+{{version_and_date}}
+
+Bugfix
+------
+
+- Extraction candidates are now deserialized and returned as expected.
+
 1.1.47 (2015-11-13)
 ===================
 
