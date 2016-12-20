@@ -1,6 +1,8 @@
 package net.gini.android.authorization.requests;
 
 
+import static net.gini.android.helpers.TestUtils.areEqualURIQueries;
+
 import android.test.AndroidTestCase;
 
 import com.android.volley.AuthFailureError;
@@ -66,8 +68,7 @@ public class TokenRequestTest extends AndroidTestCase {
         data.put("bar", "foo");
         loginRequest = new TokenRequest("foobar", "1234", "https://user.gini.net", data, null, null, retryPolicy);
 
-        // TODO: Remove all the flakiness.
-        assertEquals("foo=bar&bar=foo", new String(loginRequest.getBody()));
+        assertTrue(areEqualURIQueries("foo=bar&bar=foo", new String(loginRequest.getBody())));
     }
 
     public void testBodyContentTypeHeader() throws AuthFailureError {

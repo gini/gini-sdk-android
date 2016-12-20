@@ -1,6 +1,15 @@
 package net.gini.android;
 
 
+import static com.android.volley.Request.Method.DELETE;
+import static com.android.volley.Request.Method.GET;
+import static com.android.volley.Request.Method.POST;
+import static com.android.volley.Request.Method.PUT;
+
+import static net.gini.android.helpers.TestUtils.areEqualURIs;
+
+import static org.mockito.Mockito.verify;
+
 import android.net.Uri;
 import android.test.InstrumentationTestCase;
 
@@ -17,14 +26,9 @@ import org.json.JSONObject;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.Map;
-
-import static com.android.volley.Request.Method.DELETE;
-import static com.android.volley.Request.Method.GET;
-import static com.android.volley.Request.Method.POST;
-import static com.android.volley.Request.Method.PUT;
-import static org.mockito.Mockito.verify;
 
 public class ApiCommunicatorTests extends InstrumentationTestCase {
     private ApiCommunicator mApiCommunicator;
@@ -463,7 +467,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         }
     }
 
-    public void testErrorReportForDocumentHasCorrectUrl() {
+    public void testErrorReportForDocumentHasCorrectUrl() throws URISyntaxException {
         Session session = createSession();
 
         mApiCommunicator.errorReportForDocument("1234", "short summary", "and a description", session);
@@ -471,10 +475,8 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
-        // TODO: remove all the flakiness
-        assertEquals(
-                "https://api.gini.net/documents/1234/errorreport?description=and+a+description&summary=short+summary",
-                request.getUrl());
+        assertTrue(areEqualURIs("https://api.gini.net/documents/1234/errorreport?description=and+a+description&summary=short+summary",
+                request.getUrl()));
     }
 
     public void testErrorReportForDocumentHasCorrectAuthorizationHeader() throws AuthFailureError {
