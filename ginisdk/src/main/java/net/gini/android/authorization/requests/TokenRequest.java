@@ -1,12 +1,14 @@
 package net.gini.android.authorization.requests;
 
 
+import static net.gini.android.Utils.mapToUrlEncodedString;
+
 import android.util.Base64;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.Response;
 import com.android.volley.RetryPolicy;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.Response;
 
 import net.gini.android.MediaTypes;
 import net.gini.android.Utils;
@@ -16,8 +18,6 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static net.gini.android.Utils.mapToUrlEncodedString;
 
 
 /**
@@ -30,7 +30,7 @@ public class TokenRequest extends JsonObjectRequest {
 
     public TokenRequest(String clientId, String clientSecret, String url, @Nullable Map<String, String> requestData,
                         Response.Listener<JSONObject> listener, Response.ErrorListener errorListener, RetryPolicy retryPolicy) {
-        super(Method.POST, url, "", listener, errorListener);
+        super(Method.POST, url, null, listener, errorListener);
 
         mAuthorizationCredentials =
                 Base64.encodeToString(String.format("%s:%s", clientId, clientSecret).getBytes(Utils.CHARSET_UTF8),

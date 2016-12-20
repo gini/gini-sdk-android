@@ -36,17 +36,17 @@ public class SdkIntegrationTest extends AndroidTestCase{
         testProperties.load(testPropertiesInput);
         final String clientId = getProperty(testProperties, "testClientId");
         final String clientSecret = getProperty(testProperties, "testClientSecret");
-        final String apiUrl = getProperty(testProperties, "testApiUri");
-        final String userCenterUrl = getProperty(testProperties, "testUserCenterUri");
+        final String apiUri = getProperty(testProperties, "testApiUri");
+        final String userCenterUri = getProperty(testProperties, "testUserCenterUri");
 
         Log.d("TEST", "testClientId " + clientId);
         Log.d("TEST", "testClientSecret " + clientSecret);
-        Log.d("TEST", "testApiUri " + apiUrl);
-        Log.d("TEST", "testUserCenterUrl" + userCenterUrl);
+        Log.d("TEST", "testApiUri " + apiUri);
+        Log.d("TEST", "testUserCenterUri" + userCenterUri);
 
         gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
-                setApiBaseUrl(apiUrl).
-                setUserCenterApiBaseUrl(userCenterUrl).
+                setApiBaseUrl(apiUri).
+                setUserCenterApiBaseUrl(userCenterUri).
                 build();
     }
 

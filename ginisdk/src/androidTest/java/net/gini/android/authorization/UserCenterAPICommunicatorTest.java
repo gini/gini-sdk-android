@@ -1,5 +1,9 @@
 package net.gini.android.authorization;
 
+import static net.gini.android.helpers.TestUtils.areEqualURIQueries;
+
+import static org.mockito.Mockito.verify;
+
 import android.os.SystemClock;
 import android.test.InstrumentationTestCase;
 
@@ -12,8 +16,6 @@ import net.gini.android.requests.RetryPolicyFactory;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-
-import static org.mockito.Mockito.verify;
 
 
 public class UserCenterAPICommunicatorTest extends InstrumentationTestCase {
@@ -86,7 +88,6 @@ public class UserCenterAPICommunicatorTest extends InstrumentationTestCase {
         final ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
-        // TODO: Remove all the flakiness.
-        assertEquals("username=foobar&password=1234", new String(request.getBody()));
+        assertTrue(areEqualURIQueries("username=foobar&password=1234", new String(request.getBody())));
     }
 }
