@@ -27,20 +27,6 @@ dependency. In order to gain access to the aar file, you have to add the Gini Ma
         ...
     }
 
-Resolving dependency conflicts
-------------------------------
-
-In case there is a dependency conflict regarding `Volley`, you may exclude it and as long as the API of your Volley version is
-compatible with the one in the Gini Android SDK (`com.mcxiaoke.volley:library:1.0.18`) everything should work as expected:
-
-.. code-block:: groovy
-
-    compile('net.gini:gini-android-sdk:1.1.66@aar') {
-        transitive = true
-        exclude group: 'com.mcxiaoke.volley'
-    } 
-
-
 Integrating the Gini SDK
 ========================
 

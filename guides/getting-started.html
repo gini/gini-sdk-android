@@ -82,10 +82,7 @@
         
             <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="">Getting started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#first-of-all-add-the-library-to-your-build">First of all: Add the Library to your Build</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#resolving-dependency-conflicts">Resolving dependency conflicts</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#first-of-all-add-the-library-to-your-build">First of all: Add the Library to your Build</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#integrating-the-gini-sdk">Integrating the Gini SDK</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#creating-the-gini-sdk-instance">Creating the Gini SDK instance</a></li>
 </ul>
@@ -105,11 +102,15 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../changelog.html#id1">1.1.66 (2016-11-21)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../changelog.html#id1">1.1.73 (2016-12-21)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../changelog.html#maintenance">Maintenance</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../changelog.html#id2">1.1.66 (2016-11-21)</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../changelog.html#bugfix">Bugfix</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../changelog.html#id2">1.1.47 (2015-11-13)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../changelog.html#id3">1.1.47 (2015-11-13)</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../changelog.html#feature">Feature</a></li>
 </ul>
 </li>
@@ -176,17 +177,6 @@ dependency. In order to gain access to the aar file, you have to add the Gini Ma
     <span class="o">...</span>
 <span class="o">}</span>
 </pre></div>
-</div>
-<div class="section" id="resolving-dependency-conflicts">
-<h3>Resolving dependency conflicts<a class="headerlink" href="#resolving-dependency-conflicts" title="Permalink to this headline">¶</a></h3>
-<p>In case there is a dependency conflict regarding <cite>Volley</cite>, you may exclude it and as long as the API of your Volley version is
-compatible with the one in the Gini Android SDK (<cite>com.mcxiaoke.volley:library:1.0.18</cite>) everything should work as expected:</p>
-<div class="highlight-groovy"><div class="highlight"><pre><span class="n">compile</span><span class="o">(</span><span class="s1">&#39;net.gini:gini-android-sdk:1.1.66@aar&#39;</span><span class="o">)</span> <span class="o">{</span>
-    <span class="n">transitive</span> <span class="o">=</span> <span class="kc">true</span>
-    <span class="n">exclude</span> <span class="nl">group:</span> <span class="s1">&#39;com.mcxiaoke.volley&#39;</span>
-<span class="o">}</span>
-</pre></div>
-</div>
 </div>
 </div>
 <div class="section" id="integrating-the-gini-sdk">
