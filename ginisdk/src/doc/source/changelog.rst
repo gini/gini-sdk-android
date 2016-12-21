@@ -2,7 +2,8 @@
 Changelog
 =========
 
-{{version_and_date}}
+1.1.73 (2016-12-21)
+===================
 
 Maintenance
 -----------
