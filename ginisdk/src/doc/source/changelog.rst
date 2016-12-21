@@ -2,6 +2,13 @@
 Changelog
 =========
 
+{{version_and_date}}
+
+Maintenance
+-----------
+
+- Updated Volley to com.android.Volley 1.0.0.
+
 1.1.66 (2016-11-21)
 ===================
 
