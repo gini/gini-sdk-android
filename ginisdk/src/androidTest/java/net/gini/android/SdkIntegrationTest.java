@@ -47,6 +47,7 @@ public class SdkIntegrationTest extends AndroidTestCase{
         gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUri).
                 setUserCenterApiBaseUrl(userCenterUri).
+                setConnectionTimeoutInMs(60000).
                 build();
     }
 
