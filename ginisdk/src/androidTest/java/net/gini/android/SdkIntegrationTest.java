@@ -47,6 +47,7 @@ public class SdkIntegrationTest extends AndroidTestCase{
         gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUri).
                 setUserCenterApiBaseUrl(userCenterUri).
+                setConnectionTimeoutInMs(60000).
                 build();
     }
 
@@ -116,7 +117,7 @@ public class SdkIntegrationTest extends AndroidTestCase{
 
         assertEquals("IBAN should be found", "DE78370501980020008850", extractions.get("iban").getValue());
         assertEquals("Amount to pay should be found", "1.00:EUR", extractions.get("amountToPay").getValue());
-        assertEquals("BIC should be found", "COLSDE33XXX", extractions.get("bic").getValue());
+        assertEquals("BIC should be found", "COLSDE33", extractions.get("bic").getValue());
         assertEquals("Payee should be found", "Uno Flüchtlingshilfe", extractions.get("senderName").getValue());
 
         // all extractions are correct, that means we have nothing to correct and will only send positive feedback

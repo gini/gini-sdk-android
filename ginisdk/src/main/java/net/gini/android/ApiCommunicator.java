@@ -40,7 +40,7 @@ import static net.gini.android.Utils.mapToUrlEncodedString;
 public class ApiCommunicator {
 
     private final Uri mBaseUri;
-    private final RequestQueue mRequestQueue;
+    final RequestQueue mRequestQueue; // Visible for testing
     // Visible for testing
     final RetryPolicyFactory mRetryPolicyFactory;
 

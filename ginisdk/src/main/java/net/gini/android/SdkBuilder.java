@@ -4,6 +4,7 @@ package net.gini.android;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.android.volley.Cache;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
@@ -41,6 +42,7 @@ public class SdkBuilder {
     private int mMaxRetries = DefaultRetryPolicy.DEFAULT_MAX_RETRIES;
     private float mBackOffMultiplier = DefaultRetryPolicy.DEFAULT_BACKOFF_MULT;
     private RetryPolicyFactory mRetryPolicyFactory;
+    private Cache mCache;
 
     /**
      * Constructor to initialize a new builder instance where anonymous Gini users are used. <b>This requires access to
@@ -155,6 +157,18 @@ public class SdkBuilder {
     }
 
     /**
+     * Set the cache implementation to use with Volley. If no cache is set, the default Volley cache
+     * will be used.
+     *
+     * @param cache                 A cache instance (specified by the com.android.volley.Cache interface).
+     * @return                      The builder instance to enable chaining.
+     */
+    public SdkBuilder setCache(Cache cache) {
+        mCache = cache;
+        return this;
+    }
+
+    /**
      * Builds the Gini instance with the configuration settings of the builder instance.
      *
      * @return                      The fully configured Gini instance.
@@ -171,7 +185,13 @@ public class SdkBuilder {
      */
     private synchronized RequestQueue getRequestQueue() {
         if (mRequestQueue == null) {
-            mRequestQueue = Volley.newRequestQueue(mContext);
+            if (mCache == null) {
+                mRequestQueue = Volley.newRequestQueue(mContext);
+            } else {
+                mRequestQueue = new RequestQueueBuilder(mContext)
+                        .setCache(mCache)
+                        .build();
+            }
         }
         return mRequestQueue;
     }

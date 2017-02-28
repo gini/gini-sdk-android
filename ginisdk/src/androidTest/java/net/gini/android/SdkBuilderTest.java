@@ -2,6 +2,7 @@ package net.gini.android;
 
 import android.test.AndroidTestCase;
 
+import com.android.volley.Cache;
 import com.android.volley.RetryPolicy;
 
 import net.gini.android.authorization.Session;
@@ -70,6 +71,48 @@ public class SdkBuilderTest extends AndroidTestCase {
         final RetryPolicy retryPolicy = documentTaskManager.mApiCommunicator.mRetryPolicyFactory.newRetryPolicy();
         assertEquals(3333, retryPolicy.getCurrentTimeout());
         assertEquals(0, retryPolicy.getCurrentRetryCount());
+    }
+
+    public void testVolleyCacheConfiguration() {
+        SdkBuilder builder = new SdkBuilder(getContext(), "clientId", "clientSecret", "@example.com");
+        NullCache nullCache = new NullCache();
+        builder.setCache(nullCache);
+        Gini sdkInstance = builder.build();
+
+        assertSame(sdkInstance.getDocumentTaskManager().mApiCommunicator.mRequestQueue.getCache(), nullCache);
+    }
+
+    private static final class NullCache implements Cache {
+
+        @Override
+        public Entry get(final String key) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void put(final String key, final Entry entry) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void initialize() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void invalidate(final String key, final boolean fullExpire) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void remove(final String key) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void clear() {
+            throw new UnsupportedOperationException();
+        }
     }
 
     private class NullSessionManager implements SessionManager {
