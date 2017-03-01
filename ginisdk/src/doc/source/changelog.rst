@@ -2,6 +2,14 @@
 Changelog
 =========
 
+{{version_and_date}}
+
+Feature
+-------
+
+- Volley caching can be customized by setting a com.android.volley.Cache implementation in the
+  SdkBuilder.
+
 1.1.73 (2016-12-21)
 ===================
 
