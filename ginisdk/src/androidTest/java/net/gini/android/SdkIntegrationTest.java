@@ -7,6 +7,8 @@ import android.graphics.BitmapFactory;
 import android.test.AndroidTestCase;
 import android.util.Log;
 
+import com.android.volley.toolbox.NoCache;
+
 import net.gini.android.DocumentTaskManager.DocumentUploadBuilder;
 import net.gini.android.helpers.TestUtils;
 import net.gini.android.models.Document;
@@ -26,6 +28,10 @@ import bolts.Task;
 public class SdkIntegrationTest extends AndroidTestCase{
 
     private Gini gini;
+    private String clientId;
+    private String clientSecret;
+    private String apiUri;
+    private String userCenterUri;
 
     @Override
     protected void setUp() throws Exception {
@@ -34,10 +40,10 @@ public class SdkIntegrationTest extends AndroidTestCase{
         assertNotNull("test.properties not found", testPropertiesInput);
         final Properties testProperties = new Properties();
         testProperties.load(testPropertiesInput);
-        final String clientId = getProperty(testProperties, "testClientId");
-        final String clientSecret = getProperty(testProperties, "testClientSecret");
-        final String apiUri = getProperty(testProperties, "testApiUri");
-        final String userCenterUri = getProperty(testProperties, "testUserCenterUri");
+        clientId = getProperty(testProperties, "testClientId");
+        clientSecret = getProperty(testProperties, "testClientSecret");
+        apiUri = getProperty(testProperties, "testApiUri");
+        userCenterUri = getProperty(testProperties, "testUserCenterUri");
 
         Log.d("TEST", "testClientId " + clientId);
         Log.d("TEST", "testClientSecret " + clientSecret);
@@ -78,6 +84,23 @@ public class SdkIntegrationTest extends AndroidTestCase{
     }
 
     public void testProcessDocumentByteArray() throws IOException, InterruptedException, JSONException {
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
+
+        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        uploadDocument(uploadBuilder);
+    }
+
+    public void testProcessDocumentWithCustomCache() throws IOException, JSONException, InterruptedException {
+        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
+                setApiBaseUrl(apiUri).
+                setUserCenterApiBaseUrl(userCenterUri).
+                setConnectionTimeoutInMs(60000).
+                setCache(new NoCache()).
+                build();
+
         final AssetManager assetManager = getContext().getResources().getAssets();
         final InputStream testDocumentAsStream = assetManager.open("test.jpg");
         assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);

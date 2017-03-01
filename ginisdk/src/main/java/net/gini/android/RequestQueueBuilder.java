@@ -54,7 +54,9 @@ class RequestQueueBuilder {
         if (mCache == null && mUserAgent == null && mStack == null && mNetwork == null) {
             return Volley.newRequestQueue(mContext);
         } else {
-            return new RequestQueue(getCache(), getNetwork());
+            RequestQueue queue = new RequestQueue(getCache(), getNetwork());
+            queue.start();
+            return queue;
         }
     }
 
