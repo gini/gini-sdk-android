@@ -86,32 +86,27 @@ public class SdkBuilderTest extends AndroidTestCase {
 
         @Override
         public Entry get(final String key) {
-            throw new UnsupportedOperationException();
+            return null;
         }
 
         @Override
         public void put(final String key, final Entry entry) {
-            throw new UnsupportedOperationException();
         }
 
         @Override
         public void initialize() {
-            throw new UnsupportedOperationException();
         }
 
         @Override
         public void invalidate(final String key, final boolean fullExpire) {
-            throw new UnsupportedOperationException();
         }
 
         @Override
         public void remove(final String key) {
-            throw new UnsupportedOperationException();
         }
 
         @Override
         public void clear() {
-            throw new UnsupportedOperationException();
         }
     }
 
