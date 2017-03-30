@@ -185,13 +185,11 @@ public class SdkBuilder {
      */
     private synchronized RequestQueue getRequestQueue() {
         if (mRequestQueue == null) {
-            if (mCache == null) {
-                mRequestQueue = Volley.newRequestQueue(mContext);
-            } else {
-                mRequestQueue = new RequestQueueBuilder(mContext)
-                        .setCache(mCache)
-                        .build();
+            RequestQueueBuilder requestQueueBuilder = new RequestQueueBuilder(mContext);
+            if (mCache != null) {
+                requestQueueBuilder.setCache(mCache);
             }
+            mRequestQueue = requestQueueBuilder.build();
         }
         return mRequestQueue;
     }

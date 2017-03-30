@@ -14,9 +14,12 @@ import com.android.volley.toolbox.DiskBasedCache;
 import com.android.volley.toolbox.HttpClientStack;
 import com.android.volley.toolbox.HttpStack;
 import com.android.volley.toolbox.HurlStack;
-import com.android.volley.toolbox.Volley;
 
 import java.io.File;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+
+import javax.net.ssl.SSLSocketFactory;
 
 /**
  * <p>
@@ -31,7 +34,9 @@ import java.io.File;
  */
 class RequestQueueBuilder {
 
-    /** Default on-disk cache directory. */
+    /**
+     * Default on-disk cache directory.
+     */
     private static final String DEFAULT_CACHE_DIR = "volley";
 
     private final Context mContext;
@@ -40,6 +45,7 @@ class RequestQueueBuilder {
     private String mUserAgent;
     private HttpStack mStack;
     private Network mNetwork;
+    private SSLSocketFactory mSSLSocketFactory;
 
     RequestQueueBuilder(final Context context) {
         mContext = context;
@@ -51,13 +57,9 @@ class RequestQueueBuilder {
     }
 
     RequestQueue build() {
-        if (mCache == null && mUserAgent == null && mStack == null && mNetwork == null) {
-            return Volley.newRequestQueue(mContext);
-        } else {
-            RequestQueue queue = new RequestQueue(getCache(), getNetwork());
-            queue.start();
-            return queue;
-        }
+        RequestQueue queue = new RequestQueue(getCache(), getNetwork());
+        queue.start();
+        return queue;
     }
 
     private Cache getCache() {
@@ -84,7 +86,7 @@ class RequestQueueBuilder {
     private HttpStack getStack() {
         if (mStack == null) {
             if (Build.VERSION.SDK_INT >= 9) {
-                mStack = new HurlStack();
+                mStack = getHurlStack();
             } else {
                 // Prior to Gingerbread, HttpUrlConnection was unreliable.
                 // See: http://android-developers.blogspot.com/2011/09/androids-http-clients.html
@@ -92,6 +94,26 @@ class RequestQueueBuilder {
             }
         }
         return mStack;
+    }
+
+    private HurlStack getHurlStack() {
+        SSLSocketFactory sslSocketFactory = getSSLSocketFactory();
+        if (sslSocketFactory != null) {
+            return new HurlStack(null, sslSocketFactory);
+        }
+        return new HurlStack();
+    }
+
+    private SSLSocketFactory getSSLSocketFactory() {
+        if (mSSLSocketFactory == null) {
+            if (TLSPreferredSocketFactory.isTLSv1xSupported()) {
+                try {
+                    mSSLSocketFactory = new TLSPreferredSocketFactory();
+                } catch (NoSuchAlgorithmException | KeyManagementException ignore) {
+                }
+            }
+        }
+        return mSSLSocketFactory;
     }
 
     private Network getNetwork() {
