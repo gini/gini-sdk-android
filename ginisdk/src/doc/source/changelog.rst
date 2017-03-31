@@ -2,6 +2,13 @@
 Changelog
 =========
 
+{{version_and_date}}
+
+Feature
+-------
+
+- TLS is preferred over SSLv3 on API Levels 16 and later.
+
 1.2.81 (2017-03-01)
 ===================
 
