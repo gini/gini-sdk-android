@@ -1,6 +1,7 @@
 package net.gini.android;
 
 
+import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -10,6 +11,8 @@ import android.util.Log;
 import com.android.volley.toolbox.NoCache;
 
 import net.gini.android.DocumentTaskManager.DocumentUploadBuilder;
+import net.gini.android.authorization.SharedPreferencesCredentialsStore;
+import net.gini.android.authorization.UserCredentials;
 import net.gini.android.helpers.TestUtils;
 import net.gini.android.models.Document;
 import net.gini.android.models.SpecificExtraction;
@@ -25,7 +28,7 @@ import java.util.Properties;
 import bolts.Continuation;
 import bolts.Task;
 
-public class SdkIntegrationTest extends AndroidTestCase{
+public class SdkIntegrationTest extends AndroidTestCase {
 
     private Gini gini;
     private String clientId;
@@ -57,7 +60,7 @@ public class SdkIntegrationTest extends AndroidTestCase{
                 build();
     }
 
-    public static String getProperty(Properties properties, String propertyName){
+    public static String getProperty(Properties properties, String propertyName) {
         Object value = properties.get(propertyName);
         assertNotNull(propertyName + " not set!", value);
         return value.toString();
@@ -110,6 +113,31 @@ public class SdkIntegrationTest extends AndroidTestCase{
         uploadDocument(uploadBuilder);
     }
 
+    public void testDocumentUploadWorksAfterNewUserWasCreatedIfUserWasInvalid() throws IOException, JSONException, InterruptedException {
+        SharedPreferencesCredentialsStore credentialsStore = new SharedPreferencesCredentialsStore(getContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE));
+        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
+                setApiBaseUrl(apiUri).
+                setUserCenterApiBaseUrl(userCenterUri).
+                setConnectionTimeoutInMs(60000).
+                setCredentialsStore(credentialsStore).
+                build();
+
+        // Create invalid user credentials
+        UserCredentials invalidUserCredentials = new UserCredentials("invalid@example.com", "1234");
+        credentialsStore.storeUserCredentials(invalidUserCredentials);
+
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
+
+        final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        uploadDocument(uploadBuilder);
+
+        // Verify that a new user was created
+        assertNotSame(invalidUserCredentials.getUsername(), credentialsStore.getUserCredentials().getUsername());
+    }
+
     private void uploadDocument(DocumentUploadBuilder uploadBuilder) throws InterruptedException, JSONException {
         final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
 
@@ -130,7 +158,7 @@ public class SdkIntegrationTest extends AndroidTestCase{
         });
 
         retrieveExtractions.waitForCompletion();
-        if (retrieveExtractions.isFaulted()){
+        if (retrieveExtractions.isFaulted()) {
             Log.e("TEST", Log.getStackTraceString(retrieveExtractions.getError()));
         }
 
@@ -153,7 +181,7 @@ public class SdkIntegrationTest extends AndroidTestCase{
 
         final Task<Document> sendFeedback = documentTaskManager.sendFeedbackForExtractions(upload.getResult(), feedback);
         sendFeedback.waitForCompletion();
-        if (sendFeedback.isFaulted()){
+        if (sendFeedback.isFaulted()) {
             Log.e("TEST", Log.getStackTraceString(sendFeedback.getError()));
         }
         assertTrue("Sending feedback should be completed", sendFeedback.isCompleted());

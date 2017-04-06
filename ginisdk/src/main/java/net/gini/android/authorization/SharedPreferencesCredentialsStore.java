@@ -34,4 +34,12 @@ public class SharedPreferencesCredentialsStore implements CredentialsStore {
         }
         return null;
     }
+
+    @Override
+    public boolean deleteUserCredentials() {
+        return mSharedPreferences.edit()
+                .remove(USERNAME_KEY)
+                .remove(PASSWORD_KEY)
+                .commit();
+    }
 }
