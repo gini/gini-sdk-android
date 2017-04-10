@@ -187,4 +187,23 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
         verify(mCredentialsStore).deleteUserCredentials();
         verify(mUserCenterManager).createUser(any(UserCredentials.class));
     }
+
+    @SuppressWarnings({"unchecked", "ThrowableResultOfMethodCallIgnored"})
+    public void testThatCreateUserErrorIsReturnedWhenNewUserIsCreatedIfExistingIsInvalid() throws InterruptedException {
+        when(mCredentialsStore.getUserCredentials()).thenReturn(new UserCredentials("foo@example.com", "1234"));
+        when(mUserCenterManager.loginUser(any(UserCredentials.class)))
+                .thenReturn(Task.<Session>forError(new VolleyError(new NetworkResponse(400, null, Collections.<String, String>emptyMap(), true))))
+                .thenReturn(Task.forResult(new Session(UUID.randomUUID().toString(), new Date())));
+        when(mUserCenterManager.createUser(any(UserCredentials.class)))
+                .thenReturn(Task.<User>forError(new VolleyError(new NetworkResponse(503, null, Collections.singletonMap("Some-Header", "10"), true))));
+
+        Task<Session> sessionTask = mAnonymousSessionSessionManager.getSession();
+        sessionTask.waitForCompletion();
+
+        assertTrue("Task should have faulted", sessionTask.isFaulted());
+        assertEquals(503, ((VolleyError) sessionTask.getError()).networkResponse.statusCode);
+        String headerValue = ((VolleyError) sessionTask.getError()).networkResponse.headers.get("Some-Header");
+        assertNotNull("Task error should contain response header 'Some-Header'", headerValue);
+        assertEquals("10", headerValue);
+    }
 }
