@@ -2,8 +2,11 @@ package net.gini.android.authorization;
 
 
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.Volley;
 
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -11,6 +14,7 @@ import java.util.concurrent.Callable;
 import bolts.Continuation;
 import bolts.Task;
 
+import static net.gini.android.Utils.CHARSET_UTF8;
 import static net.gini.android.Utils.checkNotNull;
 
 
@@ -118,8 +122,18 @@ public class AnonymousSessionManager implements SessionManager {
 
     @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
     private boolean isInvalidUserError(Task<Session> task) {
-        return task.getError() instanceof VolleyError
-                && ((VolleyError) task.getError()).networkResponse.statusCode == 400;
+        if (task.getError() instanceof VolleyError) {
+            VolleyError error = (VolleyError) task.getError();
+            if (error.networkResponse != null
+                    && error.networkResponse.data != null) {
+                try {
+                    JSONObject responseJson = new JSONObject(new String(error.networkResponse.data, CHARSET_UTF8));
+                    return responseJson.get("error").equals("invalid_grant");
+                } catch (JSONException ignore) {
+                }
+            }
+        }
+        return false;
     }
 
     /**

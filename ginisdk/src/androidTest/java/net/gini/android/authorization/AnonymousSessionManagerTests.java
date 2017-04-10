@@ -7,15 +7,15 @@ import com.android.volley.VolleyError;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.mockito.Spy;
+import org.mockito.stubbing.OngoingStubbing;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.Map;
 import java.util.UUID;
 
 import bolts.Task;
 
+import static net.gini.android.Utils.CHARSET_UTF8;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -176,9 +176,7 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
 
     @SuppressWarnings("unchecked")
     public void testThatExistingUserIsDeletedAndNewUserIsCreatedIfExistingIsInvalid() throws InterruptedException {
-        when(mCredentialsStore.getUserCredentials()).thenReturn(new UserCredentials("foo@example.com", "1234"));
-        when(mUserCenterManager.loginUser(any(UserCredentials.class)))
-                .thenReturn(Task.<Session>forError(new VolleyError(new NetworkResponse(400, null, Collections.<String, String>emptyMap(), true))))
+        makeLoginRequestFailOnce()
                 .thenReturn(Task.forResult(new Session(UUID.randomUUID().toString(), new Date())));
 
         Task<Session> sessionTask = mAnonymousSessionSessionManager.getSession();
@@ -188,12 +186,17 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
         verify(mUserCenterManager).createUser(any(UserCredentials.class));
     }
 
+    private OngoingStubbing<Task<Session>> makeLoginRequestFailOnce() {
+        when(mCredentialsStore.getUserCredentials()).thenReturn(new UserCredentials("foo@example.com", "1234"));
+        String invalidGrantErrorJson = "{\"error\": \"invalid_grant\"}";
+        return when(mUserCenterManager.loginUser(any(UserCredentials.class)))
+                .thenReturn(Task.<Session>forError(new VolleyError(
+                        new NetworkResponse(400, invalidGrantErrorJson.getBytes(CHARSET_UTF8), Collections.<String, String>emptyMap(), true))));
+    }
+
     @SuppressWarnings({"unchecked", "ThrowableResultOfMethodCallIgnored"})
     public void testThatCreateUserErrorIsReturnedWhenNewUserIsCreatedIfExistingIsInvalid() throws InterruptedException {
-        when(mCredentialsStore.getUserCredentials()).thenReturn(new UserCredentials("foo@example.com", "1234"));
-        when(mUserCenterManager.loginUser(any(UserCredentials.class)))
-                .thenReturn(Task.<Session>forError(new VolleyError(new NetworkResponse(400, null, Collections.<String, String>emptyMap(), true))))
-                .thenReturn(Task.forResult(new Session(UUID.randomUUID().toString(), new Date())));
+        makeLoginRequestFailOnce();
         when(mUserCenterManager.createUser(any(UserCredentials.class)))
                 .thenReturn(Task.<User>forError(new VolleyError(new NetworkResponse(503, null, Collections.singletonMap("Some-Header", "10"), true))));
 
