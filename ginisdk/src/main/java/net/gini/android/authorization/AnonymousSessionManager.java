@@ -84,12 +84,9 @@ public class AnonymousSessionManager implements SessionManager {
                 if (task.isFaulted()) {
                     if (isInvalidUserError(task)) {
                         mCredentialsStore.deleteUserCredentials();
-                        return createUser().continueWithTask(new Continuation<UserCredentials, Task<Session>>() {
+                        return createUser().onSuccessTask(new Continuation<UserCredentials, Task<Session>>() {
                             @Override
                             public Task<Session> then(Task<UserCredentials> task) throws Exception {
-                                if (task.isFaulted()) {
-                                    return Task.forError(task.getError());
-                                }
                                 return loginUser();
                             }
                         });
