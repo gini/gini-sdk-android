@@ -2,15 +2,22 @@ package net.gini.android.authorization;
 
 import android.test.InstrumentationTestCase;
 
+import com.android.volley.NetworkResponse;
+import com.android.volley.VolleyError;
+
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.mockito.stubbing.OngoingStubbing;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.UUID;
 
 import bolts.Task;
 
+import static net.gini.android.Utils.CHARSET_UTF8;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -34,17 +41,20 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
         try {
             new AnonymousSessionManager(null, null, null);
             fail("NullPointerException not thrown");
-        } catch (NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
 
         try {
             new AnonymousSessionManager("foobar", null, null);
             fail("NullPointerException not thrown");
-        } catch (NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
 
         try {
             new AnonymousSessionManager("foobar", mUserCenterManager, null);
             fail("NullPointerException not thrown");
-        } catch (NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
     }
 
     public void testGetSessionShouldReturnTask() {
@@ -113,7 +123,7 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
     }
 
     @SuppressWarnings("unchecked")
-    public void testThatUserSessionsAreReused() throws InterruptedException{
+    public void testThatUserSessionsAreReused() throws InterruptedException {
         when(mCredentialsStore.getUserCredentials()).thenReturn(new UserCredentials("foo@example.com", "1234"));
         when(mUserCenterManager.loginUser(any(UserCredentials.class))).thenReturn(
                 Task.forResult(new Session(UUID.randomUUID().toString(), new Date(new Date().getTime() + 10000))),
@@ -130,7 +140,7 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
     }
 
     @SuppressWarnings("unchecked")
-    public void testThatUserSessionsAreNotReusedWhenTimedOut() throws InterruptedException{
+    public void testThatUserSessionsAreNotReusedWhenTimedOut() throws InterruptedException {
         when(mCredentialsStore.getUserCredentials()).thenReturn(new UserCredentials("foo@example.com", "1234"));
         when(mUserCenterManager.loginUser(any(UserCredentials.class))).thenReturn(
                 Task.forResult(new Session(UUID.randomUUID().toString(), new Date(new Date().getTime() - 10000))),
@@ -149,7 +159,7 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
         assertNotSame(firstSessionTask.getResult(), secondSessionTask.getResult());
     }
 
-    public void testThatCreatedUserNamesAreEmailAddresses () throws InterruptedException {
+    public void testThatCreatedUserNamesAreEmailAddresses() throws InterruptedException {
         // TODO: The returned "created" user has another email address than the UserCredentials instance which is given
         //       to the mock.
         User fakeUser = new User("1234-5678-9012-3456", "foobar@example.com");
@@ -162,5 +172,41 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
         verify(mUserCenterManager).createUser(userCredentialsCaptor.capture());
 
         assertTrue(userCredentialsCaptor.getValue().getUsername().endsWith("@gini.net"));
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testThatExistingUserIsDeletedAndNewUserIsCreatedIfExistingIsInvalid() throws InterruptedException {
+        makeLoginRequestFailOnce()
+                .thenReturn(Task.forResult(new Session(UUID.randomUUID().toString(), new Date())));
+
+        Task<Session> sessionTask = mAnonymousSessionSessionManager.getSession();
+        sessionTask.waitForCompletion();
+
+        verify(mCredentialsStore).deleteUserCredentials();
+        verify(mUserCenterManager).createUser(any(UserCredentials.class));
+    }
+
+    private OngoingStubbing<Task<Session>> makeLoginRequestFailOnce() {
+        when(mCredentialsStore.getUserCredentials()).thenReturn(new UserCredentials("foo@example.com", "1234"));
+        String invalidGrantErrorJson = "{\"error\": \"invalid_grant\"}";
+        return when(mUserCenterManager.loginUser(any(UserCredentials.class)))
+                .thenReturn(Task.<Session>forError(new VolleyError(
+                        new NetworkResponse(400, invalidGrantErrorJson.getBytes(CHARSET_UTF8), Collections.<String, String>emptyMap(), true))));
+    }
+
+    @SuppressWarnings({"unchecked", "ThrowableResultOfMethodCallIgnored"})
+    public void testThatCreateUserErrorIsReturnedWhenNewUserIsCreatedIfExistingIsInvalid() throws InterruptedException {
+        makeLoginRequestFailOnce();
+        when(mUserCenterManager.createUser(any(UserCredentials.class)))
+                .thenReturn(Task.<User>forError(new VolleyError(new NetworkResponse(503, null, Collections.singletonMap("Some-Header", "10"), true))));
+
+        Task<Session> sessionTask = mAnonymousSessionSessionManager.getSession();
+        sessionTask.waitForCompletion();
+
+        assertTrue("Task should have faulted", sessionTask.isFaulted());
+        assertEquals(503, ((VolleyError) sessionTask.getError()).networkResponse.statusCode);
+        String headerValue = ((VolleyError) sessionTask.getError()).networkResponse.headers.get("Some-Header");
+        assertNotNull("Task error should contain response header 'Some-Header'", headerValue);
+        assertEquals("10", headerValue);
     }
 }

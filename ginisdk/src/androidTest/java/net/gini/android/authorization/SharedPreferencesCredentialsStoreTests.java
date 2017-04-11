@@ -53,4 +53,12 @@ public class SharedPreferencesCredentialsStoreTests extends AndroidTestCase {
         assertEquals("foo@example.com", userCredentials.getUsername());
         assertEquals("1234", userCredentials.getPassword());
     }
+
+    public void testDeleteCredentials() {
+        mCredentialsStore.storeUserCredentials(new UserCredentials("foo@example.com", "1234"));
+
+        assertTrue(mCredentialsStore.deleteUserCredentials());
+
+        assertNull(mCredentialsStore.getUserCredentials());
+    }
 }

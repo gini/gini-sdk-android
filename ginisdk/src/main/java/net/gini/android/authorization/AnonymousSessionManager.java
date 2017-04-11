@@ -1,13 +1,20 @@
 package net.gini.android.authorization;
 
 
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.Volley;
+
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import bolts.Continuation;
 import bolts.Task;
 
+import static net.gini.android.Utils.CHARSET_UTF8;
 import static net.gini.android.Utils.checkNotNull;
 
 
@@ -35,7 +42,9 @@ public class AnonymousSessionManager implements SessionManager {
      */
     private Session mCurrentSession;
 
-    /** The current task to get a new session. */
+    /**
+     * The current task to get a new session.
+     */
     private Task<Session> mCurrentSessionTask;
 
     public AnonymousSessionManager(final String emailDomain, final UserCenterManager userCenterManager,
@@ -67,8 +76,28 @@ public class AnonymousSessionManager implements SessionManager {
             }
             mCurrentSessionTask = completionSource.getTask();
         }
-        // Otherwise log in the user and store the session.
-        loginUser().continueWith(new Continuation<Session, Object>() {
+        // Otherwise try to log in the user and store the session or if user was invalid create
+        // a new user.
+        loginUser().continueWithTask(new Continuation<Session, Task<Session>>() {
+            @Override
+            public Task<Session> then(Task<Session> task) throws Exception {
+                if (task.isFaulted()) {
+                    if (isInvalidUserError(task)) {
+                        mCredentialsStore.deleteUserCredentials();
+                        return createUser().continueWithTask(new Continuation<UserCredentials, Task<Session>>() {
+                            @Override
+                            public Task<Session> then(Task<UserCredentials> task) throws Exception {
+                                if (task.isFaulted()) {
+                                    return Task.forError(task.getError());
+                                }
+                                return loginUser();
+                            }
+                        });
+                    }
+                }
+                return task;
+            }
+        }).continueWith(new Continuation<Session, Object>() {
             @Override
             public Object then(Task<Session> task) throws Exception {
                 if (task.isFaulted()) {
@@ -89,6 +118,22 @@ public class AnonymousSessionManager implements SessionManager {
         });
 
         return completionSource.getTask();
+    }
+
+    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+    private boolean isInvalidUserError(Task<Session> task) {
+        if (task.getError() instanceof VolleyError) {
+            VolleyError error = (VolleyError) task.getError();
+            if (error.networkResponse != null
+                    && error.networkResponse.data != null) {
+                try {
+                    JSONObject responseJson = new JSONObject(new String(error.networkResponse.data, CHARSET_UTF8));
+                    return responseJson.get("error").equals("invalid_grant");
+                } catch (JSONException ignore) {
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -121,7 +166,7 @@ public class AnonymousSessionManager implements SessionManager {
     /**
      * Creates a new user via the UserCenterManager. The user credentials of the freshly created user are then stored in
      * the credentials store.
-     *
+     * <p>
      * Warning: This method overwrites the credentials of an existing user.
      *
      * @return A task which will resolve to a UserCredentials instance which store the credentials of the freshly

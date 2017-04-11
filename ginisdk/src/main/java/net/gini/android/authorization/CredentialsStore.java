@@ -11,7 +11,7 @@ public interface CredentialsStore {
      * @param userCredentials   The user's credentials.
      * @return                  Whether the storing of the credentials was successful.
      */
-    public boolean storeUserCredentials(UserCredentials userCredentials);
+    boolean storeUserCredentials(UserCredentials userCredentials);
 
     /**
      * Returns the stored user credentials.
@@ -20,5 +20,12 @@ public interface CredentialsStore {
      *
      * @return                  The stored user credentials.
      */
-    public UserCredentials getUserCredentials();
+    UserCredentials getUserCredentials();
+
+    /**
+     * Deletes the stored user credentials.
+     *
+     * @return                  Whether the deleting of the credentials was successful.
+     */
+    boolean deleteUserCredentials();
 }
