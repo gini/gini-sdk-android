@@ -3,7 +3,7 @@ package net.gini.android.authorization;
 import android.net.Uri;
 
 import com.android.volley.RequestQueue;
-import com.android.volley.RetryPolicy;
+import com.android.volley.toolbox.JsonObjectRequest;
 
 import net.gini.android.RequestTaskCompletionSource;
 import net.gini.android.authorization.requests.BearerJsonObjectRequest;
@@ -16,6 +16,7 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 
+import bolts.Continuation;
 import bolts.Task;
 
 import static com.android.volley.Request.Method.GET;
@@ -60,7 +61,7 @@ public class UserCenterAPICommunicator {
         final String url = mBaseUrl + "oauth/token?grant_type=client_credentials";
         TokenRequest loginRequest =
                 new TokenRequest(mClientId, mClientSecret, url, null, completionSource, completionSource,
-                                 mRetryPolicyFactory.newRetryPolicy());
+                        mRetryPolicyFactory.newRetryPolicy());
         mRequestQueue.add(loginRequest);
 
         return completionSource.getTask();
@@ -83,7 +84,7 @@ public class UserCenterAPICommunicator {
         data.put("password", userCredentials.getPassword());
         TokenRequest loginRequest =
                 new TokenRequest(mClientId, mClientSecret, url, data, completionSource, completionSource,
-                                 mRetryPolicyFactory.newRetryPolicy());
+                        mRetryPolicyFactory.newRetryPolicy());
         mRequestQueue.add(loginRequest);
 
         return completionSource.getTask();
@@ -104,13 +105,13 @@ public class UserCenterAPICommunicator {
 
         final RequestTaskCompletionSource<Uri> completionSource = RequestTaskCompletionSource.newCompletionSource();
         final String url = mBaseUrl + "api/users";
-        final JSONObject data = new JSONObject(){{
+        final JSONObject data = new JSONObject() {{
             put("email", userCredentials.getUsername());
             put("password", userCredentials.getPassword());
         }};
         BearerLocationRequest request =
                 new BearerLocationRequest(POST, url, data, userCenterApiSession, completionSource,
-                                          completionSource, mRetryPolicyFactory.newRetryPolicy());
+                        completionSource, mRetryPolicyFactory.newRetryPolicy());
         mRequestQueue.add(request);
 
         return completionSource.getTask();
@@ -121,9 +122,54 @@ public class UserCenterAPICommunicator {
                 RequestTaskCompletionSource.newCompletionSource();
         final BearerJsonObjectRequest request =
                 new BearerJsonObjectRequest(GET, userUri.toString(), null, userCenterApiSession, completionSource,
-                                            completionSource, mRetryPolicyFactory.newRetryPolicy());
+                        completionSource, mRetryPolicyFactory.newRetryPolicy());
 
         mRequestQueue.add(request);
+        return completionSource.getTask();
+    }
+
+    // Visible for testing
+    Task<JSONObject> getGiniApiSessionTokenInfo(final Session giniApiSession) {
+        final RequestTaskCompletionSource<JSONObject> completionSource = RequestTaskCompletionSource.newCompletionSource();
+        final String url = mBaseUrl + "oauth/check_token?token=" + giniApiSession.getAccessToken();
+        final JsonObjectRequest request =
+                new JsonObjectRequest(POST, url, null, completionSource, completionSource);
+        mRequestQueue.add(request);
+        return completionSource.getTask();
+    }
+
+    public Task<String> getUserId(final Session giniAPISession) {
+        return getGiniApiSessionTokenInfo(giniAPISession)
+                .onSuccessTask(new Continuation<JSONObject, Task<String>>() {
+                    @Override
+                    public Task<String> then(Task<JSONObject> task) throws Exception {
+                        String userId = "";
+                        try {
+                            userId = task.getResult().getString("user_name");
+                        } catch (JSONException e) {
+                            return Task.forError(e);
+                        }
+                        return Task.forResult(userId);
+                    }
+                });
+    }
+
+
+    public Task<JSONObject> updateEmail(final String userId,
+                                        final String newEmail,
+                                        final String oldEmail,
+                                        final Session userCenterApiSession) throws JSONException {
+        final RequestTaskCompletionSource<JSONObject> completionSource = RequestTaskCompletionSource.newCompletionSource();
+        final String url = mBaseUrl + "api/users/" + userId;
+        final JSONObject data = new JSONObject() {{
+            put("oldEmail", oldEmail);
+            put("email", newEmail);
+        }};
+        final BearerJsonObjectRequest request =
+                new BearerJsonObjectRequest(POST, url, data, userCenterApiSession, completionSource,
+                        completionSource, mRetryPolicyFactory.newRetryPolicy());
+        mRequestQueue.add(request);
+
         return completionSource.getTask();
     }
 }

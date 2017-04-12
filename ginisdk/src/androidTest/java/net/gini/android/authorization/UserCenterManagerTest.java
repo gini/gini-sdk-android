@@ -9,9 +9,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mockito.Mockito;
 
+import java.util.Date;
+
 import bolts.Task;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -138,5 +141,16 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
         assertNotNull(user);
         assertEquals("foobar@example.com", user.getUsername());
         assertEquals("88a28076-18e8-4275-b39c-eaacc240d406", user.getUserId());
+    }
+
+    public void testUpdateEmailShouldReturnTask() throws JSONException {
+        when(mMockUserCenterAPICommunicator.loginClient())
+                .thenReturn(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6"));
+        when(mMockUserCenterAPICommunicator.getUserId(any(Session.class)))
+                .thenReturn(Task.forResult("exampleUserId"));
+        when(mMockUserCenterAPICommunicator.updateEmail(anyString(),anyString(),anyString(), any(Session.class)))
+                .thenReturn(Task.forResult(new JSONObject()));
+
+        assertNotNull(mUserCenterManager.updateEmail("1234@beispiel.com", "5678@example.com", new Session("example_token", new Date())));
     }
 }

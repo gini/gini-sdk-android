@@ -5,6 +5,7 @@ import android.test.InstrumentationTestCase;
 import com.android.volley.NetworkResponse;
 import com.android.volley.VolleyError;
 
+import org.json.JSONObject;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.stubbing.OngoingStubbing;
@@ -16,7 +17,9 @@ import java.util.UUID;
 import bolts.Task;
 
 import static net.gini.android.Utils.CHARSET_UTF8;
+import static net.gini.android.Utils.mapToUrlEncodedString;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -208,5 +211,54 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
         String headerValue = ((VolleyError) sessionTask.getError()).networkResponse.headers.get("Some-Header");
         assertNotNull("Task error should contain response header 'Some-Header'", headerValue);
         assertEquals("10", headerValue);
+    }
+
+    public void testHasUserCredentialsEmailDomainReturnsTrueIfUsernameEmailDomainIsSameAsEmailDomain() {
+        UserCredentials userCredentials = new UserCredentials("1234@example.com", "1234");
+        assertTrue(mAnonymousSessionSessionManager.hasUserCredentialsEmailDomain("example.com", userCredentials));
+    }
+
+    public void testHasUserCredentialsEmailDomainReturnsFalseIfUsernameEmailDomainIsNotSameAsEmailDomain() {
+        UserCredentials userCredentials = new UserCredentials("1234@example.com", "1234");
+        assertFalse(mAnonymousSessionSessionManager.hasUserCredentialsEmailDomain("beispiel.com", userCredentials));
+    }
+
+    public void testHasUserCredentialsEmailDomainReturnsFalseIfUsernameEmailDomainContainsEmailDomain() {
+        UserCredentials userCredentials = new UserCredentials("1234@exampledomain.com", "1234");
+        assertFalse(mAnonymousSessionSessionManager.hasUserCredentialsEmailDomain("domain.com", userCredentials));
+    }
+
+    public void testThatLoginUserUpdatesEmailDomainIfChanged() throws InterruptedException {
+        String newEmailDomain = "beispiel.com";
+        String oldEmailDomain = "example.com";
+        mAnonymousSessionSessionManager = new AnonymousSessionManager(newEmailDomain, mUserCenterManager, mCredentialsStore);
+        when(mCredentialsStore.getUserCredentials())
+                .thenReturn(new UserCredentials("1234@" + oldEmailDomain, "5678"));
+        when(mUserCenterManager.updateEmail(anyString(), anyString(), any(Session.class)))
+                .thenReturn(Task.forResult(new JSONObject()));
+        when(mUserCenterManager.loginUser(any(UserCredentials.class)))
+                .thenReturn(Task.forResult(new Session("1234-5678-9012", new Date())))
+                .thenReturn(Task.forResult(new Session("1234-5678-9012", new Date())));
+
+        Task<Session> loginTask = mAnonymousSessionSessionManager.loginUser();
+        loginTask.waitForCompletion();
+
+        assertTrue(loginTask.isCompleted());
+        verify(mCredentialsStore).deleteUserCredentials();
+
+        ArgumentCaptor<UserCredentials> userCredentialsCaptor = ArgumentCaptor.forClass(UserCredentials.class);
+        verify(mCredentialsStore).storeUserCredentials(userCredentialsCaptor.capture());
+
+        UserCredentials newUserCredentials = userCredentialsCaptor.getValue();
+        assertEquals(newEmailDomain, extractEmailDomain(newUserCredentials.getUsername()));
+        assertEquals("5678", newUserCredentials.getPassword());
+    }
+
+    private String extractEmailDomain(String email) {
+        String[] components = email.split("@");
+        if (components.length > 1) {
+            return components[1];
+        }
+        return "";
     }
 }
