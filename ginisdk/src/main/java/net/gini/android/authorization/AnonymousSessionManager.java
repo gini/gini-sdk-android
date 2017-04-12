@@ -2,14 +2,13 @@ package net.gini.android.authorization;
 
 
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.Volley;
 
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.UUID;
-import java.util.concurrent.Callable;
+import java.util.regex.Pattern;
 
 import bolts.Continuation;
 import bolts.Task;
@@ -84,12 +83,9 @@ public class AnonymousSessionManager implements SessionManager {
                 if (task.isFaulted()) {
                     if (isInvalidUserError(task)) {
                         mCredentialsStore.deleteUserCredentials();
-                        return createUser().continueWithTask(new Continuation<UserCredentials, Task<Session>>() {
+                        return createUser().onSuccessTask(new Continuation<UserCredentials, Task<Session>>() {
                             @Override
                             public Task<Session> then(Task<UserCredentials> task) throws Exception {
-                                if (task.isFaulted()) {
-                                    return Task.forError(task.getError());
-                                }
                                 return loginUser();
                             }
                         });
@@ -147,9 +143,30 @@ public class AnonymousSessionManager implements SessionManager {
         // Wrap getting the user credentials in a task, because it is much easier to handle the creation of a new
         // user then.
         Task<UserCredentials> credentialsTask;
-        UserCredentials userCredentials = mCredentialsStore.getUserCredentials();
+        final UserCredentials userCredentials = mCredentialsStore.getUserCredentials();
         if (userCredentials != null) {
-            credentialsTask = Task.forResult(userCredentials);
+            if (hasUserCredentialsEmailDomain(mEmailDomain, userCredentials)) {
+                credentialsTask = Task.forResult(userCredentials);
+            } else {
+                final String oldEmail = userCredentials.getUsername();
+                final String newEmail = generateUsername();
+                credentialsTask = mUserCenterManager.loginUser(userCredentials)
+                        .onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
+                            @Override
+                            public Task<JSONObject> then(Task<Session> task) throws Exception {
+                                return mUserCenterManager.updateEmail(newEmail, oldEmail, task.getResult());
+                            }
+                        })
+                        .onSuccess(new Continuation<JSONObject, UserCredentials>() {
+                            @Override
+                            public UserCredentials then(Task<JSONObject> task) throws Exception {
+                                mCredentialsStore.deleteUserCredentials();
+                                UserCredentials newCredentials = new UserCredentials(newEmail, userCredentials.getPassword());
+                                mCredentialsStore.storeUserCredentials(newCredentials);
+                                return newCredentials;
+                            }
+                        });
+            }
         } else {
             credentialsTask = createUser();
         }
@@ -163,6 +180,11 @@ public class AnonymousSessionManager implements SessionManager {
         });
     }
 
+    // Visible for testing
+    boolean hasUserCredentialsEmailDomain(final String emailDomain, final UserCredentials userCredentials) {
+        return userCredentials.getUsername().endsWith("@" + emailDomain);
+    }
+
     /**
      * Creates a new user via the UserCenterManager. The user credentials of the freshly created user are then stored in
      * the credentials store.
@@ -173,8 +195,8 @@ public class AnonymousSessionManager implements SessionManager {
      * created user.
      */
     protected Task<UserCredentials> createUser() {
-        final String username = UUID.randomUUID().toString() + "@" + mEmailDomain;
-        final String password = UUID.randomUUID().toString();
+        final String username = generateUsername();
+        final String password = generatePassword();
         final UserCredentials userCredentials = new UserCredentials(username, password);
         return mUserCenterManager.createUser(userCredentials).onSuccess(new Continuation<User, UserCredentials>() {
             @Override
@@ -183,5 +205,14 @@ public class AnonymousSessionManager implements SessionManager {
                 return userCredentials;
             }
         });
+    }
+
+    private String generateUsername() {
+        return UUID.randomUUID().toString() + "@" + mEmailDomain;
+    }
+
+
+    private String generatePassword() {
+        return UUID.randomUUID().toString();
     }
 }

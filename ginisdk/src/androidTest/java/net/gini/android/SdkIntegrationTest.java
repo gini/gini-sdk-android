@@ -138,6 +138,48 @@ public class SdkIntegrationTest extends AndroidTestCase {
         assertNotSame(invalidUserCredentials.getUsername(), credentialsStore.getUserCredentials().getUsername());
     }
 
+    public void testEmailDomainIsUpdatedForExistingUserIfEmailDomainWasChanged() throws IOException, JSONException, InterruptedException {
+        // Upload a document to make sure we have a valid user
+        SharedPreferencesCredentialsStore credentialsStore = new SharedPreferencesCredentialsStore(getContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE));
+        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
+                setApiBaseUrl(apiUri).
+                setUserCenterApiBaseUrl(userCenterUri).
+                setConnectionTimeoutInMs(60000).
+                setCredentialsStore(credentialsStore).
+                build();
+
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
+
+        final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        uploadDocument(uploadBuilder);
+
+        // Create another sdk instance with a new email domain (to simulate an app update)
+        // and verify that the new email domain is used
+        String newEmailDomain = "beispiel.com";
+        gini = new SdkBuilder(getContext(), clientId, clientSecret, newEmailDomain).
+                setApiBaseUrl(apiUri).
+                setUserCenterApiBaseUrl(userCenterUri).
+                setConnectionTimeoutInMs(60000).
+                setCredentialsStore(credentialsStore).
+                build();
+
+        uploadDocument(uploadBuilder);
+
+        UserCredentials newUserCredentials = credentialsStore.getUserCredentials();
+        assertEquals(newEmailDomain, extractEmailDomain(newUserCredentials.getUsername()));
+    }
+
+    private String extractEmailDomain(String email) {
+        String[] components = email.split("@");
+        if (components.length > 1) {
+            return components[1];
+        }
+        return "";
+    }
+
     private void uploadDocument(DocumentUploadBuilder uploadBuilder) throws InterruptedException, JSONException {
         final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
 

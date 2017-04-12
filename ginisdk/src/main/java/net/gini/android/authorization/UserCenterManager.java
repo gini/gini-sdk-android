@@ -87,6 +87,23 @@ public class UserCenterManager {
         }, Task.BACKGROUND_EXECUTOR);
     }
 
+    public Task<JSONObject> updateEmail(final String newEmail, final String oldEmail,
+                                        final Session giniAPISession) {
+        return getUserCenterSession().onSuccessTask(new Continuation<Session, Task<String>>() {
+            @Override
+            public Task<String> then(Task<Session> task) throws Exception {
+                return mUserCenterAPICommunicator.getUserId(giniAPISession);
+            }
+        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<String, Task<JSONObject>>() {
+            @Override
+            public Task<JSONObject> then(Task<String> task) throws Exception {
+                final String userId = task.getResult();
+                return mUserCenterAPICommunicator.updateEmail(userId,
+                        newEmail, oldEmail, mCurrentSession);
+            }
+        }, Task.BACKGROUND_EXECUTOR);
+    }
+
     /**
      * Returns a future that will resolve to a valid session (for the User Center API!).
      */
