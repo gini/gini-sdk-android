@@ -182,8 +182,7 @@ public class AnonymousSessionManager implements SessionManager {
 
     // Visible for testing
     boolean hasUserCredentialsEmailDomain(final String emailDomain, final UserCredentials userCredentials) {
-        String newEmailDomainRegex = "^.*@" + Pattern.quote(emailDomain) + "$";
-        return userCredentials.getUsername().matches(newEmailDomainRegex);
+        return userCredentials.getUsername().endsWith("@" + emailDomain);
     }
 
     /**
