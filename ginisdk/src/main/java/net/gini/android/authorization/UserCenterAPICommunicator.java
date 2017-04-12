@@ -134,7 +134,7 @@ public class UserCenterAPICommunicator {
         final RequestTaskCompletionSource<JSONObject> completionSource = RequestTaskCompletionSource.newCompletionSource();
         final String url = mBaseUrl + "oauth/check_token?token=" + giniApiSession.getAccessToken();
         final JsonObjectRequest request =
-                new JsonObjectRequest(POST, url, null, completionSource, completionSource);
+                new JsonObjectRequest(GET, url, null, completionSource, completionSource);
         mRequestQueue.add(request);
         return completionSource.getTask();
     }
