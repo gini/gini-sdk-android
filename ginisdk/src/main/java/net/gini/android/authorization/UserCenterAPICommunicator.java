@@ -21,6 +21,7 @@ import bolts.Task;
 
 import static com.android.volley.Request.Method.GET;
 import static com.android.volley.Request.Method.POST;
+import static com.android.volley.Request.Method.PUT;
 
 
 /**
@@ -166,7 +167,7 @@ public class UserCenterAPICommunicator {
             put("email", newEmail);
         }};
         final BearerJsonObjectRequest request =
-                new BearerJsonObjectRequest(POST, url, data, userCenterApiSession, completionSource,
+                new BearerJsonObjectRequest(PUT, url, data, userCenterApiSession, completionSource,
                         completionSource, mRetryPolicyFactory.newRetryPolicy());
         mRequestQueue.add(request);
 
