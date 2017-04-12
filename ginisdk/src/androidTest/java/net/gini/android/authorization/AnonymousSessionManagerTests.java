@@ -29,6 +29,7 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
     private AnonymousSessionManager mAnonymousSessionSessionManager;
     private UserCenterManager mUserCenterManager;
     private CredentialsStore mCredentialsStore;
+    private String mEmailDomain;
 
     @Override
     public void setUp() {
@@ -37,7 +38,8 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
 
         mUserCenterManager = Mockito.mock(UserCenterManager.class);
         mCredentialsStore = Mockito.mock(CredentialsStore.class);
-        mAnonymousSessionSessionManager = new AnonymousSessionManager("gini.net", mUserCenterManager, mCredentialsStore);
+        mEmailDomain = "example.com";
+        mAnonymousSessionSessionManager = new AnonymousSessionManager(mEmailDomain, mUserCenterManager, mCredentialsStore);
     }
 
     public void testConstructionWithNullReferencesThrowsNullPointerException() {
@@ -69,7 +71,7 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
     }
 
     public void testGetSessionShouldResolveToSession() throws InterruptedException {
-        UserCredentials userCredentials = new UserCredentials("foobar@example.com", "1234");
+        UserCredentials userCredentials = new UserCredentials(email("foobar"), "1234");
         when(mCredentialsStore.getUserCredentials()).thenReturn(userCredentials);
         when(mUserCenterManager.loginUser(userCredentials))
                 .thenReturn(Task.forResult(new Session(UUID.randomUUID().toString(), new Date())));
@@ -78,6 +80,10 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
         sessionTask.waitForCompletion();
 
         assertNotNull(sessionTask.getResult());
+    }
+
+    private String email(String name) {
+        return name +"@" + mEmailDomain;
     }
 
     public void testLoginUserShouldReturnTask() {
@@ -89,7 +95,7 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
     }
 
     public void testLoginUserShouldResolveToSession() throws InterruptedException {
-        UserCredentials userCredentials = new UserCredentials("foobar@example.com", "1234");
+        UserCredentials userCredentials = new UserCredentials(email("foobar"), "1234");
         when(mCredentialsStore.getUserCredentials()).thenReturn(userCredentials);
         when(mUserCenterManager.loginUser(userCredentials))
                 .thenReturn(Task.forResult(new Session(UUID.randomUUID().toString(), new Date())));
@@ -104,7 +110,7 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
     public void testThatNewUserCredentialsAreStored() throws InterruptedException {
         // TODO: The returned "created" user has another email address than the UserCredentials instance which is given
         //       to the mock.
-        User fakeUser = new User("1234-5678-9012-3456", "foobar@example.com");
+        User fakeUser = new User("1234-5678-9012-3456", email("foobar"));
         when(mUserCenterManager.createUser(any(UserCredentials.class))).thenReturn(Task.forResult(fakeUser));
 
         Task<Session> sessionTask = mAnonymousSessionSessionManager.getSession();
@@ -114,7 +120,7 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
     }
 
     public void testThatStoredUserCredentialsAreUsed() throws InterruptedException {
-        UserCredentials userCredentials = new UserCredentials("foo@example.com", "1234");
+        UserCredentials userCredentials = new UserCredentials(email("foobar"), "1234");
         when(mCredentialsStore.getUserCredentials()).thenReturn(userCredentials);
 
         Session session = new Session("1234-5678-9012", new Date());
@@ -127,7 +133,7 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
 
     @SuppressWarnings("unchecked")
     public void testThatUserSessionsAreReused() throws InterruptedException {
-        when(mCredentialsStore.getUserCredentials()).thenReturn(new UserCredentials("foo@example.com", "1234"));
+        when(mCredentialsStore.getUserCredentials()).thenReturn(new UserCredentials(email("foo"), "1234"));
         when(mUserCenterManager.loginUser(any(UserCredentials.class))).thenReturn(
                 Task.forResult(new Session(UUID.randomUUID().toString(), new Date(new Date().getTime() + 10000))),
                 Task.forResult(new Session(UUID.randomUUID().toString(), new Date()))
@@ -144,7 +150,7 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
 
     @SuppressWarnings("unchecked")
     public void testThatUserSessionsAreNotReusedWhenTimedOut() throws InterruptedException {
-        when(mCredentialsStore.getUserCredentials()).thenReturn(new UserCredentials("foo@example.com", "1234"));
+        when(mCredentialsStore.getUserCredentials()).thenReturn(new UserCredentials(email("foo"), "1234"));
         when(mUserCenterManager.loginUser(any(UserCredentials.class))).thenReturn(
                 Task.forResult(new Session(UUID.randomUUID().toString(), new Date(new Date().getTime() - 10000))),
                 Task.forResult(new Session(UUID.randomUUID().toString(), new Date()))
@@ -165,7 +171,7 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
     public void testThatCreatedUserNamesAreEmailAddresses() throws InterruptedException {
         // TODO: The returned "created" user has another email address than the UserCredentials instance which is given
         //       to the mock.
-        User fakeUser = new User("1234-5678-9012-3456", "foobar@example.com");
+        User fakeUser = new User("1234-5678-9012-3456", email("foobar"));
         when(mUserCenterManager.createUser(any(UserCredentials.class))).thenReturn(Task.forResult(fakeUser));
 
         Task<Session> sessionTask = mAnonymousSessionSessionManager.getSession();
@@ -174,7 +180,7 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
         ArgumentCaptor<UserCredentials> userCredentialsCaptor = ArgumentCaptor.forClass(UserCredentials.class);
         verify(mUserCenterManager).createUser(userCredentialsCaptor.capture());
 
-        assertTrue(userCredentialsCaptor.getValue().getUsername().endsWith("@gini.net"));
+        assertTrue(userCredentialsCaptor.getValue().getUsername().endsWith("@" + mEmailDomain));
     }
 
     @SuppressWarnings("unchecked")
@@ -190,7 +196,7 @@ public class AnonymousSessionManagerTests extends InstrumentationTestCase {
     }
 
     private OngoingStubbing<Task<Session>> makeLoginRequestFailOnce() {
-        when(mCredentialsStore.getUserCredentials()).thenReturn(new UserCredentials("foo@example.com", "1234"));
+        when(mCredentialsStore.getUserCredentials()).thenReturn(new UserCredentials(email("foo"), "1234"));
         String invalidGrantErrorJson = "{\"error\": \"invalid_grant\"}";
         return when(mUserCenterManager.loginUser(any(UserCredentials.class)))
                 .thenReturn(Task.<Session>forError(new VolleyError(
