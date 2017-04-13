@@ -2,6 +2,14 @@
 Changelog
 =========
 
+{{version_and_date}}
+
+Bugfixes
+--------
+
+- A new anonymous user will be generated if the existing one is invalid.
+- Changing the email domain will be applied to existing anonymous users.
+
 1.2.84 (2017-03-31)
 ===================
 
