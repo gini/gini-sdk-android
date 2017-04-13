@@ -137,6 +137,9 @@ public class AnonymousSessionManager implements SessionManager {
      * credentials, this method will create a new user via the UserCenterManager and then log in the newly created
      * user.
      *
+     * If the email domain is different in the existing user credentials from the one that was provided
+     * for this instance, a new email with the new domain will be generated and the old email will be replaced.
+     *
      * @return A task which will resolve to valid Session instance.
      */
     public Task<Session> loginUser() {

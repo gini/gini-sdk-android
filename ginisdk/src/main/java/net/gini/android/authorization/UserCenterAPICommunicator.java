@@ -129,6 +129,16 @@ public class UserCenterAPICommunicator {
         return completionSource.getTask();
     }
 
+    /**
+     * Returns information about the Gini API session.
+     *
+     * Although you may use this method with any session (for Gini API or User Center API) the
+     * purpose of this method is to retrieve information about Gini API sessions.
+     *
+     * @param giniApiSession            A valid session for the Gini API.
+     * @return                          A task which will resolve to a JSONObject containing information
+     *                                  about the session.
+     */
     // Visible for testing
     Task<JSONObject> getGiniApiSessionTokenInfo(final Session giniApiSession) {
         final RequestTaskCompletionSource<JSONObject> completionSource = RequestTaskCompletionSource.newCompletionSource();
@@ -139,6 +149,13 @@ public class UserCenterAPICommunicator {
         return completionSource.getTask();
     }
 
+    /**
+     * Returns the user id of the logged in user.
+     *
+     * @param giniAPISession            The session for the Gini API, which was returned when the
+     *                                  user was logged in.
+     * @return                          A task which will resolve to a String containing the user id.
+     */
     public Task<String> getUserId(final Session giniAPISession) {
         return getGiniApiSessionTokenInfo(giniAPISession)
                 .onSuccessTask(new Continuation<JSONObject, Task<String>>() {
@@ -155,7 +172,17 @@ public class UserCenterAPICommunicator {
                 });
     }
 
-
+    /**
+     * Update the email of a user.
+     *
+     * @param userId                    The user's id.
+     * @param newEmail                  A new email address.
+     * @param oldEmail                  The previous email address of the user.
+     * @param userCenterApiSession      The session for the User Center API which was returned when
+     *                                  the client was authenticated.
+     * @return                          A task which will resolve to an empty JSONObject.
+     * @throws JSONException            If the emails can't be JSON serialized.
+     */
     public Task<JSONObject> updateEmail(final String userId,
                                         final String newEmail,
                                         final String oldEmail,

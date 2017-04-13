@@ -87,6 +87,15 @@ public class UserCenterManager {
         }, Task.BACKGROUND_EXECUTOR);
     }
 
+    /**
+     * Update the email of the logged in user.
+     *
+     * @param newEmail                  A new email address.
+     * @param oldEmail                  The previous email address of the user.
+     * @param giniAPISession            The session for the Gini API which was returned when the user
+     *                                  was logged in.
+     * @return                          A (Bolts) task which will resolve to an empty JSONObject.
+     */
     public Task<JSONObject> updateEmail(final String newEmail, final String oldEmail,
                                         final Session giniAPISession) {
         return getUserCenterSession().onSuccessTask(new Continuation<Session, Task<String>>() {
