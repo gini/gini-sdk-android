@@ -28,7 +28,7 @@ You can easily integrate the Gini Android SDK into your app using Gradle and our
     }
     
     dependencies {
-        compile ('net.gini:gini-android-sdk:1.3.89@aar'){
+        compile ('net.gini:gini-android-sdk:1.3.92@aar'){
             transitive = true
         }
         ...
