@@ -33,15 +33,15 @@ public final class PubKeyManager implements X509TrustManager {
 
         checkSSLTLSFor(remoteX509Certificates, authType);
 
-        boolean expected = false;
+        boolean trusted = false;
         for (X509Certificate remoteCert : remoteX509Certificates) {
             if (isValidCertificate(remoteCert)) {
-                expected = true;
+                trusted = true;
                 break;
             }
         }
 
-        if (!expected) {
+        if (!trusted) {
             throw new CertificateException("Remote certificate not trusted");
         }
     }
