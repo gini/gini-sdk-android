@@ -354,12 +354,21 @@ public class SdkBuilder {
         return mSessionManager;
     }
 
-    private X509Certificate[] getLocalCertificatesFromAssets(String[] certFileNames) throws IOException, CertificateException {
+    /**
+     * Helper method to get local certificates from assets
+     *
+     * @param certFilePaths An array containing all certificates paths relatively to the assets
+     * @throws IOException if the the certificate is not found or it is invalid.
+     * @throws CertificateException if parsing problems are detected when generating Certificate
+     * @return Local certificates
+     */
+
+    private synchronized X509Certificate[] getLocalCertificatesFromAssets(String[] certFilePaths) throws IOException, CertificateException {
         List<X509Certificate> certificates = new ArrayList<>();
         AssetManager assetManager = mContext.getAssets();
-        for (String fileName : certFileNames) {
+        for (String fileName : certFilePaths) {
             InputStream fis = assetManager.open(fileName);
-            X509Certificate certificate = getCertificateFrom(fis);
+            X509Certificate certificate = createCertificateFrom(fis);
             if (certificate != null) {
                 certificates.add(certificate);
             }
@@ -369,7 +378,16 @@ public class SdkBuilder {
         return certificates.toArray(new X509Certificate[certificates.size()]);
     }
 
-    private X509Certificate getCertificateFrom(InputStream inputStream) throws CertificateException, IOException {
+    /**
+     * Helper method to create certificate from and InputStream
+     *
+     * @param inputStream Certificate generated with the input stream
+     * @throws IOException if the the certificate is not found or it is invalid.
+     * @throws CertificateException if parsing problems are detected when generating Certificate
+     * @return Generated cetificate
+     */
+
+    private synchronized X509Certificate createCertificateFrom(InputStream inputStream) throws IOException, CertificateException {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         BufferedInputStream bis = new BufferedInputStream(inputStream);
 

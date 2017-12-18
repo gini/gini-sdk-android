@@ -15,26 +15,26 @@ import javax.net.ssl.X509TrustManager;
 
 public final class PubKeyManager implements X509TrustManager {
 
-    private X509Certificate[] mPublicKeys;
+    private X509Certificate[] mLocalCertificates;
 
     public PubKeyManager(@NotNull X509Certificate[] certificates) {
-        mPublicKeys = certificates;
+        mLocalCertificates = certificates;
     }
 
     @Override
-    public void checkServerTrusted(X509Certificate[] x509Certificates, String authType)
+    public void checkServerTrusted(X509Certificate[] remoteX509Certificates, String authType)
             throws CertificateException {
-        if (x509Certificates == null) {
-            throw new IllegalArgumentException("checkServerTrusted: X509Certificate array is null");
+        if (remoteX509Certificates == null) {
+            throw new IllegalArgumentException("checkServerTrusted: Remote X509Certificate array is null");
         }
-        if (!(x509Certificates.length > 0)) {
-            throw new IllegalArgumentException("checkServerTrusted: X509Certificate is empty");
+        if (remoteX509Certificates.length == 0) {
+            throw new IllegalArgumentException("checkServerTrusted: Remote X509Certificate array is empty");
         }
 
-        checkSSLTLSFor(x509Certificates, authType);
+        checkSSLTLSFor(remoteX509Certificates, authType);
 
         boolean expected = false;
-        for (X509Certificate remoteCert : x509Certificates) {
+        for (X509Certificate remoteCert : remoteX509Certificates) {
             if (isValidCertificate(remoteCert)) {
                 expected = true;
                 break;
@@ -71,7 +71,7 @@ public final class PubKeyManager implements X509TrustManager {
     private Boolean isValidCertificate(X509Certificate remoteCertificate) {
         String remoteEncoded = getEncodedPublicKeyFrom(remoteCertificate);
         Boolean isValid = false;
-        for (X509Certificate localCert : mPublicKeys) {
+        for (X509Certificate localCert : mLocalCertificates) {
             String localEncoded = getEncodedPublicKeyFrom(localCert);
             if (remoteEncoded.equalsIgnoreCase(localEncoded)) {
                 isValid = true;
