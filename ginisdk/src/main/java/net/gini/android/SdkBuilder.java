@@ -224,38 +224,36 @@ public class SdkBuilder {
     private synchronized RequestQueue getRequestQueue() {
         if (mRequestQueue == null) {
             if (mCache != null) {
-                mRequestQueue = new RequestQueue(mCache, new BasicNetwork(getHttpStack()));
+                mRequestQueue = new RequestQueue(mCache, new BasicNetwork(createHttpStack()));
             } else {
-                mRequestQueue = Volley.newRequestQueue(mContext, getHttpStack());
+                mRequestQueue = Volley.newRequestQueue(mContext, createHttpStack());
             }
         }
         return mRequestQueue;
     }
 
     /**
-     * Helper method to create a HttpStack which is used performs Http request. Optionally it can
+     * Helper method to create a HttpStack which is used to perform Http requests. Optionally it can
      * take care of certificate pinning functionality.
      *
      * @return HttpStack instance.
      */
 
-    private synchronized HttpStack getHttpStack() {
-        HttpStack stack;
+    private synchronized HttpStack createHttpStack() {
+        HttpStack stack = new HurlStack();
 
         if (mCertificatePaths != null && mCertificatePaths.length > 0) {
             try {
-                TrustManager tm[] = {new PubKeyManager(getLocalCertificatesFromAssets(mCertificatePaths))};
+                TrustManager trustManagers[] = {new PubKeyManager(getLocalCertificatesFromAssets(mCertificatePaths))};
 
-                SSLContext context = SSLContext.getInstance("TLS");
-                context.init(null, tm, null);
-                SSLSocketFactory pinnedSSLSocketFactory = context.getSocketFactory();
+                SSLContext sslContext = SSLContext.getInstance("TLS");
+                sslContext.init(null, trustManagers, null);
+                SSLSocketFactory pinnedSSLSocketFactory = sslContext.getSocketFactory();
                 stack = new HurlStack(null, pinnedSSLSocketFactory);
 
             } catch (IOException | CertificateException | NoSuchAlgorithmException | KeyManagementException e) {
-                stack = new HurlStack();
+                e.printStackTrace();
             }
-        } else {
-            stack = new HurlStack();
         }
 
         return stack;
@@ -368,7 +366,7 @@ public class SdkBuilder {
         AssetManager assetManager = mContext.getAssets();
         for (String fileName : certFilePaths) {
             InputStream fis = assetManager.open(fileName);
-            X509Certificate certificate = createCertificateFrom(fis);
+            X509Certificate certificate = createCertificate(fis);
             if (certificate != null) {
                 certificates.add(certificate);
             }
@@ -387,7 +385,7 @@ public class SdkBuilder {
      * @return Generated cetificate
      */
 
-    private synchronized X509Certificate createCertificateFrom(InputStream inputStream) throws IOException, CertificateException {
+    private synchronized X509Certificate createCertificate(InputStream inputStream) throws IOException, CertificateException {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         BufferedInputStream bis = new BufferedInputStream(inputStream);
 
