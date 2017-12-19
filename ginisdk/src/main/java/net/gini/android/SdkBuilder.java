@@ -251,7 +251,7 @@ public class SdkBuilder {
                 SSLSocketFactory pinnedSSLSocketFactory = sslContext.getSocketFactory();
                 stack = new HurlStack(null, pinnedSSLSocketFactory);
 
-            } catch (IOException | CertificateException | NoSuchAlgorithmException | KeyManagementException e) {
+            } catch (NoSuchAlgorithmException | KeyManagementException e) {
                 e.printStackTrace();
             }
         }
@@ -356,23 +356,25 @@ public class SdkBuilder {
      * Helper method to get local certificates from assets
      *
      * @param certFilePaths An array containing all certificates paths relatively to the assets
-     * @throws IOException if the the certificate is not found or it is invalid.
-     * @throws CertificateException if parsing problems are detected when generating Certificate
      * @return Local certificates
+     * @throws IllegalArgumentException if the the certificate is not found or it is invalid.
      */
 
-    private synchronized X509Certificate[] getLocalCertificatesFromAssets(String[] certFilePaths) throws IOException, CertificateException {
+    private synchronized X509Certificate[] getLocalCertificatesFromAssets(String[] certFilePaths) {
         List<X509Certificate> certificates = new ArrayList<>();
         AssetManager assetManager = mContext.getAssets();
-        for (String fileName : certFilePaths) {
-            InputStream fis = assetManager.open(fileName);
-            X509Certificate certificate = createCertificate(fis);
-            if (certificate != null) {
-                certificates.add(certificate);
+        try {
+            for (String fileName : certFilePaths) {
+                InputStream fis = assetManager.open(fileName);
+                X509Certificate certificate = createCertificate(fis);
+                if (certificate != null) {
+                    certificates.add(certificate);
+                }
+                fis.close();
             }
-            fis.close();
+        } catch (IOException | CertificateException e) {
+            throw new IllegalArgumentException("It is not a valid certificate or it does not exist in the assets");
         }
-
         return certificates.toArray(new X509Certificate[certificates.size()]);
     }
 
@@ -380,9 +382,9 @@ public class SdkBuilder {
      * Helper method to create certificate from and InputStream
      *
      * @param inputStream Certificate generated with the input stream
-     * @throws IOException if the the certificate is not found or it is invalid.
-     * @throws CertificateException if parsing problems are detected when generating Certificate
      * @return Generated cetificate
+     * @throws IOException          if the the certificate is not found or it is invalid.
+     * @throws CertificateException if parsing problems are detected when generating Certificate
      */
 
     private synchronized X509Certificate createCertificate(InputStream inputStream) throws IOException, CertificateException {
