@@ -373,7 +373,7 @@ public class SdkBuilder {
                 fis.close();
             }
         } catch (IOException | CertificateException e) {
-            throw new IllegalArgumentException("It is not a valid certificate or it does not exist in the assets");
+            throw new IllegalArgumentException("It is not a valid certificate or it does not exist in the assets: ", e.getCause());
         }
         return certificates.toArray(new X509Certificate[certificates.size()]);
     }
