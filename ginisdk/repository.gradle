@@ -11,19 +11,13 @@ uploadArchives {
             pom.artifactId = artifactId
             pom.version = version
 
-            snapshotRepository(url: "https://repo.i.gini.net/nexus/content/repositories/snapshots") {
-                authentication(
-                        userName: project.hasProperty('repoUser') ? repoUser : "invalidUserName",
-                        password: project.hasProperty('repoPassword') ? repoPassword : "invalidPassword"
-                )
-                uniqueVersion = false
-            }
-
-            repository(url: "https://repo.i.gini.net/nexus/content/repositories/releases") {
-                authentication(
-                        userName: project.hasProperty('repoUser') ? repoUser : 'invalidUserName',
-                        password: project.hasProperty('repoPassword') ? repoPassword : 'invalidPassword'
-                )
+            if (project.hasProperty('mavenOpenRepoUrl')) {
+                repository(url: mavenOpenRepoUrl) {
+                    authentication(
+                            userName: project.hasProperty('repoUser') ? repoUser : 'invalidUserName',
+                            password: project.hasProperty('repoPassword') ? repoPassword : 'invalidPassword'
+                    )
+                }
             }
         }
     }

@@ -52,6 +52,8 @@ pipeline {
                 }
             }
             steps {
+                sh './gradlew ginisdk:buildReleaseZip'
+                archiveArtifacts 'ginisdk/build/distributions/*.zip'
                 sh './gradlew ginisdk:uploadArchives -PmavenOpenRepoUrl=https://repo.gini.net/nexus/content/repositories/open -PrepoUser=$NEXUS_MAVEN_USR -PrepoPassword=$NEXUS_MAVEN_PSW'
             }
         }

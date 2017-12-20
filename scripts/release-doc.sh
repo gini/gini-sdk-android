@@ -24,7 +24,6 @@ git clone -b gh-pages https://"$git_user":"$git_password"@github.com/gini/gini-s
 
 rm -rf gh-pages/*
 cp -a ginisdk/build/docs/* gh-pages/
-mkdir gh-pages/java-docs-release
 cd gh-pages
 touch .nojekyll
 git add -u
