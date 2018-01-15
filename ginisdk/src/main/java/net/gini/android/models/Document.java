@@ -38,6 +38,7 @@ public class Document implements Parcelable {
 
     public enum SourceClassification {
         SCANNED,
+        SANDWICH,
         NATIVE,
         TEXT,
         UNKNOWN
