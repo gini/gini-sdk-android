@@ -1,6 +1,8 @@
 package net.gini.android.models;
 
 
+import static net.gini.android.Utils.checkNotNull;
+
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -8,8 +10,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Date;
-
-import static net.gini.android.Utils.checkNotNull;
 
 public class Document implements Parcelable {
 
@@ -29,12 +29,19 @@ public class Document implements Parcelable {
         /**
          * Gini has processed the document, but there was an error during processing.
          */
-        ERROR
+        ERROR,
+        /**
+         * Processing state cannot be identified.
+         */
+        UNKNOWN
     }
 
     public enum SourceClassification {
         SCANNED,
-        NATIVE
+        SANDWICH,
+        NATIVE,
+        TEXT,
+        UNKNOWN
     }
 
 
@@ -106,14 +113,23 @@ public class Document implements Parcelable {
      */
     public static Document fromApiResponse(JSONObject responseData) throws JSONException {
         final String documentId = responseData.getString("id");
-        final ProcessingState processingState =
-                ProcessingState.valueOf(responseData.getString("progress"));
+        ProcessingState processingState;
+        try {
+            processingState =
+                    ProcessingState.valueOf(responseData.getString("progress"));
+        } catch (IllegalArgumentException e) {
+            processingState = ProcessingState.UNKNOWN;
+        }
         final Integer pageCount = responseData.getInt("pageCount");
         final String fileName = responseData.getString("name");
         final Date creationDate = new Date(responseData.getLong("creationDate"));
-        final SourceClassification sourceClassification =
-                SourceClassification.valueOf(responseData.getString("sourceClassification"));
-
+        SourceClassification sourceClassification;
+        try {
+            sourceClassification =
+                    SourceClassification.valueOf(responseData.getString("sourceClassification"));
+        } catch (IllegalArgumentException e) {
+            sourceClassification = SourceClassification.UNKNOWN;
+        }
         return new Document(documentId, processingState, fileName, pageCount, creationDate,
                             sourceClassification);
     }
