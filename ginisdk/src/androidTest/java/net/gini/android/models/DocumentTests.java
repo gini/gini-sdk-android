@@ -1,5 +1,7 @@
 package net.gini.android.models;
 
+import static net.gini.android.helpers.ParcelHelper.doRoundTrip;
+
 import android.test.AndroidTestCase;
 
 import org.json.JSONException;
@@ -9,12 +11,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
-import static net.gini.android.helpers.ParcelHelper.doRoundTrip;
-
 public class DocumentTests extends AndroidTestCase {
 
     private JSONObject createDocumentJSON() throws IOException, JSONException {
-        InputStream is = getContext().getResources().getAssets().open("document.json");
+        return createDocumentJSON("document.json");
+    }
+
+    private JSONObject createDocumentJSON(final String fileName) throws IOException, JSONException {
+        InputStream is = getContext().getResources().getAssets().open(fileName);
 
         int size = is.available();
         byte[] buffer = new byte[size];
@@ -51,6 +55,34 @@ public class DocumentTests extends AndroidTestCase {
         assertEquals("scanned.jpg", document.getFilename());
         assertEquals(1, document.getPageCount());
         assertEquals(Document.SourceClassification.SCANNED, document.getSourceClassification());
+        // Tue Feb 12 2013 00:04:27 GMT+0100 (CET)
+        assertEquals(1360623867402L, document.getCreationDate().getTime());
+    }
+
+    public void testDocumentFactory_withUnknown_sourceClassification() throws IOException, JSONException {
+        JSONObject responseData = createDocumentJSON("unknown-source-classification-document.json");
+
+        Document document = Document.fromApiResponse(responseData);
+
+        assertEquals("626626a0-749f-11e2-bfd6-000000000000", document.getId());
+        assertEquals(Document.ProcessingState.COMPLETED, document.getState());
+        assertEquals("scanned.jpg", document.getFilename());
+        assertEquals(1, document.getPageCount());
+        assertEquals(Document.SourceClassification.UNKNOWN, document.getSourceClassification());
+        // Tue Feb 12 2013 00:04:27 GMT+0100 (CET)
+        assertEquals(1360623867402L, document.getCreationDate().getTime());
+    }
+
+    public void testDocumentFactory_withUnknown_processingState() throws IOException, JSONException {
+        JSONObject responseData = createDocumentJSON("unknown-processing-state-document.json");
+
+        Document document = Document.fromApiResponse(responseData);
+
+        assertEquals("626626a0-749f-11e2-bfd6-000000000000", document.getId());
+        assertEquals(Document.ProcessingState.UNKNOWN, document.getState());
+        assertEquals("scanned.jpg", document.getFilename());
+        assertEquals(1, document.getPageCount());
+        assertEquals(Document.SourceClassification.TEXT, document.getSourceClassification());
         // Tue Feb 12 2013 00:04:27 GMT+0100 (CET)
         assertEquals(1360623867402L, document.getCreationDate().getTime());
     }
