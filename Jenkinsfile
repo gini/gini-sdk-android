@@ -38,6 +38,17 @@ pipeline {
                     def tag = sh(returnStdout: true, script: 'git tag --contains $(git rev-parse HEAD)').trim()
                     return !tag.isEmpty()
                 }
+                expression {
+                    boolean publish = false
+                    try {
+                        def sha = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+                        input "Release documentation from branch ${env.BRANCH_NAME} commit ${sha}?"
+                        publish = true
+                    } catch (final ignore) {
+                        publish = false
+                    }
+                    return publish
+                }
             }
             steps {
                 sh 'scripts/release-doc.sh $GIT_USR $GIT_PSW'
@@ -49,6 +60,17 @@ pipeline {
                 expression {
                     def tag = sh(returnStdout: true, script: 'git tag --contains $(git rev-parse HEAD)').trim()
                     return !tag.isEmpty()
+                }
+                expression {
+                    boolean publish = false
+                    try {
+                        def sha = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+                        input "Release from branch ${env.BRANCH_NAME} commit ${sha}?"
+                        publish = true
+                    } catch (final ignore) {
+                        publish = false
+                    }
+                    return publish
                 }
             }
             steps {

@@ -9,5 +9,5 @@ This document describes the release process for a new version of the Gini SDK fo
 4. Add entry to changelog with version and date
 6. Tag `master` branch with the same version used in 3
 7. Push all branches to remote including tags
-8. Wait for Jenkins to pass
+8. Wait for Jenkins to pass and confirm the release
 9. Done!
