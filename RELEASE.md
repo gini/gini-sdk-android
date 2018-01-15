@@ -2,12 +2,11 @@
 
 This document describes the release process for a new version of the Gini SDK for Android.
 
-1. Add new features only in separate `feature` branches and merge them into `develop`
-2. Create a `release` branch from `develop`
-  * Update `baseVersion` in `ginisdk/gradle.properties`
-  * Add entry to changelog with version and date
-3. Merge `release` branch into `master` and `develop`
-4. Tag `master` branch with the same version used in 2
-5. Push all branches to remote including tags
-6. Wait for Jenkins to pass
-7. Done!
+1. Add new features only in separate `feature` branches
+2. Merge `feature` branches into `master`
+3. Update `baseVersion` in `ginisdk/gradle.properties`
+4. Add entry to changelog with version and date
+6. Tag `master` branch with the same version used in 3
+7. Push all branches to remote including tags
+8. Wait for Jenkins to pass
+9. Done!
