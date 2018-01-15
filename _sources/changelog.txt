@@ -2,6 +2,15 @@
 Changelog
 =========
 
+1.4.1 (2018-01-15)
+===================
+
+Bugfixes
+--------
+
+- Added missing source classification types.
+- Unknown source classification or unknown processing states don't cause exceptions anymore.
+
 1.4.0 (2017-12-20)
 ===================
 
