@@ -6,14 +6,45 @@ pipeline {
         GIT = credentials('github')
     }
     stages {
+        stage('Import Pipeline Libraries') {
+            steps{
+                library 'android-tools'
+            }
+        }
         stage('Build') {
             steps {
                 sh './gradlew ginisdk:clean ginisdk:assembleDebug ginisdk:assembleRelease'
             }
         }
-        stage('Unit Tests') {
+        stage('Create AVDs') {
             steps {
-                sh './gradlew ginisdk:test'
+                script {
+                    avd.deleteCorrupt()
+                    avd.create("api-25-nexus-5x", "system-images;android-25;google_apis;x86", "Nexus 5X")
+                }
+            }
+        }
+        stage('Instrumentation Tests') {
+            steps {
+                script {
+                    def emulatorPort = emulator.start(avd.createName("api-25-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -no-snapshot-load -no-snapshot-save -gpu on -camera-back emulated")
+                    sh "echo $emulatorPort > emulator_port"
+                    adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
+                    withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
+                        sh "./gradlew ginisdk:targetedDebugAndroidTest -PpackageName=net.gini.android -PtestTarget=emulator-$emulatorPort"
+                    }
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'ginisdk/build/outputs/androidTest-results/targeted/*.xml'
+                    script {
+                        def emulatorPort = sh returnStdout:true, script: 'cat emulator_port'
+                        emulatorPort = emulatorPort.trim().replaceAll("\r", "").replaceAll("\n", "")
+                        emulator.stop(emulatorPort)
+                        sh 'rm emulator_port || true'
+                    }
+                }
             }
         }
         stage('Build Documentation') {
