@@ -4,6 +4,7 @@ pipeline {
     environment {
         NEXUS_MAVEN = credentials('external-nexus-maven-repo-credentials')
         GIT = credentials('github')
+        GINI_API_CREDENTIALS = credentials('gini-vision-library-android_gini-api-client-credentials')
     }
     stages {
         stage('Import Pipeline Libraries') {
@@ -31,7 +32,7 @@ pipeline {
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
                     withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
-                        sh "./gradlew ginisdk:targetedDebugAndroidTest -PpackageName=net.gini.android -PtestTarget=emulator-$emulatorPort"
+                        sh "./gradlew ginisdk:targetedDebugAndroidTest -PpackageName=net.gini.android -PtestTarget=emulator-$emulatorPort -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
                     }
                 }
             }
