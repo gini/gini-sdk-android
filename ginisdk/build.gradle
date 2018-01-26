@@ -51,15 +51,36 @@ def fullDocumentationDir(variant) {
     return "${buildDir.getPath()}/docs/java-docs-$variant.name/";
 }
 
+def getLocalProperties = {
+    File propertiesFile = file('local.properties')
+    if (propertiesFile.exists()) {
+        Properties properties = new Properties()
+        propertiesFile.withInputStream { instr ->
+            properties.load(instr)
+        }
+        return properties
+    }
+}
+
+def setProperty(key, props, localProps) {
+    if (project.hasProperty(key)) {
+        props[key] = testClientId
+    } else {
+        props[key] = localProps?.get(key) ?: ''
+    }
+}
+
 task createTestPropertyFile << {
     def propertyFile = new File("$projectDir/src/androidTest/assets/test.properties")
     if (!propertyFile.exists()) propertyFile.createNewFile()
     def props = new Properties()
 
-    if (project.hasProperty('testClientId')) props['testClientId'] = testClientId
-    if (project.hasProperty('testClientSecret')) props['testClientSecret'] = testClientSecret
-    if (project.hasProperty('testApiUri')) props['testApiUri'] = testApiUri
-    if (project.hasProperty('testUserCenterUri')) props['testUserCenterUri'] = testUserCenterUri
+    def localProperties = getLocalProperties()
+
+    setProperty('testClientId', props, localProperties)
+    setProperty('testClientSecret', props, localProperties)
+    setProperty('testApiUri', props, localProperties)
+    setProperty('testUserCenterUri', props, localProperties)
 
     propertyFile.withWriter("utf-8") {
         props.store(it, "test properties")
