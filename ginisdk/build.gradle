@@ -69,7 +69,7 @@ def getLocalProperties = {
 
 def setProperty(key, props, localProps) {
     if (project.hasProperty(key)) {
-        props[key] = testClientId
+        props[key] = project.property(key)
     } else {
         props[key] = localProps?.get(key) ?: ''
     }
@@ -99,7 +99,7 @@ task createIntegrationGuide(type: Exec) {
 }
 
 tasks.whenTaskAdded { task ->
-    if (task.name.equals("assembleDebug")) {
+    if (task.name.endsWith("Test")) {
         task.dependsOn.add(createTestPropertyFile)
     }
 }
