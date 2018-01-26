@@ -1,43 +1,22 @@
 package net.gini.android;
 
+import static net.gini.android.Utils.checkNotNull;
+
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.AssetManager;
 
 import com.android.volley.Cache;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.BasicNetwork;
-import com.android.volley.toolbox.HttpStack;
-import com.android.volley.toolbox.HurlStack;
-import com.android.volley.toolbox.Volley;
 
 import net.gini.android.authorization.AnonymousSessionManager;
 import net.gini.android.authorization.CredentialsStore;
-import net.gini.android.authorization.PubKeyManager;
 import net.gini.android.authorization.SessionManager;
 import net.gini.android.authorization.SharedPreferencesCredentialsStore;
 import net.gini.android.authorization.UserCenterAPICommunicator;
 import net.gini.android.authorization.UserCenterManager;
 import net.gini.android.requests.DefaultRetryPolicyFactory;
 import net.gini.android.requests.RetryPolicyFactory;
-
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-
-import static net.gini.android.Utils.checkNotNull;
 
 public class SdkBuilder {
 
@@ -223,40 +202,16 @@ public class SdkBuilder {
      */
     private synchronized RequestQueue getRequestQueue() {
         if (mRequestQueue == null) {
+            RequestQueueBuilder requestQueueBuilder = new RequestQueueBuilder(mContext);
             if (mCache != null) {
-                mRequestQueue = new RequestQueue(mCache, new BasicNetwork(createHttpStack()));
-            } else {
-                mRequestQueue = Volley.newRequestQueue(mContext, createHttpStack());
+                requestQueueBuilder.setCache(mCache);
             }
+            if (mCertificatePaths != null && mCertificatePaths.length > 0) {
+                requestQueueBuilder.setCertificatePaths(mCertificatePaths);
+            }
+            mRequestQueue = requestQueueBuilder.build();
         }
         return mRequestQueue;
-    }
-
-    /**
-     * Helper method to create a HttpStack which is used to perform Http requests. Optionally it can
-     * take care of certificate pinning functionality.
-     *
-     * @return HttpStack instance.
-     */
-
-    private synchronized HttpStack createHttpStack() {
-        HttpStack stack = new HurlStack();
-
-        if (mCertificatePaths != null && mCertificatePaths.length > 0) {
-            try {
-                TrustManager trustManagers[] = {new PubKeyManager(getLocalCertificatesFromAssets(mCertificatePaths))};
-
-                SSLContext sslContext = SSLContext.getInstance("TLS");
-                sslContext.init(null, trustManagers, null);
-                SSLSocketFactory pinnedSSLSocketFactory = sslContext.getSocketFactory();
-                stack = new HurlStack(null, pinnedSSLSocketFactory);
-
-            } catch (NoSuchAlgorithmException | KeyManagementException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return stack;
     }
 
     /**
@@ -352,50 +307,5 @@ public class SdkBuilder {
         return mSessionManager;
     }
 
-    /**
-     * Helper method to get local certificates from assets
-     *
-     * @param certFilePaths An array containing all certificates paths relatively to the assets
-     * @return Local certificates
-     * @throws IllegalArgumentException if the the certificate is not found or it is invalid.
-     */
-
-    private synchronized X509Certificate[] getLocalCertificatesFromAssets(String[] certFilePaths) {
-        List<X509Certificate> certificates = new ArrayList<>();
-        AssetManager assetManager = mContext.getAssets();
-        try {
-            for (String fileName : certFilePaths) {
-                InputStream fis = assetManager.open(fileName);
-                X509Certificate certificate = createCertificate(fis);
-                if (certificate != null) {
-                    certificates.add(certificate);
-                }
-                fis.close();
-            }
-        } catch (IOException | CertificateException e) {
-            throw new IllegalArgumentException("It is not a valid certificate or it does not exist in the assets: ", e.getCause());
-        }
-        return certificates.toArray(new X509Certificate[certificates.size()]);
-    }
-
-    /**
-     * Helper method to create certificate from and InputStream
-     *
-     * @param inputStream Certificate generated with the input stream
-     * @return Generated cetificate
-     * @throws IOException          if the the certificate is not found or it is invalid.
-     * @throws CertificateException if parsing problems are detected when generating Certificate
-     */
-
-    private synchronized X509Certificate createCertificate(InputStream inputStream) throws IOException, CertificateException {
-        CertificateFactory cf = CertificateFactory.getInstance("X.509");
-        BufferedInputStream bis = new BufferedInputStream(inputStream);
-
-        if (bis.available() > 0) {
-            return (X509Certificate) cf.generateCertificate(bis);
-        } else {
-            return null;
-        }
-    }
 }
 

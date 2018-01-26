@@ -14,6 +14,7 @@ import java.security.NoSuchAlgorithmException;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
 
 class TLSPreferredSocketFactory extends SSLSocketFactory {
 
@@ -24,20 +25,24 @@ class TLSPreferredSocketFactory extends SSLSocketFactory {
     }
 
     TLSPreferredSocketFactory() throws NoSuchAlgorithmException, KeyManagementException {
-        mSSLSocketFactory = createSSLSocketFactory();
+        mSSLSocketFactory = createSSLSocketFactory(null);
+    }
+
+    TLSPreferredSocketFactory(TrustManager[] trustManagers) throws NoSuchAlgorithmException, KeyManagementException {
+        mSSLSocketFactory = createSSLSocketFactory(trustManagers);
     }
 
     @NotNull
-    private SSLSocketFactory createSSLSocketFactory() throws KeyManagementException, NoSuchAlgorithmException {
-        final SSLContext sslContext = createSSLContext();
+    private SSLSocketFactory createSSLSocketFactory(TrustManager[] trustManagers) throws KeyManagementException, NoSuchAlgorithmException {
+        final SSLContext sslContext = createSSLContext(trustManagers);
         return sslContext.getSocketFactory();
     }
 
     @NotNull
-    private SSLContext createSSLContext() throws NoSuchAlgorithmException, KeyManagementException {
+    private SSLContext createSSLContext(TrustManager[] trustManagers) throws NoSuchAlgorithmException, KeyManagementException {
         if (TLSPreferredSocketFactory.isTLSv1xSupported()) {
             final SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-            sslContext.init(null, null, null);
+            sslContext.init(null, trustManagers, null);
             return sslContext;
         }
         throw new NoSuchAlgorithmException();
