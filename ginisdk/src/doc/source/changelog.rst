@@ -2,6 +2,14 @@
 Changelog
 =========
 
+1.4.2 (2018-01-29)
+===================
+
+Bugfix
+------
+
+- Using a custom cache doesn't prevent requests from being sent anymore.
+
 1.4.1 (2018-01-15)
 ===================
 
