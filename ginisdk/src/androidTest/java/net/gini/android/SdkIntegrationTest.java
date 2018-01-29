@@ -51,7 +51,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
         Log.d("TEST", "testClientId " + clientId);
         Log.d("TEST", "testClientSecret " + clientSecret);
         Log.d("TEST", "testApiUri " + apiUri);
-        Log.d("TEST", "testUserCenterUri" + userCenterUri);
+        Log.d("TEST", "testUserCenterUri " + userCenterUri);
 
         gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUri).
@@ -102,6 +102,98 @@ public class SdkIntegrationTest extends AndroidTestCase {
                 setUserCenterApiBaseUrl(userCenterUri).
                 setConnectionTimeoutInMs(60000).
                 setCache(new NoCache()).
+                build();
+
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
+
+        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        uploadDocument(uploadBuilder);
+    }
+
+    public void testCertificatePinningWithMatchingCertificate() throws IOException, JSONException, InterruptedException {
+        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com",
+                new String[]{"*.gini.net.cer"}).
+                setApiBaseUrl(apiUri).
+                setUserCenterApiBaseUrl(userCenterUri).
+                setConnectionTimeoutInMs(60000).
+                build();
+
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
+
+        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        uploadDocument(uploadBuilder);
+    }
+
+    public void testCertificatePinningWithCustomCache() throws IOException, JSONException, InterruptedException {
+        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com",
+                new String[]{"*.gini.net.cer"}).
+                setApiBaseUrl(apiUri).
+                setUserCenterApiBaseUrl(userCenterUri).
+                setConnectionTimeoutInMs(60000).
+                setCache(new NoCache()).
+                build();
+
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
+
+        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        uploadDocument(uploadBuilder);
+    }
+
+    public void testCertificatePinningWithWrongCertificate() throws IOException, JSONException, InterruptedException {
+        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com",
+                new String[]{"fotoueberweisung.net.cer"}).
+                setApiBaseUrl(apiUri).
+                setUserCenterApiBaseUrl(userCenterUri).
+                setConnectionTimeoutInMs(60000).
+                build();
+
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
+
+        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
+
+        final Task<Document> upload = uploadBuilder.upload(documentTaskManager);
+        final Task<Document> processDocument = upload.onSuccessTask(new Continuation<Document, Task<Document>>() {
+            @Override
+            public Task<Document> then(Task<Document> task) throws Exception {
+                Document document = task.getResult();
+                return documentTaskManager.pollDocument(document);
+            }
+        });
+
+        final Task<Map<String, SpecificExtraction>> retrieveExtractions = processDocument.onSuccessTask(new Continuation<Document, Task<Map<String, SpecificExtraction>>>() {
+            @Override
+            public Task<Map<String, SpecificExtraction>> then(Task<Document> task) throws Exception {
+                return documentTaskManager.getExtractions(task.getResult());
+            }
+        });
+
+        retrieveExtractions.waitForCompletion();
+        if (retrieveExtractions.isFaulted()) {
+            Log.e("TEST", Log.getStackTraceString(retrieveExtractions.getError()));
+        }
+
+        assertTrue("extractions shouldn't have succeeded", retrieveExtractions.isFaulted());
+    }
+
+    public void testCertificatePinningWithMultipleCertificates() throws IOException, JSONException, InterruptedException {
+        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com",
+                new String[]{"*.gini.net.cer", "fotoueberweisung.net.cer"}).
+                setApiBaseUrl(apiUri).
+                setUserCenterApiBaseUrl(userCenterUri).
+                setConnectionTimeoutInMs(60000).
                 build();
 
         final AssetManager assetManager = getContext().getResources().getAssets();
