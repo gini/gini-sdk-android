@@ -19,6 +19,7 @@ import com.android.volley.toolbox.HurlStack;
 import net.gini.android.authorization.PubKeyManager;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,6 +61,7 @@ class RequestQueueBuilder {
     private Network mNetwork;
     private SSLSocketFactory mSSLSocketFactory;
     private String[] mCertificatePaths;
+    private String[] mPubKeyPaths;
 
     RequestQueueBuilder(final Context context) {
         mContext = context;
@@ -67,6 +69,10 @@ class RequestQueueBuilder {
 
     void setCertificatePaths(final String[] certificatePaths) {
         mCertificatePaths = certificatePaths;
+    }
+
+    void setPublicKeyPaths(final String[] publicKeyPaths) {
+        mPubKeyPaths = publicKeyPaths;
     }
 
     RequestQueueBuilder setCache(final Cache cache) {
@@ -150,12 +156,19 @@ class RequestQueueBuilder {
     }
 
     private TrustManager[] getTrustManagers() {
-        TrustManager[] trustManagers = null;
+        final PubKeyManager.Builder builder = PubKeyManager.builder();
         if (mCertificatePaths != null && mCertificatePaths.length > 0) {
-            trustManagers =
-                    new TrustManager[]{new PubKeyManager(getLocalCertificatesFromAssets(mCertificatePaths))};
+            builder.setLocalCertificates(getLocalCertificatesFromAssets(mCertificatePaths));
+
         }
-        return trustManagers;
+        if (mPubKeyPaths != null && mPubKeyPaths.length > 0) {
+            builder.setLocalPublicKeys(getLocalPublicKeysFromAssets(mPubKeyPaths));
+        }
+        if (builder.canBuild()) {
+            final PubKeyManager pubKeyManager = builder.build();
+            return new TrustManager[]{pubKeyManager};
+        }
+        return null;
     }
 
     private Network getNetwork() {
@@ -172,21 +185,29 @@ class RequestQueueBuilder {
      * @return Local certificates
      * @throws IllegalArgumentException if the the certificate is not found or it is invalid.
      */
-
     private synchronized X509Certificate[] getLocalCertificatesFromAssets(String[] certFilePaths) {
         List<X509Certificate> certificates = new ArrayList<>();
         AssetManager assetManager = mContext.getAssets();
-        try {
-            for (String fileName : certFilePaths) {
-                InputStream fis = assetManager.open(fileName);
-                X509Certificate certificate = createCertificate(fis);
+        for (String fileName : certFilePaths) {
+            InputStream inputStream = null;
+            try {
+                inputStream = assetManager.open(fileName);
+                X509Certificate certificate = createCertificate(inputStream);
                 if (certificate != null) {
                     certificates.add(certificate);
                 }
-                fis.close();
+            } catch (IOException | CertificateException e) {
+                throw new IllegalArgumentException(
+                        "It is not a valid certificate or it does not exist in the assets: ",
+                        e.getCause());
+            } finally {
+                if (inputStream != null) {
+                    try {
+                        inputStream.close();
+                    } catch (IOException ignore) {
+                    }
+                }
             }
-        } catch (IOException | CertificateException e) {
-            throw new IllegalArgumentException("It is not a valid certificate or it does not exist in the assets: ", e.getCause());
         }
         return certificates.toArray(new X509Certificate[certificates.size()]);
     }
@@ -199,8 +220,8 @@ class RequestQueueBuilder {
      * @throws IOException          if the the certificate is not found or it is invalid.
      * @throws CertificateException if parsing problems are detected when generating Certificate
      */
-
-    private synchronized X509Certificate createCertificate(InputStream inputStream) throws IOException, CertificateException {
+    private synchronized X509Certificate createCertificate(InputStream inputStream)
+            throws IOException, CertificateException {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         BufferedInputStream bis = new BufferedInputStream(inputStream);
 
@@ -209,5 +230,54 @@ class RequestQueueBuilder {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Helper method to get local public keys from assets
+     *
+     * @param publicKeyPaths An array containing all public key paths relatively to the assets
+     * @return Local certificates
+     * @throws IllegalArgumentException if the the certificate is not found or it is invalid.
+     */
+    private synchronized String[] getLocalPublicKeysFromAssets(String[] publicKeyPaths) {
+        List<String> publicKeys = new ArrayList<>();
+        AssetManager assetManager = mContext.getAssets();
+        for (String fileName : publicKeyPaths) {
+            InputStream inputStream = null;
+            try {
+                inputStream = new BufferedInputStream(assetManager.open(fileName));
+                String publicKey = readPublicKeyFile(inputStream);
+                if (publicKey != null) {
+                    publicKeys.add(publicKey);
+                }
+            } catch (IOException e) {
+                throw new IllegalArgumentException(
+                        "It is not a valid public key or it does not exist in the assets: ",
+                        e.getCause());
+            } finally {
+                if (inputStream != null) {
+                    try {
+                        inputStream.close();
+                    } catch (IOException ignore) {
+                    }
+                }
+            }
+        }
+
+        return publicKeys.toArray(new String[publicKeys.size()]);
+    }
+
+    private String readPublicKeyFile(final InputStream inputStream) {
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int length;
+        try {
+            while ((length = inputStream.read(buffer)) != -1) {
+                result.write(buffer, 0, length);
+            }
+            return result.toString();
+        } catch (IOException ignored) {
+        }
+        return null;
     }
 }

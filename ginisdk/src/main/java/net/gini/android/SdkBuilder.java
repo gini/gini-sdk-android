@@ -29,6 +29,7 @@ public class SdkBuilder {
     private String mClientId;
     private String mClientSecret;
     private String[] mCertificatePaths;
+    private String[] mPubKeyPaths;
 
     private ApiCommunicator mApiCommunicator;
     private RequestQueue mRequestQueue;
@@ -87,6 +88,30 @@ public class SdkBuilder {
     public SdkBuilder(final Context context, final SessionManager sessionManager) {
         mContext = context;
         mSessionManager = sessionManager;
+    }
+
+    /**
+     * To use certificate pinning set the paths to the local certificates in the assets folder.
+     *
+     * @param certificateAssetPaths Your certificates paths relative to your assets.
+     *                               (i.e: 'gini.cer' or 'certificates/gini.cer')
+     * @return The builder instance to enable chaining.
+     */
+    public SdkBuilder setCertificateAssetPaths(String[] certificateAssetPaths) {
+        mCertificatePaths = certificateAssetPaths;
+        return this;
+    }
+
+    /**
+     * To use public key pinning set the paths to the local public keys in the assets folder.
+     *
+     * @param publicKeyAssetPaths Your public key paths relative to your assets.
+     *                               (i.e: 'gini.pub' or 'pubkeys/gini.pub')
+     * @return The builder instance to enable chaining.
+     */
+    public SdkBuilder setPublicKeyAssetPaths(String[] publicKeyAssetPaths) {
+        mPubKeyPaths = publicKeyAssetPaths;
+        return this;
     }
 
     /**
@@ -208,6 +233,9 @@ public class SdkBuilder {
             }
             if (mCertificatePaths != null && mCertificatePaths.length > 0) {
                 requestQueueBuilder.setCertificatePaths(mCertificatePaths);
+            }
+            if (mPubKeyPaths != null && mPubKeyPaths.length > 0) {
+                requestQueueBuilder.setPublicKeyPaths(mPubKeyPaths);
             }
             mRequestQueue = requestQueueBuilder.build();
         }
