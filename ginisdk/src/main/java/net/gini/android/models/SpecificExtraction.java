@@ -1,14 +1,13 @@
 package net.gini.android.models;
 
+import static net.gini.android.Utils.checkNotNull;
+
 import android.os.Parcel;
 import android.os.Parcelable;
-
-import org.jetbrains.annotations.Nullable;
+import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static net.gini.android.Utils.checkNotNull;
 
 public class SpecificExtraction extends Extraction {
 

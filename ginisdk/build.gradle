@@ -9,11 +9,10 @@ version = "${baseVersion}"
 
 android {
     compileSdkVersion 27
-    buildToolsVersion '27.0.3'
 
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 26
+        minSdkVersion 15
+        targetSdkVersion 27
         versionCode 1
         versionName version
 
@@ -35,23 +34,21 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.volley:volley:1.1.0'
-    compile 'com.parse.bolts:bolts-android:1.1.3'
-
-    // Useful annotations.
-    compile 'org.jetbrains:annotations:13.0'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.volley:volley:1.1.0'
+    api 'com.parse.bolts:bolts-android:1.1.3'
 
     // Mocks for testing.
-    androidTestCompile "org.mockito:mockito-core:1.10.19"
-    androidTestCompile "com.crittercism.dexmaker:dexmaker:1.4"
-    androidTestCompile "com.crittercism.dexmaker:dexmaker-dx:1.4"
-    androidTestCompile "com.crittercism.dexmaker:dexmaker-mockito:1.4"
-    androidTestCompile "com.android.support.test:runner:1.0.1"
-    androidTestCompile "com.android.support.test:rules:1.0.1"
+    androidTestImplementation "org.mockito:mockito-core:1.10.19"
+    androidTestImplementation "com.crittercism.dexmaker:dexmaker:1.4"
+    androidTestImplementation "com.crittercism.dexmaker:dexmaker-dx:1.4"
+    androidTestImplementation "com.crittercism.dexmaker:dexmaker-mockito:1.4"
+    androidTestImplementation "com.android.support.test:runner:1.0.1"
+    androidTestImplementation "com.android.support.test:rules:1.0.1"
 }
 
 apply from: file("repository.gradle")
+
 def fullDocumentationDir(variant) {
     return "${buildDir.getPath()}/docs/java-docs-$variant.name/";
 }
@@ -143,7 +140,7 @@ android.libraryVariants.all { variant ->
         include 'LICENSE'
         rename("ginisdk-${variant.name}.jar", "ginisdk-${android.defaultConfig.versionName}.jar");
 
-        from (fullDocumentationDir(variant)) {
+        from(fullDocumentationDir(variant)) {
             into "doc-" + android.defaultConfig.versionName;
             include "**/*.html"
             include "**/*.css"

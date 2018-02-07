@@ -1,5 +1,7 @@
 package net.gini.android.authorization.requests;
 
+import android.support.annotation.Nullable;
+
 import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
 import com.android.volley.ParseError;
@@ -12,7 +14,6 @@ import net.gini.android.MediaTypes;
 import net.gini.android.authorization.Session;
 
 import org.apache.http.protocol.HTTP;
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 

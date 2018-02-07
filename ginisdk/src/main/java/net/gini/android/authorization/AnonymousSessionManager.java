@@ -1,20 +1,20 @@
 package net.gini.android.authorization;
 
 
+import static net.gini.android.Utils.CHARSET_UTF8;
+import static net.gini.android.Utils.checkNotNull;
+
+import android.support.annotation.Nullable;
+
 import com.android.volley.VolleyError;
 
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 import bolts.Continuation;
 import bolts.Task;
-
-import static net.gini.android.Utils.CHARSET_UTF8;
-import static net.gini.android.Utils.checkNotNull;
 
 
 /**

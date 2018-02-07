@@ -1,7 +1,12 @@
 package net.gini.android;
 
+import static android.graphics.Bitmap.CompressFormat.JPEG;
+
+import static net.gini.android.Utils.checkNotNull;
+
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.support.annotation.Nullable;
 
 import net.gini.android.authorization.Session;
 import net.gini.android.authorization.SessionManager;
@@ -10,7 +15,6 @@ import net.gini.android.models.Document;
 import net.gini.android.models.Extraction;
 import net.gini.android.models.SpecificExtraction;
 
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,9 +28,6 @@ import java.util.Map;
 
 import bolts.Continuation;
 import bolts.Task;
-
-import static android.graphics.Bitmap.CompressFormat.JPEG;
-import static net.gini.android.Utils.checkNotNull;
 
 /**
  * The DocumentTaskManager is a high level API on top of the Gini API, which is used via the ApiCommunicator. It

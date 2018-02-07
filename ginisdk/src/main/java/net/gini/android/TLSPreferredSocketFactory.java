@@ -1,8 +1,7 @@
 package net.gini.android;
 
 import android.os.Build;
-
-import org.jetbrains.annotations.NotNull;
+import android.support.annotation.NonNull;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -32,13 +31,13 @@ class TLSPreferredSocketFactory extends SSLSocketFactory {
         mSSLSocketFactory = createSSLSocketFactory(trustManagers);
     }
 
-    @NotNull
+    @NonNull
     private SSLSocketFactory createSSLSocketFactory(TrustManager[] trustManagers) throws KeyManagementException, NoSuchAlgorithmException {
         final SSLContext sslContext = createSSLContext(trustManagers);
         return sslContext.getSocketFactory();
     }
 
-    @NotNull
+    @NonNull
     private SSLContext createSSLContext(TrustManager[] trustManagers) throws NoSuchAlgorithmException, KeyManagementException {
         if (TLSPreferredSocketFactory.isTLSv1xSupported()) {
             final SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
