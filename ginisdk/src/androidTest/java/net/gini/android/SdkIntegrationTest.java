@@ -1,10 +1,13 @@
 package net.gini.android;
 
+import static net.gini.android.helpers.TrustKitHelper.resetTrustKit;
 
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
+import android.support.test.filters.SdkSuppress;
 import android.test.AndroidTestCase;
 import android.util.Log;
 
@@ -53,6 +56,8 @@ public class SdkIntegrationTest extends AndroidTestCase {
         Log.d("TEST", "testApiUri " + apiUri);
         Log.d("TEST", "testUserCenterUri " + userCenterUri);
 
+        resetTrustKit();
+
         gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUri).
                 setUserCenterApiBaseUrl(userCenterUri).
@@ -60,7 +65,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
                 build();
     }
 
-    public static String getProperty(Properties properties, String propertyName) {
+    private static String getProperty(Properties properties, String propertyName) {
         Object value = properties.get(propertyName);
         assertNotNull(propertyName + " not set!", value);
         return value.toString();
@@ -102,225 +107,6 @@ public class SdkIntegrationTest extends AndroidTestCase {
                 setUserCenterApiBaseUrl(userCenterUri).
                 setConnectionTimeoutInMs(60000).
                 setCache(new NoCache()).
-                build();
-
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
-        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        uploadDocument(uploadBuilder);
-    }
-
-    public void testCertificatePinningWithMatchingCertificate() throws IOException, JSONException, InterruptedException {
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
-                setCertificateAssetPaths(new String[]{"*.gini.net.cer"}).
-                setApiBaseUrl(apiUri).
-                setUserCenterApiBaseUrl(userCenterUri).
-                setConnectionTimeoutInMs(60000).
-                build();
-
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
-        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        uploadDocument(uploadBuilder);
-    }
-
-    public void testCertificatePinningWithCustomCache() throws IOException, JSONException, InterruptedException {
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com",
-                new String[]{"*.gini.net.cer"}).
-                setApiBaseUrl(apiUri).
-                setUserCenterApiBaseUrl(userCenterUri).
-                setConnectionTimeoutInMs(60000).
-                setCache(new NoCache()).
-                build();
-
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
-        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        uploadDocument(uploadBuilder);
-    }
-
-    public void testCertificatePinningWithWrongCertificate() throws IOException, JSONException, InterruptedException {
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com",
-                new String[]{"fotoueberweisung.net.cer"}).
-                setApiBaseUrl(apiUri).
-                setUserCenterApiBaseUrl(userCenterUri).
-                setConnectionTimeoutInMs(60000).
-                build();
-
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
-        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
-
-        final Task<Document> upload = uploadBuilder.upload(documentTaskManager);
-        final Task<Document> processDocument = upload.onSuccessTask(new Continuation<Document, Task<Document>>() {
-            @Override
-            public Task<Document> then(Task<Document> task) throws Exception {
-                Document document = task.getResult();
-                return documentTaskManager.pollDocument(document);
-            }
-        });
-
-        final Task<Map<String, SpecificExtraction>> retrieveExtractions = processDocument.onSuccessTask(new Continuation<Document, Task<Map<String, SpecificExtraction>>>() {
-            @Override
-            public Task<Map<String, SpecificExtraction>> then(Task<Document> task) throws Exception {
-                return documentTaskManager.getExtractions(task.getResult());
-            }
-        });
-
-        retrieveExtractions.waitForCompletion();
-        if (retrieveExtractions.isFaulted()) {
-            Log.e("TEST", Log.getStackTraceString(retrieveExtractions.getError()));
-        }
-
-        assertTrue("extractions shouldn't have succeeded", retrieveExtractions.isFaulted());
-    }
-
-    public void testCertificatePinningWithMultipleCertificates() throws IOException, JSONException, InterruptedException {
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com",
-                new String[]{"*.gini.net.cer", "fotoueberweisung.net.cer"}).
-                setApiBaseUrl(apiUri).
-                setUserCenterApiBaseUrl(userCenterUri).
-                setConnectionTimeoutInMs(60000).
-                build();
-
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
-        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        uploadDocument(uploadBuilder);
-    }
-
-    public void testPublicKeyPinningWithMatchingPublicKey() throws IOException, JSONException, InterruptedException {
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
-                setPublicKeyAssetPaths(new String[]{"*.gini.net.pub"}).
-                setApiBaseUrl(apiUri).
-                setUserCenterApiBaseUrl(userCenterUri).
-                setConnectionTimeoutInMs(60000).
-                build();
-
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
-        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        uploadDocument(uploadBuilder);
-    }
-
-    public void testPublicKeyPinningWithMatchingPublicKeyWithDelimiters() throws IOException, JSONException, InterruptedException {
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
-                setPublicKeyAssetPaths(new String[]{"*.gini.net.with-delimiters.pub"}).
-                setApiBaseUrl(apiUri).
-                setUserCenterApiBaseUrl(userCenterUri).
-                setConnectionTimeoutInMs(60000).
-                build();
-
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
-        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        uploadDocument(uploadBuilder);
-    }
-
-    public void testPublicKeyPinningWithCustomCache() throws IOException, JSONException, InterruptedException {
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
-                setPublicKeyAssetPaths(new String[]{"*.gini.net.pub"}).
-                setApiBaseUrl(apiUri).
-                setUserCenterApiBaseUrl(userCenterUri).
-                setConnectionTimeoutInMs(60000).
-                setCache(new NoCache()).
-                build();
-
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
-        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        uploadDocument(uploadBuilder);
-    }
-
-    public void testPublicKeyPinningWithWrongPublicKey() throws IOException, JSONException, InterruptedException {
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
-                setPublicKeyAssetPaths(new String[]{"fotoueberweisung.net.pub"}).
-                setApiBaseUrl(apiUri).
-                setUserCenterApiBaseUrl(userCenterUri).
-                setConnectionTimeoutInMs(60000).
-                build();
-
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
-        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
-
-        final Task<Document> upload = uploadBuilder.upload(documentTaskManager);
-        final Task<Document> processDocument = upload.onSuccessTask(new Continuation<Document, Task<Document>>() {
-            @Override
-            public Task<Document> then(Task<Document> task) throws Exception {
-                Document document = task.getResult();
-                return documentTaskManager.pollDocument(document);
-            }
-        });
-
-        final Task<Map<String, SpecificExtraction>> retrieveExtractions = processDocument.onSuccessTask(new Continuation<Document, Task<Map<String, SpecificExtraction>>>() {
-            @Override
-            public Task<Map<String, SpecificExtraction>> then(Task<Document> task) throws Exception {
-                return documentTaskManager.getExtractions(task.getResult());
-            }
-        });
-
-        retrieveExtractions.waitForCompletion();
-        if (retrieveExtractions.isFaulted()) {
-            Log.e("TEST", Log.getStackTraceString(retrieveExtractions.getError()));
-        }
-
-        assertTrue("extractions shouldn't have succeeded", retrieveExtractions.isFaulted());
-    }
-
-    public void testPublicKeyPinningWithMultiplePublicKeys() throws IOException, JSONException, InterruptedException {
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
-                setPublicKeyAssetPaths(new String[]{"*.gini.net.pub", "fotoueberweisung.net.pub"}).
-                setApiBaseUrl(apiUri).
-                setUserCenterApiBaseUrl(userCenterUri).
-                setConnectionTimeoutInMs(60000).
-                build();
-
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
-        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        uploadDocument(uploadBuilder);
-    }
-
-    public void testPublicKeyAndCertificatePinningWithMultiplePublicKeysAndCertificates() throws IOException, JSONException, InterruptedException {
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
-                setPublicKeyAssetPaths(new String[]{"*.gini.net.pub", "fotoueberweisung.net.pub"}).
-                setCertificateAssetPaths(new String[]{"*.gini.net.cer", "fotoueberweisung.net.cer"}).
-                setApiBaseUrl(apiUri).
-                setUserCenterApiBaseUrl(userCenterUri).
-                setConnectionTimeoutInMs(60000).
                 build();
 
         final AssetManager assetManager = getContext().getResources().getAssets();
@@ -390,6 +176,105 @@ public class SdkIntegrationTest extends AndroidTestCase {
         UserCredentials newUserCredentials = credentialsStore.getUserCredentials();
         assertEquals(newEmailDomain, extractEmailDomain(newUserCredentials.getUsername()));
     }
+
+    public void testPublicKeyPinningWithMatchingPublicKey() throws Exception {
+        resetTrustKit();
+        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
+                setNetworkSecurityConfigResId(net.gini.android.test.R.xml.network_security_config).
+                setApiBaseUrl(apiUri).
+                setUserCenterApiBaseUrl(userCenterUri).
+                setConnectionTimeoutInMs(60000).
+                build();
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
+
+        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        uploadDocument(uploadBuilder);
+    }
+
+    public void testPublicKeyPinningWithCustomCache() throws Exception {
+        resetTrustKit();
+        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
+                setNetworkSecurityConfigResId(net.gini.android.test.R.xml.network_security_config).
+                setApiBaseUrl(apiUri).
+                setUserCenterApiBaseUrl(userCenterUri).
+                setConnectionTimeoutInMs(60000).
+                setCache(new NoCache()).
+                build();
+
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
+
+        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        uploadDocument(uploadBuilder);
+    }
+
+    @SdkSuppress(maxSdkVersion = Build.VERSION_CODES.JELLY_BEAN_MR1)
+    public void testPublicKeyPinningWithWrongPublicKey() throws Exception {
+        resetTrustKit();
+        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
+                setNetworkSecurityConfigResId(net.gini.android.test.R.xml.wrong_network_security_config).
+                setApiBaseUrl(apiUri).
+                setUserCenterApiBaseUrl(userCenterUri).
+                setConnectionTimeoutInMs(60000).
+                build();
+
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
+
+        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
+
+        final Task<Document> upload = uploadBuilder.upload(documentTaskManager);
+        final Task<Document> processDocument = upload.onSuccessTask(new Continuation<Document, Task<Document>>() {
+            @Override
+            public Task<Document> then(Task<Document> task) throws Exception {
+                Document document = task.getResult();
+                return documentTaskManager.pollDocument(document);
+            }
+        });
+
+        final Task<Map<String, SpecificExtraction>> retrieveExtractions = processDocument.onSuccessTask(new Continuation<Document, Task<Map<String, SpecificExtraction>>>() {
+            @Override
+            public Task<Map<String, SpecificExtraction>> then(Task<Document> task) throws Exception {
+                return documentTaskManager.getExtractions(task.getResult());
+            }
+        });
+
+        retrieveExtractions.waitForCompletion();
+        if (retrieveExtractions.isFaulted()) {
+            Log.e("TEST", Log.getStackTraceString(retrieveExtractions.getError()));
+        }
+
+        assertTrue("extractions shouldn't have succeeded", retrieveExtractions.isFaulted());
+    }
+
+    @SdkSuppress(maxSdkVersion = Build.VERSION_CODES.JELLY_BEAN_MR1)
+    public void testPublicKeyPinningWithMultiplePublicKeys() throws Exception {
+        resetTrustKit();
+        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
+                setNetworkSecurityConfigResId(net.gini.android.test.R.xml.multiple_keys_network_security_config).
+                setApiBaseUrl(apiUri).
+                setUserCenterApiBaseUrl(userCenterUri).
+                setConnectionTimeoutInMs(60000).
+                build();
+
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
+
+        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        uploadDocument(uploadBuilder);
+    }
+
+
 
     private String extractEmailDomain(String email) {
         String[] components = email.split("@");
