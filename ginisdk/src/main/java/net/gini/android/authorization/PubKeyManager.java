@@ -139,7 +139,9 @@ public final class PubKeyManager implements X509TrustManager {
             for (final X509TrustManager trustKitTrustManager : mTrustKitTrustManagers) {
                 trustKitTrustManager.checkClientTrusted(x509Certificates, s);
             }
+            return;
         }
+        throw new CertificateException("Client certificates not supported!");
     }
 
     @Override
