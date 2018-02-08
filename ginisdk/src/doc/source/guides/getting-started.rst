@@ -122,6 +122,14 @@ In your ``AndroidManifest.xml`` you need to set the ``android:networkSecurityCon
         ...
     </manifest>
 
+For the Gini SDK to know about the xml you need to set the xml resource id using the ``SdkBuilder#setNetworkSecurityConfigResId()`` method:
+
+.. code-block:: java
+
+    Gini gini = new SdkBuilder(getContext(), "gini-client-id", "GiniClientSecret", "example.com")
+            .setNetworkSecurityConfigResId(R.xml.network_security_config)
+            .build();
+
 The Gini API public key SHA256 hash in Base64 encoding can be extracted with the following openssl commands:
 
 .. code-block:: bash
