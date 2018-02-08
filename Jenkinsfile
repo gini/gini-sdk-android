@@ -30,7 +30,7 @@ pipeline {
         stage('Instrumentation Tests - API Level 26') {
             steps {
                 script {
-                    def emulatorPort = emulator.start(avd.createName("api-26-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -gpu on -camera-back emulated")
+                    def emulatorPort = emulator.start(avd.createName("api-26-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -gpu on -camera-back emulated -no-snapshot-save -no-snapshot-load")
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
                     withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
@@ -53,7 +53,7 @@ pipeline {
         stage('Instrumentation Tests - API Level 22') {
             steps {
                 script {
-                    def emulatorPort = emulator.start(avd.createName("api-22-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -gpu on -camera-back emulated")
+                    def emulatorPort = emulator.start(avd.createName("api-22-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -gpu on -camera-back emulated -no-snapshot-save -no-snapshot-load")
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
                     withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
@@ -76,7 +76,7 @@ pipeline {
         stage('Instrumentation Tests - API Level 16') {
             steps {
                 script {
-                    def emulatorPort = emulator.start(avd.createName("api-16-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -gpu on -camera-back emulated")
+                    def emulatorPort = emulator.start(avd.createName("api-16-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -gpu on -camera-back emulated -no-snapshot-save -no-snapshot-load")
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
                     withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
