@@ -8,11 +8,11 @@ from various types of documents.
 Dependencies
 ------------
 
-The Gini Android SDK has only two dependencies:
+The Gini Android SDK has the following dependencies:
 
 * [Volley from Google](http://developer.android.com/training/volley/index.html) ([AOSP Repository](https://android.googlesource.com/platform/frameworks/volley))
 * [Bolts from facebook](https://github.com/BoltsFramework/Bolts-Android)
-* IntelliJ Annotations
+* [TrustKit from DataTheorem](https://github.com/datatheorem/TrustKit-Android)
 
 Integration
 -----------
@@ -28,7 +28,7 @@ You can easily integrate the Gini Android SDK into your app using Gradle and our
     }
     
     dependencies {
-        compile ('net.gini:gini-android-sdk:1.4.3@aar'){
+        compile ('net.gini:gini-android-sdk:1.5.0@aar'){
             transitive = true
         }
         ...
@@ -43,4 +43,4 @@ See the [Gini Android SDK documentation](http://developer.gini.net/gini-sdk-andr
 for more details how to use the `DocumentTaskManager`.
 
 
-Copyright (c) 2014-2015, [Gini GmbH](https://www.gini.net/)
+Copyright (c) 2014-2018, [Gini GmbH](https://www.gini.net/)
