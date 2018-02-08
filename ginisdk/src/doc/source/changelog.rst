@@ -6,7 +6,7 @@ Changelog
 ===================
 
 - Min API Level increased to 15.
-- Public key pinning with `Android Network Security Configuration and TrustKit <guides/getting-started.html#public-key-pinning>`_. Previous configuration was removed.
+- Public key pinning with `Android Network Security Configuration and TrustKit <guides/getting-started.html#public-key-pinning>`_. Previous public key pinning configuration was removed.
 
 1.4.3 (2018-02-05)
 ===================
