@@ -69,3 +69,61 @@ An example of a username created with this configuration would be ``550e8400-e29
 
 
 Congratulations, you successfully integrated the Gini SDK. 
+
+Public Key Pinning
+==================
+
+Since version 1.5.0 public key pinning is provided using the `Android Network Security Configuration <https://developer.android.com/training/articles/security-config.html>`_ and `TrustKit <https://github.com/datatheorem/TrustKit-Android>`_. The previous configuration through the `SdkBuilder` was removed.
+
+To use public key pinning you need to create an `Android network security configuration <https://developer.android.com/training/articles/security-config.html>`_ xml file. This configuration is supported natively on Android Nougat (API Level 23) and newer. For versions between API Level 17 and 22 the Gini SDK relies on `TrustKit <https://github.com/datatheorem/TrustKit-Android>`_. On API Levels 15 and 16 our own pinning implementation is used.
+
+We recommend reading the `Android Network Security Configuration <https://developer.android.com/training/articles/security-config.html>`_ guide and the `TrustKit limitations for API Levels 17 to 22 <https://github.com/datatheorem/TrustKit-Android#limitations>`_.
+
+The following sample configuration shows how to set the public key pin for the two domains the Gini SDK uses by default (``api.gini.net`` and ``user.gini.net``). It should be saved under ``res/xml/network_security_config.xml``:
+
+.. code-block:: xml
+
+    <?xml version="1.0" encoding="utf-8"?>
+    <network-security-config>
+        <domain-config>
+            <trustkit-config
+                disableDefaultReportUri="true"
+                enforcePinning="true" />
+            <domain>api.gini.net</domain>
+            <pin-set>
+                <!-- *.gini.net public key-->
+                <pin digest="SHA-256">yGLLyvZLo2NNXeBNKJwx1PlCtm+YEVU6h2hxVpRa4l4=</pin>
+                <!-- some invalid key created with '$ echo "0" | openssl dgst -sha256 -binary | openssl enc -base64' -->
+                <pin digest="SHA-256">micfKpFrC27mzsskJvCzIG7wdFeL5V2byU9vP+Orhqo=</pin>
+            </pin-set>
+            <domain-config>
+                <trustkit-config
+                    disableDefaultReportUri="true"
+                    enforcePinning="true" />
+                <domain>user.gini.net</domain>
+            </domain-config>
+        </domain-config>
+    </network-security-config>
+
+.. note::
+
+    If you set different base urls when instantiating the Gini SDK with the ``SdkBuilder`` make sure you set matching domains in the network security configuration xml.
+
+The `TrustKit <https://github.com/datatheorem/TrustKit-Android>`_ configuration tag ``<trustkit-config>`` is required in order to disable TrustKit reporting and to enforce public key pinning. This is important because without it TrustKit won't throw ``CertificateExceptions`` if the local public keys didn't match any of the remote ones, effectively disabling pinning. The only downside of enforcing pinning is that two public key hashes are required. In the example above we create and used a "zero" key as a placeholder. Setting the same key twice won't help since keys are stored in a set. Ideally you should use a backup public key as the second one.
+
+In your ``AndroidManifest.xml`` you need to set the ``android:networkSecurityConfig`` attribute on the ``<application>`` tag to point to the xml:
+
+.. code-block:: xml
+
+    <?xml version="1.0" encoding="utf-8"?>
+    <manifest ...>
+        ...
+        <application android:networkSecurityConfig="@xml/network_security_config">
+        ...
+    </manifest>
+
+The Gini API public key SHA256 hash in Base64 encoding can be extracted with the following openssl commands:
+
+.. code-block:: bash
+
+    $ openssl s_client -servername gini.net -connect gini.net:443 | openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64
