@@ -109,7 +109,7 @@ The following sample configuration shows how to set the public key pin for the t
 
     If you set different base urls when instantiating the Gini SDK with the ``SdkBuilder`` make sure you set matching domains in the network security configuration xml.
 
-The `TrustKit <https://github.com/datatheorem/TrustKit-Android>`_ configuration tag ``<trustkit-config>`` is required in order to disable TrustKit reporting and to enforce public key pinning. This is important because without it TrustKit won't throw ``CertificateExceptions`` if the local public keys didn't match any of the remote ones, effectively disabling pinning. The only downside of enforcing pinning is that two public key hashes are required. In the example above we create and used a "zero" key as a placeholder. Setting the same key twice won't help since keys are stored in a set. Ideally you should use a backup public key as the second one.
+The `TrustKit <https://github.com/datatheorem/TrustKit-Android>`_ configuration tag ``<trustkit-config>`` is required in order to disable TrustKit reporting and to enforce public key pinning. This is important because without it TrustKit won't throw ``CertificateExceptions`` if the local public keys didn't match any of the remote ones, effectively disabling pinning. The only downside of enforcing pinning is that two public key hashes are required. In the example above we create and used a "zero" key hash as a placeholder. Setting the same key hash twice won't help since key hashes are stored in a set. Ideally you should use a backup public key hash as the second one.
 
 In your ``AndroidManifest.xml`` you need to set the ``android:networkSecurityConfig`` attribute on the ``<application>`` tag to point to the xml:
 
