@@ -75,9 +75,9 @@ Public Key Pinning
 
 Since version 1.5.0 public key pinning is provided using the `Android Network Security Configuration <https://developer.android.com/training/articles/security-config.html>`_ and `TrustKit <https://github.com/datatheorem/TrustKit-Android>`_. The previous configuration through the `SdkBuilder` was removed.
 
-To use public key pinning you need to create an `Android network security configuration <https://developer.android.com/training/articles/security-config.html>`_ xml file. This configuration is supported natively on Android Nougat (API Level 23) and newer. For versions between API Level 17 and 22 the Gini SDK relies on `TrustKit <https://github.com/datatheorem/TrustKit-Android>`_. On API Levels 15 and 16 our own pinning implementation is used.
+To use public key pinning you need to create an `Android network security configuration <https://developer.android.com/training/articles/security-config.html>`_ xml file. This configuration is supported natively on Android Nougat (API Level 24) and newer. For versions between API Level 17 and 23 the Gini SDK relies on `TrustKit <https://github.com/datatheorem/TrustKit-Android>`_. On API Levels 15 and 16 our own pinning implementation is used.
 
-We recommend reading the `Android Network Security Configuration <https://developer.android.com/training/articles/security-config.html>`_ guide and the `TrustKit limitations for API Levels 17 to 22 <https://github.com/datatheorem/TrustKit-Android#limitations>`_.
+We recommend reading the `Android Network Security Configuration <https://developer.android.com/training/articles/security-config.html>`_ guide and the `TrustKit limitations for API Levels 17 to 23 <https://github.com/datatheorem/TrustKit-Android#limitations>`_.
 
 The following sample configuration shows how to set the public key pin for the two domains the Gini SDK uses by default (``api.gini.net`` and ``user.gini.net``). It should be saved under ``res/xml/network_security_config.xml``:
 
