@@ -89,7 +89,7 @@ The following sample configuration shows how to set the public key pin for the t
             <trustkit-config
                 disableDefaultReportUri="true"
                 enforcePinning="true" />
-            <domain>api.gini.net</domain>
+            <domain includeSubdomains="false">api.gini.net</domain>
             <pin-set>
                 <!-- *.gini.net public key-->
                 <pin digest="SHA-256">yGLLyvZLo2NNXeBNKJwx1PlCtm+YEVU6h2hxVpRa4l4=</pin>
@@ -100,7 +100,7 @@ The following sample configuration shows how to set the public key pin for the t
                 <trustkit-config
                     disableDefaultReportUri="true"
                     enforcePinning="true" />
-                <domain>user.gini.net</domain>
+                <domain includeSubdomains="false">user.gini.net</domain>
             </domain-config>
         </domain-config>
     </network-security-config>
