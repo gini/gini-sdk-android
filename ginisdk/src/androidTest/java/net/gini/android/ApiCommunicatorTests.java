@@ -475,7 +475,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
-        assertTrue(areEqualURIs("https://api.gini.net/documents/1234/errorreport?description=and+a+description&summary=short+summary",
+        assertTrue(areEqualURIs("https://api.gini.net/documents/1234/errorreport?description=and%20a%20description&summary=short%20summary",
                 request.getUrl()));
     }
 

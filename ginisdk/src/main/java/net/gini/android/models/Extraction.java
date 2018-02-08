@@ -1,11 +1,10 @@
 package net.gini.android.models;
 
+import static net.gini.android.Utils.checkNotNull;
+
 import android.os.Parcel;
 import android.os.Parcelable;
-
-import org.jetbrains.annotations.Nullable;
-
-import static net.gini.android.Utils.checkNotNull;
+import android.support.annotation.Nullable;
 
 public class Extraction implements Parcelable {
     private String mValue;

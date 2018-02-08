@@ -1,7 +1,7 @@
 package net.gini.android;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,7 +22,7 @@ class TLSPreferredSocket extends SSLSocket {
 
     private final SSLSocket mSSLSocket;
 
-    TLSPreferredSocket(@NotNull SSLSocket mSSLSocket) {
+    TLSPreferredSocket(@NonNull SSLSocket mSSLSocket) {
         this.mSSLSocket = mSSLSocket;
     }
 

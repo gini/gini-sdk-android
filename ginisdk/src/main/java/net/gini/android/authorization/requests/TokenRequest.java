@@ -3,6 +3,7 @@ package net.gini.android.authorization.requests;
 
 import static net.gini.android.Utils.mapToUrlEncodedString;
 
+import android.support.annotation.Nullable;
 import android.util.Base64;
 
 import com.android.volley.AuthFailureError;
@@ -13,7 +14,6 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import net.gini.android.MediaTypes;
 import net.gini.android.Utils;
 
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
 import java.util.HashMap;

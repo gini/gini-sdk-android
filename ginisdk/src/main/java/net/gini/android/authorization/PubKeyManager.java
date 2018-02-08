@@ -1,18 +1,22 @@
 package net.gini.android.authorization;
 
-import android.util.Base64;
+import android.content.Context;
+import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.XmlRes;
 
-import org.jetbrains.annotations.NotNull;
+import com.datatheorem.android.trustkit.TrustKit;
+import com.datatheorem.android.trustkit.config.DomainPinningPolicy;
+import com.datatheorem.android.trustkit.config.PublicKeyPin;
 
-import java.math.BigInteger;
-import java.security.KeyFactory;
 import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -21,53 +25,82 @@ import javax.net.ssl.X509TrustManager;
 
 public final class PubKeyManager implements X509TrustManager {
 
-    private final X509Certificate[] mLocalCertificates;
-    private final String[] mLocalPublicKeys;
+    private final Context mContext;
+    private final List<String> mHostnames;
+    @XmlRes
+    private final int mNetworkSecurityConfigResId;
+    private Set<PublicKeyPin> mLocalPublicKeys;
+    private final List<X509TrustManager> mTrustKitTrustManagers = new ArrayList<>();
 
-    public static Builder builder() {
-        return new Builder();
+    public static Builder builder(@NonNull final Context context) {
+        return new Builder(context);
     }
 
-    private PubKeyManager(@NotNull final X509Certificate[] certificates,
-            @NotNull final String[] publicKeys) {
-        mLocalCertificates = certificates;
-        mLocalPublicKeys = publicKeys;
+    private PubKeyManager(@NonNull Context context, @NonNull final List<String> hostnames,
+            @XmlRes final int networkSecurityConfigResId) {
+        mContext = context;
+        mHostnames = hostnames;
+        mNetworkSecurityConfigResId = networkSecurityConfigResId;
+        setupTrustKit();
     }
 
-    private PubKeyManager(@NotNull final X509Certificate[] certificates) {
-        mLocalCertificates = certificates;
-        mLocalPublicKeys = new String[0];
+    private void setupTrustKit() {
+        try {
+            TrustKit.initializeWithNetworkSecurityConfiguration(mContext,
+                    mNetworkSecurityConfigResId);
+        } catch (IllegalStateException ignore) {
+        }
+        mLocalPublicKeys = getPublicKeys(TrustKit.getInstance());
+        mTrustKitTrustManagers.clear();
+        for (final String hostname : mHostnames) {
+            mTrustKitTrustManagers.add(TrustKit.getInstance().getTrustManager(hostname));
+        }
     }
 
-    private PubKeyManager(@NotNull final String[] publicKeys) {
-        mLocalCertificates = new X509Certificate[0];
-        mLocalPublicKeys = publicKeys;
+    private Set<PublicKeyPin> getPublicKeys(final TrustKit trustKit) {
+        final Set<PublicKeyPin> publicKeys = new HashSet<>();
+        for (final String hostname : mHostnames) {
+            final DomainPinningPolicy pinningPolicy =
+                    trustKit.getConfiguration().getPolicyForHostname(hostname);
+            if (pinningPolicy != null) {
+                publicKeys.addAll(pinningPolicy.getPublicKeyPins());
+            }
+        }
+        return publicKeys;
     }
 
     @Override
     public void checkServerTrusted(X509Certificate[] remoteX509Certificates, String authType)
             throws CertificateException {
-        if (remoteX509Certificates == null) {
-            throw new IllegalArgumentException(
-                    "checkServerTrusted: Remote X509Certificate array is null");
-        }
-        if (remoteX509Certificates.length == 0) {
-            throw new IllegalArgumentException(
-                    "checkServerTrusted: Remote X509Certificate array is empty");
-        }
-
-        checkSSLTLS(remoteX509Certificates, authType);
-
-        boolean trusted = false;
-        for (X509Certificate remoteCert : remoteX509Certificates) {
-            if (isValidCertificate(remoteCert)) {
-                trusted = true;
-                break;
+        // TrustKit supports API Levels 17+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            for (final X509TrustManager trustKitTrustManager : mTrustKitTrustManagers) {
+                trustKitTrustManager.checkServerTrusted(remoteX509Certificates, authType);
             }
-        }
+        } else {
+            // Fall back to our implementation on API Levels 16-
+            if (remoteX509Certificates == null) {
+                throw new IllegalArgumentException(
+                        "checkServerTrusted: Remote X509Certificate array is null");
+            }
+            if (remoteX509Certificates.length == 0) {
+                throw new IllegalArgumentException(
+                        "checkServerTrusted: Remote X509Certificate array is empty");
+            }
 
-        if (!trusted) {
-            throw new CertificateException("Remote certificate not trusted");
+            checkSSLTLS(remoteX509Certificates, authType);
+
+            boolean trusted = false;
+            for (X509Certificate remoteCert : remoteX509Certificates) {
+                if (isValidCertificate(remoteCert)) {
+                    trusted = true;
+                    break;
+                }
+            }
+
+            if (!trusted) {
+                throw new CertificateException("Remote certificate not trusted");
+            }
         }
     }
 
@@ -88,44 +121,11 @@ public final class PubKeyManager implements X509TrustManager {
         }
     }
 
-    private String getEncodedPublicKey(X509Certificate certificate) {
-        /* DER encoded Public Keys start with 0x30 (ASN.1 SEQUENCE and CONSTRUCTED), so there is
-         no leading 0x00 to drop.*/
-        PublicKey publicKey = certificate.getPublicKey();
-        return new BigInteger(1, publicKey.getEncoded()).toString(16);
-    }
-
-    private String getEncodedPublicKey(String publicKeyString) throws CertificateException {
-        /* DER encoded Public Keys start with 0x30 (ASN.1 SEQUENCE and CONSTRUCTED), so there is
-         no leading 0x00 to drop.*/
-        PublicKey publicKey = makePublicKey(publicKeyString);
-        return new BigInteger(1, publicKey.getEncoded()).toString(16);
-    }
-
-    private PublicKey makePublicKey(final String publicKeyString) throws CertificateException {
-        try {
-            String pubKeyString = publicKeyString.replaceAll("-----.*?-----","");
-            byte[] keyBytes = Base64.decode(pubKeyString.getBytes(), Base64.DEFAULT);
-            X509EncodedKeySpec X509keySpec = new X509EncodedKeySpec(keyBytes);
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            return keyFactory.generatePublic(X509keySpec);
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new CertificateException(e);
-        }
-    }
-
-    private Boolean isValidCertificate(X509Certificate remoteCertificate)
+    private Boolean isValidCertificate(final X509Certificate remoteCertificate)
             throws CertificateException {
-        String remotePublicKey = getEncodedPublicKey(remoteCertificate);
-        for (X509Certificate localCert : mLocalCertificates) {
-            String localPublicKey = getEncodedPublicKey(localCert);
-            if (remotePublicKey.equalsIgnoreCase(localPublicKey)) {
-                return true;
-            }
-        }
-        for (String localPublicKeyString : mLocalPublicKeys) {
-            String localPublicKey = getEncodedPublicKey(localPublicKeyString);
-            if (remotePublicKey.equalsIgnoreCase(localPublicKey)) {
+        final PublicKeyPin remotePublicKey = new PublicKeyPin(remoteCertificate);
+        for (final PublicKeyPin localPublicKey : mLocalPublicKeys) {
+            if (localPublicKey.equals(remotePublicKey)) {
                 return true;
             }
         }
@@ -135,45 +135,60 @@ public final class PubKeyManager implements X509TrustManager {
     @Override
     public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
             throws CertificateException {
+        if (!mTrustKitTrustManagers.isEmpty()) {
+            for (final X509TrustManager trustKitTrustManager : mTrustKitTrustManagers) {
+                trustKitTrustManager.checkClientTrusted(x509Certificates, s);
+            }
+            return;
+        }
+        throw new CertificateException("Client certificates not supported!");
     }
 
     @Override
     public X509Certificate[] getAcceptedIssuers() {
+        if (!mTrustKitTrustManagers.isEmpty()) {
+            final List<X509Certificate> acceptedIssuers = new ArrayList<>();
+            for (final X509TrustManager trustKitTrustManager : mTrustKitTrustManagers) {
+                acceptedIssuers.addAll(Arrays.asList(trustKitTrustManager.getAcceptedIssuers()));
+            }
+            return acceptedIssuers.toArray(new X509Certificate[acceptedIssuers.size()]);
+        }
         return new X509Certificate[0];
     }
 
     public static class Builder {
 
-        private X509Certificate[] mLocalCertificates;
-        private String[] mLocalPublicKeys;
+        private Context mContext;
+        private List<String> mHostnames;
+        @XmlRes
+        private int mNetworkSecurityConfigResId;
 
-        Builder() {
+        Builder(@NonNull final Context context) {
+            mContext = context;
         }
 
-        public Builder setLocalCertificates(final X509Certificate[] localCertificates) {
-            mLocalCertificates = localCertificates;
+        public Builder setHostnames(final List<String> hostnames) {
+            mHostnames = hostnames;
             return this;
         }
 
-        public Builder setLocalPublicKeys(final String[] localPublicKeys) {
-            mLocalPublicKeys = localPublicKeys;
+        public Builder setNetworkSecurityConfigResId(@XmlRes final int networkSecurityConfigResId) {
+            mNetworkSecurityConfigResId = networkSecurityConfigResId;
             return this;
         }
 
         public boolean canBuild() {
-            return mLocalCertificates != null || mLocalPublicKeys != null;
+            return mContext != null
+                    && mHostnames != null
+                    && mNetworkSecurityConfigResId != 0;
         }
 
         public PubKeyManager build() {
-            if (mLocalCertificates != null && mLocalPublicKeys != null) {
-                return new PubKeyManager(mLocalCertificates, mLocalPublicKeys);
-            } else if (mLocalCertificates != null) {
-                return new PubKeyManager(mLocalCertificates);
-            } else if (mLocalPublicKeys != null) {
-                return new PubKeyManager(mLocalPublicKeys);
+            if (canBuild()) {
+                return new PubKeyManager(mContext, mHostnames, mNetworkSecurityConfigResId);
             }
             throw new IllegalArgumentException(
-                    "Cannot create PubKeyManager: no local certificates or public keys were set.");
+                    "Cannot create PubKeyManager: no local certificates or public keys or network security config was set.");
         }
     }
 }

@@ -1,11 +1,8 @@
 package net.gini.android;
 
-
-import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.message.BasicNameValuePair;
+import android.net.Uri;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Map;
 
 public class Utils {
@@ -35,11 +32,11 @@ public class Utils {
      * @return      The urlencoded data.
      */
     public static String mapToUrlEncodedString(Map<String, String> data) {
-        ArrayList<BasicNameValuePair> parameters = new ArrayList<BasicNameValuePair>(data.size());
+        final Uri.Builder uriBuilder = Uri.parse("").buildUpon();
         for (Map.Entry<String, String> entry : data.entrySet()) {
-            parameters.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
-        return URLEncodedUtils.format(parameters, "utf-8");
+        return uriBuilder.build().getEncodedQuery();
     }
 
     public static Charset CHARSET_UTF8 = Charset.forName("utf-8");

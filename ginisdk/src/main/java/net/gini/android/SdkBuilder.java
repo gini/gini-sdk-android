@@ -4,6 +4,7 @@ import static net.gini.android.Utils.checkNotNull;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.support.annotation.XmlRes;
 
 import com.android.volley.Cache;
 import com.android.volley.DefaultRetryPolicy;
@@ -18,6 +19,11 @@ import net.gini.android.authorization.UserCenterManager;
 import net.gini.android.requests.DefaultRetryPolicyFactory;
 import net.gini.android.requests.RetryPolicyFactory;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
 public class SdkBuilder {
 
     private final Context mContext;
@@ -28,8 +34,8 @@ public class SdkBuilder {
     private String mEmailDomain;
     private String mClientId;
     private String mClientSecret;
-    private String[] mCertificatePaths;
-    private String[] mPubKeyPaths;
+    @XmlRes
+    private int mNetworkSecurityConfigResId;
 
     private ApiCommunicator mApiCommunicator;
     private RequestQueue mRequestQueue;
@@ -54,28 +60,11 @@ public class SdkBuilder {
      * @param emailDomain  The email domain which is used for created Gini users.
      */
     public SdkBuilder(final Context context, final String clientId, final String clientSecret,
-                      final String emailDomain) {
+            final String emailDomain) {
         mContext = context;
         mEmailDomain = emailDomain;
         mClientSecret = clientSecret;
         mClientId = clientId;
-    }
-
-    /**
-     * Constructor to initialize a new builder instance where anonymous Gini users are used. <b>This requires access to
-     * the Gini User Center API. Access to the User Center API is restricted to selected clients only.</b>
-     *
-     * @param context                Your application's Context instance (Android).
-     * @param clientId               Your application's client ID for the Gini API.
-     * @param clientSecret           Your application's client secret for the Gini API.
-     * @param emailDomain            The email domain which is used for created Gini users.
-     * @param certificateAssetsPaths Your certificates paths relative to your assets.
-     *                               (i.e: 'gini.cer' or 'certificates/gini.cer')
-     */
-    public SdkBuilder(final Context context, final String clientId, final String clientSecret,
-                      final String emailDomain, String[] certificateAssetsPaths) {
-        this(context, clientId, clientSecret, emailDomain);
-        mCertificatePaths = certificateAssetsPaths;
     }
 
     /**
@@ -91,26 +80,13 @@ public class SdkBuilder {
     }
 
     /**
-     * To use certificate pinning set the paths to the local certificates in the assets folder.
+     * Set the resource id for the network security configuration xml to enable public key pinning.
      *
-     * @param certificateAssetPaths Your certificates paths relative to your assets.
-     *                               (i.e: 'gini.cer' or 'certificates/gini.cer')
+     * @param networkSecurityConfigResId xml resource id
      * @return The builder instance to enable chaining.
      */
-    public SdkBuilder setCertificateAssetPaths(String[] certificateAssetPaths) {
-        mCertificatePaths = certificateAssetPaths;
-        return this;
-    }
-
-    /**
-     * To use public key pinning set the paths to the local public keys in the assets folder.
-     *
-     * @param publicKeyAssetPaths Your public key paths relative to your assets.
-     *                               (i.e: 'gini.pub' or 'pubkeys/gini.pub')
-     * @return The builder instance to enable chaining.
-     */
-    public SdkBuilder setPublicKeyAssetPaths(String[] publicKeyAssetPaths) {
-        mPubKeyPaths = publicKeyAssetPaths;
+    public SdkBuilder setNetworkSecurityConfigResId(@XmlRes final int networkSecurityConfigResId) {
+        mNetworkSecurityConfigResId = networkSecurityConfigResId;
         return this;
     }
 
@@ -228,18 +204,31 @@ public class SdkBuilder {
     private synchronized RequestQueue getRequestQueue() {
         if (mRequestQueue == null) {
             RequestQueueBuilder requestQueueBuilder = new RequestQueueBuilder(mContext);
+            requestQueueBuilder.setHostnames(getHostnames());
             if (mCache != null) {
                 requestQueueBuilder.setCache(mCache);
             }
-            if (mCertificatePaths != null && mCertificatePaths.length > 0) {
-                requestQueueBuilder.setCertificatePaths(mCertificatePaths);
-            }
-            if (mPubKeyPaths != null && mPubKeyPaths.length > 0) {
-                requestQueueBuilder.setPublicKeyPaths(mPubKeyPaths);
+            if (mNetworkSecurityConfigResId != 0) {
+                requestQueueBuilder.setNetworkSecurityConfigResId(mNetworkSecurityConfigResId);
             }
             mRequestQueue = requestQueueBuilder.build();
         }
         return mRequestQueue;
+    }
+
+    private List<String> getHostnames() {
+        final List<String> hostnames = new ArrayList<>(2);
+        try {
+            hostnames.add(new URL(mApiBaseUrl).getHost());
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Invalid Gini API base url", e);
+        }
+        try {
+            hostnames.add(new URL(mUserCenterApiBaseUrl).getHost());
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Invalid Gini API base url", e);
+        }
+        return hostnames;
     }
 
     /**
@@ -249,7 +238,8 @@ public class SdkBuilder {
      */
     private synchronized ApiCommunicator getApiCommunicator() {
         if (mApiCommunicator == null) {
-            mApiCommunicator = new ApiCommunicator(mApiBaseUrl, getRequestQueue(), getRetryPolicyFactory());
+            mApiCommunicator = new ApiCommunicator(mApiBaseUrl, getRequestQueue(),
+                    getRetryPolicyFactory());
         }
         return mApiCommunicator;
     }
@@ -264,7 +254,8 @@ public class SdkBuilder {
      */
     private synchronized CredentialsStore getCredentialsStore() {
         if (mCredentialsStore == null) {
-            SharedPreferences sharedPreferences = mContext.getSharedPreferences("Gini", Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences = mContext.getSharedPreferences("Gini",
+                    Context.MODE_PRIVATE);
             mCredentialsStore = new SharedPreferencesCredentialsStore(sharedPreferences);
         }
         return mCredentialsStore;
@@ -279,7 +270,8 @@ public class SdkBuilder {
     private synchronized UserCenterAPICommunicator getUserCenterAPICommunicator() {
         if (mUserCenterApiCommunicator == null) {
             mUserCenterApiCommunicator =
-                    new UserCenterAPICommunicator(getRequestQueue(), mUserCenterApiBaseUrl, mClientId, mClientSecret,
+                    new UserCenterAPICommunicator(getRequestQueue(), mUserCenterApiBaseUrl,
+                            mClientId, mClientSecret,
                             getRetryPolicyFactory());
         }
         return mUserCenterApiCommunicator;
@@ -293,7 +285,8 @@ public class SdkBuilder {
      */
     private synchronized RetryPolicyFactory getRetryPolicyFactory() {
         if (mRetryPolicyFactory == null) {
-            mRetryPolicyFactory = new DefaultRetryPolicyFactory(mTimeoutInMs, mMaxRetries, mBackOffMultiplier);
+            mRetryPolicyFactory = new DefaultRetryPolicyFactory(mTimeoutInMs, mMaxRetries,
+                    mBackOffMultiplier);
         }
         return mRetryPolicyFactory;
     }
@@ -317,7 +310,8 @@ public class SdkBuilder {
      */
     private synchronized DocumentTaskManager getDocumentTaskManager() {
         if (mDocumentTaskManager == null) {
-            mDocumentTaskManager = new DocumentTaskManager(getApiCommunicator(), getSessionManager());
+            mDocumentTaskManager = new DocumentTaskManager(getApiCommunicator(),
+                    getSessionManager());
         }
         return mDocumentTaskManager;
     }
@@ -330,7 +324,8 @@ public class SdkBuilder {
      */
     public synchronized SessionManager getSessionManager() {
         if (mSessionManager == null) {
-            mSessionManager = new AnonymousSessionManager(mEmailDomain, getUserCenterManager(), getCredentialsStore());
+            mSessionManager = new AnonymousSessionManager(mEmailDomain, getUserCenterManager(),
+                    getCredentialsStore());
         }
         return mSessionManager;
     }

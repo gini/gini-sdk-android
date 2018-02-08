@@ -1,7 +1,18 @@
 package net.gini.android;
 
+import static android.graphics.Bitmap.Config.ARGB_8888;
+
+import static com.android.volley.Request.Method.DELETE;
+import static com.android.volley.Request.Method.GET;
+import static com.android.volley.Request.Method.POST;
+import static com.android.volley.Request.Method.PUT;
+
+import static net.gini.android.Utils.checkNotNull;
+import static net.gini.android.Utils.mapToUrlEncodedString;
+
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.support.annotation.Nullable;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.RequestQueue;
@@ -13,7 +24,6 @@ import net.gini.android.authorization.requests.BearerJsonObjectRequest;
 import net.gini.android.requests.BearerUploadRequest;
 import net.gini.android.requests.RetryPolicyFactory;
 
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -21,14 +31,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import bolts.Task;
-
-import static android.graphics.Bitmap.Config.ARGB_8888;
-import static com.android.volley.Request.Method.DELETE;
-import static com.android.volley.Request.Method.GET;
-import static com.android.volley.Request.Method.POST;
-import static com.android.volley.Request.Method.PUT;
-import static net.gini.android.Utils.checkNotNull;
-import static net.gini.android.Utils.mapToUrlEncodedString;
 
 
 /**

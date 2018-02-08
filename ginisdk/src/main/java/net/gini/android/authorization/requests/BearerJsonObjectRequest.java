@@ -1,5 +1,7 @@
 package net.gini.android.authorization.requests;
 
+import android.support.annotation.Nullable;
+
 import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
 import com.android.volley.ParseError;
@@ -9,10 +11,9 @@ import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 
 import net.gini.android.MediaTypes;
+import net.gini.android.Utils;
 import net.gini.android.authorization.Session;
 
-import org.apache.http.protocol.HTTP;
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -63,7 +64,7 @@ public class BearerJsonObjectRequest extends JsonObjectRequest {
 
     private JSONObject createJSONObject(NetworkResponse response) throws UnsupportedEncodingException, JSONException {
         // The Gini API always uses UTF-8.
-        final String jsonString = new String(response.data, HTTP.UTF_8);
+        final String jsonString = new String(response.data, Utils.CHARSET_UTF8);
         if (jsonString.length() > 0) {
             return new JSONObject(jsonString);
         } else {
