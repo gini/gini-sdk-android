@@ -1,11 +1,19 @@
 package net.gini.android;
 
+import static net.gini.android.Utils.CHARSET_UTF8;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.test.InstrumentationTestCase;
 
+import net.gini.android.DocumentTaskManager.DocumentType;
 import net.gini.android.authorization.Session;
 import net.gini.android.authorization.SessionManager;
 import net.gini.android.helpers.TestUtils;
@@ -23,14 +31,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import bolts.Task;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
@@ -106,6 +110,12 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         return Task.forResult(readJSONFile("layout.json"));
     }
 
+    private Document createDocument(final String documentId) throws IOException, JSONException {
+        final JSONObject responseData = readJSONFile("document.json");
+        responseData.put("id", documentId);
+        return Document.fromApiResponse(responseData);
+    }
+
     public void testThatConstructorChecksForNull() {
         try {
             new DocumentTaskManager(null, null);
@@ -158,6 +168,74 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
                         eq(mSession));
     }
 
+    public void testThatCreatePartialDocumentSetsTheCorrectContentType() throws Exception {
+        final Uri createdDocumentUri = Uri.parse("https://api.gini.net/documents/1234");
+        when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class),
+                any(String.class), any(String.class),
+                any(Session.class)))
+                .thenReturn(Task.forResult(Uri.parse("https://api.gini.net/documents/1234")));
+        when(mApiCommunicator.getDocument(eq(createdDocumentUri), any(Session.class))).thenReturn(
+                createDocumentJSONTask("1234"));
+
+        final byte[] document = new byte[] {0x01, 0x02};
+        mDocumentTaskManager.createPartialDocument(document, MediaTypes.IMAGE_JPEG, "foobar.jpg",
+                DocumentType.INVOICE).waitForCompletion();
+
+        verify(mApiCommunicator)
+                .uploadDocument(eq(document),
+                        eq("application/vnd.gini.v2.partial+jpeg"), eq("foobar.jpg"),
+                        eq("Invoice"),
+                        eq(mSession));
+    }
+
+    public void testThatCreateMultiPageDocumentSetsTheCorrectContentType() throws Exception {
+        final Uri createdDocumentUri = Uri.parse("https://api.gini.net/documents/1234");
+        when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class),
+                any(String.class), any(String.class),
+                any(Session.class)))
+                .thenReturn(Task.forResult(Uri.parse("https://api.gini.net/documents/1234")));
+        when(mApiCommunicator.getDocument(eq(createdDocumentUri), any(Session.class))).thenReturn(
+                createDocumentJSONTask("1234"));
+
+        final List<Document> partialDocuments = new ArrayList<>();
+        partialDocuments.add(createDocument("1111"));
+        partialDocuments.add(createDocument("2222"));
+
+        mDocumentTaskManager.createMultiPageDocument(partialDocuments, DocumentType.INVOICE).waitForCompletion();
+
+        verify(mApiCommunicator)
+                .uploadDocument(any(byte[].class),
+                        eq("application/vnd.gini.v2.document+json"), eq((String) null),
+                        eq("Invoice"),
+                        eq(mSession));
+    }
+
+    public void testThatCreateMultiPageDocumentUploadsCorrectJson() throws Exception {
+        final Uri createdDocumentUri = Uri.parse("https://api.gini.net/documents/1234");
+        when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class),
+                any(String.class), any(String.class),
+                any(Session.class)))
+                .thenReturn(Task.forResult(Uri.parse("https://api.gini.net/documents/1234")));
+        when(mApiCommunicator.getDocument(eq(createdDocumentUri), any(Session.class))).thenReturn(
+                createDocumentJSONTask("1234"));
+
+        final List<Document> partialDocuments = new ArrayList<>();
+        partialDocuments.add(createDocument("1111"));
+        partialDocuments.add(createDocument("2222"));
+
+        final String jsonString = "{ \"subdocuments\": [ \"1111\", \"2222\" ] }";
+        final JSONObject jsonObject = new JSONObject(jsonString);
+        final byte[] jsonBytes = jsonObject.toString().getBytes(CHARSET_UTF8);
+
+        mDocumentTaskManager.createMultiPageDocument(partialDocuments, DocumentType.INVOICE).waitForCompletion();
+
+        verify(mApiCommunicator)
+                .uploadDocument(eq(jsonBytes),
+                        eq("application/vnd.gini.v2.document+json"), eq((String) null),
+                        eq("Invoice"),
+                        eq(mSession));
+    }
+
     public void testDeprecatedDocumentBuilderPassesThroughArguments() throws IOException {
         final DocumentTaskManager documentTaskManager = Mockito.mock(DocumentTaskManager.class);
 
@@ -179,11 +257,11 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         DocumentTaskManager.DocumentUploadBuilder documentUploadBuilder =
                 new DocumentTaskManager.DocumentUploadBuilder()
                         .setDocumentBitmap(bitmap)
-                        .setDocumentType(DocumentTaskManager.DocumentType.INVOICE)
+                        .setDocumentType(DocumentType.INVOICE)
                         .setFilename("foobar.jpg");
         documentUploadBuilder.upload(documentTaskManager);
 
-        verify(documentTaskManager).createDocument(bitmap, "foobar.jpg", DocumentTaskManager.DocumentType.INVOICE);
+        verify(documentTaskManager).createDocument(bitmap, "foobar.jpg", DocumentType.INVOICE);
     }
 
     public void testDocumentBuilderPassesThroughByteArray() throws IOException {
@@ -193,11 +271,11 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         DocumentTaskManager.DocumentUploadBuilder documentUploadBuilder =
                 new DocumentTaskManager.DocumentUploadBuilder()
                         .setDocumentBytes(byteArray)
-                        .setDocumentType(DocumentTaskManager.DocumentType.INVOICE)
+                        .setDocumentType(DocumentType.INVOICE)
                         .setFilename("foobar.jpg");
         documentUploadBuilder.upload(documentTaskManager);
 
-        verify(documentTaskManager).createDocument(byteArray, "foobar.jpg", DocumentTaskManager.DocumentType.INVOICE);
+        verify(documentTaskManager).createDocument(byteArray, "foobar.jpg", DocumentType.INVOICE);
     }
 
     public void testDocumentBuilderPassesBitmapInsteadOfByteArray() throws IOException {
@@ -209,11 +287,11 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
                 new DocumentTaskManager.DocumentUploadBuilder()
                         .setDocumentBytes(byteArray)
                         .setDocumentBitmap(bitmap)
-                        .setDocumentType(DocumentTaskManager.DocumentType.INVOICE)
+                        .setDocumentType(DocumentType.INVOICE)
                         .setFilename("foobar.jpg");
         documentUploadBuilder.upload(documentTaskManager);
 
-        verify(documentTaskManager).createDocument(bitmap, "foobar.jpg", DocumentTaskManager.DocumentType.INVOICE);
+        verify(documentTaskManager).createDocument(bitmap, "foobar.jpg", DocumentType.INVOICE);
     }
 
     public void testDocumentBuilderHasDefaultValues() throws IOException {

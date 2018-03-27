@@ -2,11 +2,14 @@ package net.gini.android;
 
 import static android.graphics.Bitmap.CompressFormat.JPEG;
 
+import static net.gini.android.Utils.CHARSET_UTF8;
 import static net.gini.android.Utils.checkNotNull;
 
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 
 import net.gini.android.authorization.Session;
 import net.gini.android.authorization.SessionManager;
@@ -94,6 +97,99 @@ public class DocumentTaskManager {
             };
 
     /**
+     * Deletes a document.
+     *
+     * @param documentId The id of an existing document
+     *
+     * @return A Task which will resolve to an empty string.
+     */
+    public Task<String> deleteDocument(@NonNull final String documentId) {
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<String>>() {
+            @Override
+            public Task<String> then(Task<Session> sessionTask) throws Exception {
+                final Session session = sessionTask.getResult();
+                return mApiCommunicator.deleteDocument(documentId, session);
+            }
+        }, Task.BACKGROUND_EXECUTOR);
+    }
+
+    /**
+     * Uploads raw data and creates a new Gini partial document.
+     *
+     * @param document     A byte array representing an image, a pdf or UTF-8 encoded text
+     * @param contentType  The media type of the uploaded data
+     * @param filename     Optional the filename of the given document
+     * @param documentType Optional a document type hint. See the documentation for the document type hints for
+     *                     possible values
+     *
+     * @return A Task which will resolve to the Document instance of the freshly created document.
+     */
+    public Task<Document> createPartialDocument(@NonNull final byte[] document, @NonNull final String contentType,
+            @Nullable final String filename, @Nullable final DocumentType documentType) {
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(Task<Session> sessionTask) throws Exception {
+                String apiDoctypeHint = null;
+                if (documentType != null) {
+                    apiDoctypeHint = documentType.getApiDoctypeHint();
+                }
+                final Session session = sessionTask.getResult();
+                final String partialDocumentMediaType = MediaTypes
+                        .forPartialDocument(checkNotNull(contentType));
+                return mApiCommunicator
+                        .uploadDocument(document, partialDocumentMediaType, filename, apiDoctypeHint, session);
+            }
+        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
+            @Override
+            public Task<Document> then(Task<Uri> uploadTask) throws Exception {
+                return getDocument(uploadTask.getResult());
+            }
+        }, Task.BACKGROUND_EXECUTOR);
+    }
+
+    /**
+     * Creates a new Gini multi-page document.
+     *
+     * @param documents    A list of partial documents which should be part of a multi-page document
+     * @param documentType Optional a document type hint. See the documentation for the document type hints for
+     *                     possible values
+     *
+     * @return A Task which will resolve to the Document instance of the freshly created document.
+     */
+    public Task<Document> createMultiPageDocument(@NonNull final List<Document> documents, @Nullable final DocumentType documentType) {
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(Task<Session> sessionTask) throws Exception {
+                String apiDoctypeHint = null;
+                if (documentType != null) {
+                    apiDoctypeHint = documentType.getApiDoctypeHint();
+                }
+                final Session session = sessionTask.getResult();
+                final byte[] multiPageJson = createMultiPageJson(documents);
+                return mApiCommunicator
+                        .uploadDocument(multiPageJson, MediaTypes.GINI_DOCUMENT_JSON_V2, null, apiDoctypeHint, session);
+            }
+        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
+            @Override
+            public Task<Document> then(Task<Uri> uploadTask) throws Exception {
+                return getDocument(uploadTask.getResult());
+            }
+        }, Task.BACKGROUND_EXECUTOR);
+    }
+
+    @VisibleForTesting
+    byte[] createMultiPageJson(@NonNull final List<Document> documents)
+            throws JSONException {
+        final JSONObject jsonObject = new JSONObject();
+        final JSONArray subdocuments = new JSONArray();
+        for (final Document document : documents) {
+            subdocuments.put(document.getId());
+        }
+        jsonObject.put("subdocuments", subdocuments);
+        return jsonObject.toString().getBytes(CHARSET_UTF8);
+    }
+
+    /**
      * Uploads raw data and creates a new Gini document.
      *
      * @param document     A byte array representing an image, a pdf or UTF-8 encoded text
@@ -104,7 +200,7 @@ public class DocumentTaskManager {
      * @return A Task which will resolve to the Document instance of the freshly created document.
      */
     public Task<Document> createDocument(final byte[] document, @Nullable final String filename,
-                                         @Nullable final DocumentType documentType) {
+            @Nullable final DocumentType documentType) {
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
             @Override
             public Task<Uri> then(Task<Session> sessionTask) throws Exception {
