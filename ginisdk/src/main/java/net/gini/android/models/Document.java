@@ -3,13 +3,19 @@ package net.gini.android.models;
 
 import static net.gini.android.Utils.checkNotNull;
 
+import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class Document implements Parcelable {
 
@@ -51,16 +57,24 @@ public class Document implements Parcelable {
     private final String mFilename;
     private final Date mCreationDate;
     private final SourceClassification mSourceClassification;
+    private final Uri mLocation;
+    private final List<Uri> mParents;
+    private final List<Uri> mSubdocuments;
 
     public Document(final String id, final ProcessingState state, final String filename,
-                    final Integer pageCount,
-                    final Date creationDate, final SourceClassification sourceClassification) {
+            final Integer pageCount,
+            final Date creationDate, final SourceClassification sourceClassification,
+            final Uri location, final List<Uri> parents,
+            final List<Uri> subdocuments) {
         mId = checkNotNull(id);
         mState = checkNotNull(state);
         mPageCount = pageCount;
         mFilename = filename;
         mCreationDate = creationDate;
         mSourceClassification = sourceClassification;
+        mLocation = location;
+        mParents = parents;
+        mSubdocuments = subdocuments;
     }
 
     /**
@@ -98,6 +112,18 @@ public class Document implements Parcelable {
         return mCreationDate;
     }
 
+    public Uri getLocation() {
+        return mLocation;
+    }
+
+    public List<Uri> getParents() {
+        return mParents;
+    }
+
+    public List<Uri> getSubdocuments() {
+        return mSubdocuments;
+    }
+
     /**
      * Classification of the source file.
      */
@@ -130,8 +156,25 @@ public class Document implements Parcelable {
         } catch (IllegalArgumentException e) {
             sourceClassification = SourceClassification.UNKNOWN;
         }
+        final JSONObject links = responseData.getJSONObject("_links");
+        final Uri documentUri = Uri.parse(links.getString("document"));
+        final List<Uri> parentUris = parseOptionalLinkArray(links.optJSONArray("parents"));
+        final List<Uri> subdocumentUris = parseOptionalLinkArray(links.optJSONArray("subdocuments"));
         return new Document(documentId, processingState, fileName, pageCount, creationDate,
-                            sourceClassification);
+                sourceClassification, documentUri, parentUris, subdocumentUris);
+    }
+
+    private static List<Uri> parseOptionalLinkArray(@Nullable final JSONArray links) {
+        final List<Uri> uris = new ArrayList<>();
+        if (links != null) {
+            for (int i = 0; i < links.length(); i++) {
+                final String uriString = links.optString(i);
+                if (!TextUtils.isEmpty(uriString)) {
+                    uris.add(Uri.parse(uriString));
+                }
+            }
+        }
+        return uris;
     }
 
     private static Document fromParcel(final Parcel in) {
@@ -142,8 +185,14 @@ public class Document implements Parcelable {
         final Date creationDate = (Date) in.readSerializable();
         final SourceClassification sourceClassification = SourceClassification.valueOf(
                 in.readString());
+        final Uri location = in.readParcelable(Document.class.getClassLoader());
+        final List<Uri> parents = new ArrayList<>();
+        in.readTypedList(parents, Uri.CREATOR);
+        //noinspection unchecked
+        final List<Uri> subdocuments = new ArrayList<>();
+        in.readTypedList(subdocuments, Uri.CREATOR);
         return new Document(documentId, processingState, fileName, pageCount, creationDate,
-                            sourceClassification);
+                sourceClassification, location, subdocuments, subdocuments);
     }
 
     @Override
@@ -159,6 +208,9 @@ public class Document implements Parcelable {
         dest.writeString(getFilename());
         dest.writeSerializable(getCreationDate());
         dest.writeString(getSourceClassification().toString());
+        dest.writeParcelable(getLocation(), flags);
+        dest.writeTypedList(getParents());
+        dest.writeTypedList(getSubdocuments());
     }
 
     public static final Parcelable.Creator<Document> CREATOR = new Parcelable.Creator<Document>() {

@@ -306,7 +306,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
     public void testGetExtractionsReturnsTask() throws IOException, JSONException {
         when(mApiCommunicator.getExtractions(eq("1234"), any(Session.class))).thenReturn(createExtractionsJSONTask());
         Document document = new Document("1234", Document.ProcessingState.COMPLETED, "foobar", 1, new Date(),
-                                         Document.SourceClassification.NATIVE);
+                                         Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
 
         assertNotNull(mDocumentTaskManager.getExtractions(document));
     }
@@ -314,7 +315,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
     public void testGetExtractionsResolvesToHashMap() throws Exception {
         when(mApiCommunicator.getExtractions(eq("1234"), any(Session.class))).thenReturn(createExtractionsJSONTask());
         Document document = new Document("1234", Document.ProcessingState.COMPLETED, "foobar", 1, new Date(),
-                                         Document.SourceClassification.NATIVE);
+                                         Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
 
         Task<Map<String, SpecificExtraction>> extractionsTask = mDocumentTaskManager.getExtractions(document);
         extractionsTask.waitForCompletion();
@@ -374,7 +376,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         when(mApiCommunicator.getDocument(eq("1234"), any(Session.class))).thenReturn(
                 createDocumentJSONTask("1234", "PENDING"), createDocumentJSONTask("1234", "COMPLETED"));
         Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
-                                         Document.SourceClassification.NATIVE);
+                                         Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
 
         Task<Document> documentTask = mDocumentTaskManager.pollDocument(document);
         documentTask.waitForCompletion();
@@ -392,7 +395,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         when(mApiCommunicator.getDocument(eq("1234"), any(Session.class))).thenReturn(
                 createDocumentJSONTask("1234", "PENDING"), createDocumentJSONTask("1234", "ERROR"));
         Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
-                                         Document.SourceClassification.NATIVE);
+                                         Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
 
         Task<Document> documentTask = mDocumentTaskManager.pollDocument(document);
         documentTask.waitForCompletion();
@@ -405,7 +409,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
     public void testSendFeedbackThrowsWithNullArguments() throws JSONException {
         final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
-                                               Document.SourceClassification.NATIVE);
+                                               Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
 
         try {
             mDocumentTaskManager.sendFeedbackForExtractions(null, null);
@@ -425,7 +430,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
     public void testSendFeedbackReturnsTask() throws JSONException {
         final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
-                                               Document.SourceClassification.NATIVE);
+                                               Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
         final HashMap<String, SpecificExtraction> extractions = new HashMap<String, SpecificExtraction>();
 
         assertNotNull(mDocumentTaskManager.sendFeedbackForExtractions(document, extractions));
@@ -433,7 +439,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
     public void testSendFeedbackResolvesToDocumentInstance() throws JSONException, InterruptedException {
         final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
-                                               Document.SourceClassification.NATIVE);
+                                               Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
         final HashMap<String, SpecificExtraction> extractions = new HashMap<String, SpecificExtraction>();
         when(mApiCommunicator.sendFeedback(eq("1234"), any(JSONObject.class), any(Session.class))).thenReturn(
                 Task.forResult(new JSONObject()));
@@ -445,7 +452,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
     public void testSendFeedbackSavesExtractions() throws JSONException, InterruptedException {
         final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
-                                               Document.SourceClassification.NATIVE);
+                                               Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
         final HashMap<String, SpecificExtraction> extractions = new HashMap<String, SpecificExtraction>();
         extractions.put("amountToPay",
                         new SpecificExtraction("amountToPay", "42:EUR", "amount", null, new ArrayList<Extraction>()));
@@ -469,7 +477,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         when(mApiCommunicator.sendFeedback(eq("1234"), any(JSONObject.class), any(Session.class))).thenReturn(
                 Task.forResult(new JSONObject()));
         final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
-                                               Document.SourceClassification.NATIVE);
+                                               Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
         final HashMap<String, SpecificExtraction> extractions = new HashMap<String, SpecificExtraction>();
         extractions.put("amountToPay",
                         new SpecificExtraction("amountToPay", "42:EUR", "amount", null, new ArrayList<Extraction>()));
@@ -495,7 +504,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
                                                      any(Session.class)))
                 .thenReturn(createErrorReportJSONTask("4444-3333"));
         final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
-                                               Document.SourceClassification.NATIVE);
+                                               Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
 
         assertNotNull(mDocumentTaskManager.reportDocument(document, "short summary", "detailed description"));
     }
@@ -505,7 +515,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
                                                      any(Session.class)))
                 .thenReturn(createErrorReportJSONTask("4444-3333"));
         final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
-                                               Document.SourceClassification.NATIVE);
+                                               Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
 
         Task<String> reportTask = mDocumentTaskManager.reportDocument(document, "short summary", "detailed description");
         reportTask.waitForCompletion();
@@ -522,7 +533,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
     public void testGetLayoutReturnsTask() {
         final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
-                                               Document.SourceClassification.NATIVE);
+                                               Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
 
         assertNotNull(mDocumentTaskManager.getLayout(document));
     }
@@ -530,7 +542,8 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
     public void testGetLayoutResolvesToJSON() throws IOException, JSONException, InterruptedException {
         when(mApiCommunicator.getLayoutForDocument(eq("1234"), any(Session.class))).thenReturn(createLayoutJSONTask());
         final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
-                                               Document.SourceClassification.NATIVE);
+                                               Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
 
         final Task<JSONObject> layoutTask = mDocumentTaskManager.getLayout(document);
         layoutTask.waitForCompletion();
