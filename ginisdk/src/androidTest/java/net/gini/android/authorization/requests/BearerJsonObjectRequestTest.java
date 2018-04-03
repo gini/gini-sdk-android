@@ -30,7 +30,7 @@ public class BearerJsonObjectRequestTest extends TestCase {
         BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com", null, session, null, null, retryPolicy);
 
         Map<String, String> headers = request.getHeaders();
-        assertEquals("application/json, application/vnd.gini.v1+json", headers.get("Accept"));
+        assertEquals("application/json, application/vnd.gini.v2+json", headers.get("Accept"));
     }
 
     public void testContentTypeHeader() throws AuthFailureError, JSONException {
