@@ -1,0 +1,24 @@
+{
+  "id": "${id}",
+  "creationDate": 1360623867402,
+  "name": "scanned.jpg",
+  "progress": "COMPLETED",
+  "origin": "UPLOAD",
+  "sourceClassification": "SCANNED",
+  "pageCount": 1,
+  "pages" : [
+    {
+      "images" : {
+        "750x900" : "http://api.gini.net/documents/${id}/pages/1/750x900",
+        "1280x1810" : "http://api.gini.net/documents/${id}/pages/1/1280x1810"
+      },
+      "pageNumber" : 1
+    }
+  ],
+  "_links": {
+    "extractions": "https://api.gini.net/documents/${id}/extractions",
+    "layout": "https://api.gini.net/documents/${id}/layout",
+    "document": "https://api.gini.net/documents/${id}",
+    "processed": "https://api.gini.net/documents/${id}/processed"
+  }
+}

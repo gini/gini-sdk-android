@@ -26,8 +26,10 @@ import org.json.JSONObject;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -71,7 +73,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         return TestUtils.createByteArray(inputStream);
     }
 
-    private JSONObject readJSONFile(final String filename) throws IOException, JSONException{
+    private JSONObject readJSONFile(final String filename) throws IOException, JSONException {
         InputStream inputStream = getInstrumentation().getContext().getResources().getAssets().open(filename);
         int size = inputStream.available();
         byte[] buffer = new byte[size];
@@ -81,16 +83,37 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         return new JSONObject(new String(buffer));
     }
 
+    private JSONObject createDocumentJSON(final String documentId) throws IOException,
+            JSONException {
+        BufferedReader inputStreamReader = null;
+        try {
+            final AssetManager assetManager =
+                    getInstrumentation().getContext().getResources().getAssets();
+            inputStreamReader = new BufferedReader(
+                    new InputStreamReader(assetManager.open("document-template.json"), CHARSET_UTF8));
+            StringBuilder stringBuilder = new StringBuilder();
+            String line;
+            while((line = inputStreamReader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+            String jsonString = stringBuilder.toString();
+            jsonString = jsonString.replaceAll("\\$\\{id\\}", documentId);
+            return new JSONObject(jsonString);
+        } finally {
+            if (inputStreamReader != null) {
+                inputStreamReader.close();
+            }
+        }
+    }
+
     private Task<JSONObject> createDocumentJSONTask(final String documentId) throws IOException, JSONException {
-        final JSONObject responseData = readJSONFile("document.json");
-        responseData.put("id", documentId);
+        final JSONObject responseData = createDocumentJSON(documentId);
         return Task.forResult(responseData);
     }
 
     private Task<JSONObject> createDocumentJSONTask(final String documentId, final String processingState)
             throws IOException, JSONException {
-        final JSONObject responseData = readJSONFile("document.json");
-        responseData.put("id", documentId);
+        final JSONObject responseData = createDocumentJSON(documentId);
         responseData.put("progress", processingState);
         return Task.forResult(responseData);
     }
@@ -111,8 +134,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
     }
 
     private Document createDocument(final String documentId) throws IOException, JSONException {
-        final JSONObject responseData = readJSONFile("document.json");
-        responseData.put("id", documentId);
+        final JSONObject responseData = createDocumentJSON(documentId);
         return Document.fromApiResponse(responseData);
     }
 
@@ -223,7 +245,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         partialDocuments.add(createDocument("1111"));
         partialDocuments.add(createDocument("2222"));
 
-        final String jsonString = "{ \"subdocuments\": [ \"1111\", \"2222\" ] }";
+        final String jsonString = "{ \"subdocuments\": [ \"https://api.gini.net/documents/1111\", \"https://api.gini.net/documents/2222\" ] }";
         final JSONObject jsonObject = new JSONObject(jsonString);
         final byte[] jsonBytes = jsonObject.toString().getBytes(CHARSET_UTF8);
 
