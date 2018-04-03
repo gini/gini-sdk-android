@@ -188,7 +188,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
                         eq(mSession));
     }
 
-    public void testThatCreateMultiPageDocumentSetsTheCorrectContentType() throws Exception {
+    public void testThatCreateCompositeDocumentSetsTheCorrectContentType() throws Exception {
         final Uri createdDocumentUri = Uri.parse("https://api.gini.net/documents/1234");
         when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class),
                 any(String.class), any(String.class),
@@ -201,7 +201,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         partialDocuments.add(createDocument("1111"));
         partialDocuments.add(createDocument("2222"));
 
-        mDocumentTaskManager.createMultiPageDocument(partialDocuments, DocumentType.INVOICE).waitForCompletion();
+        mDocumentTaskManager.createCompositeDocument(partialDocuments, DocumentType.INVOICE).waitForCompletion();
 
         verify(mApiCommunicator)
                 .uploadDocument(any(byte[].class),
@@ -210,7 +210,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
                         eq(mSession));
     }
 
-    public void testThatCreateMultiPageDocumentUploadsCorrectJson() throws Exception {
+    public void testThatCreateCompositeDocumentUploadsCorrectJson() throws Exception {
         final Uri createdDocumentUri = Uri.parse("https://api.gini.net/documents/1234");
         when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class),
                 any(String.class), any(String.class),
@@ -227,7 +227,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         final JSONObject jsonObject = new JSONObject(jsonString);
         final byte[] jsonBytes = jsonObject.toString().getBytes(CHARSET_UTF8);
 
-        mDocumentTaskManager.createMultiPageDocument(partialDocuments, DocumentType.INVOICE).waitForCompletion();
+        mDocumentTaskManager.createCompositeDocument(partialDocuments, DocumentType.INVOICE).waitForCompletion();
 
         verify(mApiCommunicator)
                 .uploadDocument(eq(jsonBytes),

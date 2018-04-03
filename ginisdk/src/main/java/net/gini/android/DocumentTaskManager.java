@@ -148,7 +148,7 @@ public class DocumentTaskManager {
     }
 
     /**
-     * Creates a new Gini multi-page document.
+     * Creates a new Gini composite document.
      *
      * @param documents    A list of partial documents which should be part of a multi-page document
      * @param documentType Optional a document type hint. See the documentation for the document type hints for
@@ -156,7 +156,7 @@ public class DocumentTaskManager {
      *
      * @return A Task which will resolve to the Document instance of the freshly created document.
      */
-    public Task<Document> createMultiPageDocument(@NonNull final List<Document> documents, @Nullable final DocumentType documentType) {
+    public Task<Document> createCompositeDocument(@NonNull final List<Document> documents, @Nullable final DocumentType documentType) {
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
             @Override
             public Task<Uri> then(Task<Session> sessionTask) throws Exception {
@@ -165,9 +165,9 @@ public class DocumentTaskManager {
                     apiDoctypeHint = documentType.getApiDoctypeHint();
                 }
                 final Session session = sessionTask.getResult();
-                final byte[] multiPageJson = createMultiPageJson(documents);
+                final byte[] compositeJson = createCompositeJson(documents);
                 return mApiCommunicator
-                        .uploadDocument(multiPageJson, MediaTypes.GINI_DOCUMENT_JSON_V2, null, apiDoctypeHint, session);
+                        .uploadDocument(compositeJson, MediaTypes.GINI_DOCUMENT_JSON_V2, null, apiDoctypeHint, session);
             }
         }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
             @Override
@@ -178,7 +178,7 @@ public class DocumentTaskManager {
     }
 
     @VisibleForTesting
-    byte[] createMultiPageJson(@NonNull final List<Document> documents)
+    byte[] createCompositeJson(@NonNull final List<Document> documents)
             throws JSONException {
         final JSONObject jsonObject = new JSONObject();
         final JSONArray subdocuments = new JSONArray();
