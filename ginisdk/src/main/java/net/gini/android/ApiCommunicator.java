@@ -136,6 +136,23 @@ public class ApiCommunicator {
         return completionSource.getTask();
     }
 
+    public Task<String> deleteDocument(final Uri documentUri, final Session session) {
+        final String accessToken = checkNotNull(session).getAccessToken();
+        final RequestTaskCompletionSource<String> completionSource = RequestTaskCompletionSource.newCompletionSource();
+        final StringRequest request = new StringRequest(DELETE, documentUri.toString(), completionSource, completionSource) {
+            @Override
+            public Map<String, String> getHeaders() {
+                HashMap<String, String> headers = new HashMap<String, String>();
+                headers.put("Authorization", "Bearer " + accessToken);
+                return headers;
+            }
+        };
+        request.setRetryPolicy(mRetryPolicyFactory.newRetryPolicy());
+        mRequestQueue.add(request);
+
+        return completionSource.getTask();
+    }
+
     public Task<JSONObject> errorReportForDocument(final String documentId, @Nullable final String summary,
                                                    @Nullable final String description, final Session session) {
         final HashMap<String, String> requestParams = new HashMap<String, String>();

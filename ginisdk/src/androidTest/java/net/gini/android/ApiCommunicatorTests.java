@@ -235,7 +235,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
 
     public void testDeleteDocumentThrowsWithWrongArguments() {
         try {
-            mApiCommunicator.deleteDocument(null, null);
+            mApiCommunicator.deleteDocument((String) null, null);
             fail("Exception not thrown");
         } catch (NullPointerException ignored) {
         }
@@ -247,7 +247,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         }
 
         try {
-            mApiCommunicator.deleteDocument(null, createSession());
+            mApiCommunicator.deleteDocument((String) null, createSession());
             fail("Exception not thrown");
         } catch (NullPointerException ignored) {
         }

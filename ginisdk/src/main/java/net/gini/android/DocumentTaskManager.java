@@ -103,14 +103,41 @@ public class DocumentTaskManager {
      * @return A Task which will resolve to an empty string.
      */
     public Task<String> deleteDocument(@NonNull final String documentId) {
-        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<String>>() {
+        return getDocument(documentId).onSuccessTask(new Continuation<Document, Task<Void>>() {
             @Override
-            public Task<String> then(Task<Session> sessionTask) throws Exception {
-                final Session session = sessionTask.getResult();
+            public Task<Void> then(Task<Document> documentTask) throws Exception {
+                final Document document = documentTask.getResult();
+                return deleteDocuments(document.getParents());
+            }
+        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Void, Task<Session>>() {
+            @Override
+            public Task<Session> then(final Task<Void> task) throws Exception {
+                return mSessionManager.getSession();
+            }
+        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Session, Task<String>>() {
+            @Override
+            public Task<String> then(final Task<Session> task) throws Exception {
+                final Session session = task.getResult();
                 return mApiCommunicator.deleteDocument(documentId, session);
+            }
+        });
+    }
+
+    private Task<Void> deleteDocuments(@NonNull final List<Uri> documentUris) {
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Void>>() {
+            @Override
+            public Task<Void> then(Task<Session> sessionTask) throws Exception {
+                final Session session = sessionTask.getResult();
+                final List<Task<String>> deleteTasks = new ArrayList<>();
+                for (final Uri parentUri : documentUris) {
+                    deleteTasks.add(mApiCommunicator.deleteDocument(parentUri, session));
+                }
+                return Task.whenAll(deleteTasks);
             }
         }, Task.BACKGROUND_EXECUTOR);
     }
+
+
 
     /**
      * Uploads raw data and creates a new Gini partial document.

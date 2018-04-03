@@ -4,6 +4,8 @@ import static net.gini.android.Utils.CHARSET_UTF8;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -24,6 +26,7 @@ import net.gini.android.models.SpecificExtraction;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mockito;
 
 import java.io.BufferedReader;
@@ -111,6 +114,11 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         return Task.forResult(responseData);
     }
 
+    private Task<JSONObject> createDocumentJSONTask() throws IOException, JSONException {
+        final JSONObject responseData = readJSONFile("document.json");
+        return Task.forResult(responseData);
+    }
+
     private Task<JSONObject> createDocumentJSONTask(final String documentId, final String processingState)
             throws IOException, JSONException {
         final JSONObject responseData = createDocumentJSON(documentId);
@@ -135,6 +143,11 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
     private Document createDocument(final String documentId) throws IOException, JSONException {
         final JSONObject responseData = createDocumentJSON(documentId);
+        return Document.fromApiResponse(responseData);
+    }
+
+    private Document createDocument() throws IOException, JSONException {
+        final JSONObject responseData = readJSONFile("document.json");
         return Document.fromApiResponse(responseData);
     }
 
@@ -256,6 +269,46 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
                         eq("application/vnd.gini.v2.document+json"), eq((String) null),
                         eq("Invoice"),
                         eq(mSession));
+    }
+
+    public void testDeleteDocument() throws Exception {
+        final Document document = createDocument();
+
+        when(mApiCommunicator.getDocument(eq(document.getId()), any(Session.class)))
+                .thenReturn(createDocumentJSONTask());
+        when(mApiCommunicator.deleteDocument(eq(document.getId()), any(Session.class)))
+                .thenReturn(Task.forResult(""));
+
+        mDocumentTaskManager.deleteDocument(document.getId()).waitForCompletion();
+
+        // No parent uris to delete
+        verify(mApiCommunicator, never())
+                .deleteDocument(any(Uri.class),eq(mSession));
+        verify(mApiCommunicator, times(1))
+                .deleteDocument(eq(document.getId()),eq(mSession));
+    }
+
+    public void testDeleteDocumentDeletesParentsFirst() throws Exception {
+        final String documentId = "1234";
+        when(mApiCommunicator.getDocument(eq(documentId), any(Session.class)))
+                .thenReturn(createDocumentJSONTask(documentId));
+        when(mApiCommunicator.deleteDocument(any(Uri.class), any(Session.class)))
+                .thenReturn(Task.forResult(""));
+        when(mApiCommunicator.deleteDocument(any(String.class), any(Session.class)))
+                .thenReturn(Task.forResult(""));
+
+        final Document document = createDocument(documentId);
+
+        mDocumentTaskManager.deleteDocument(documentId).waitForCompletion();
+
+        final InOrder inOrder = Mockito.inOrder(mApiCommunicator);
+
+        inOrder.verify(mApiCommunicator, times(1))
+                .deleteDocument(eq(document.getParents().get(0)),eq(mSession));
+        inOrder.verify(mApiCommunicator, times(1))
+                .deleteDocument(eq(document.getParents().get(1)),eq(mSession));
+        inOrder.verify(mApiCommunicator, times(1))
+                .deleteDocument(eq(document.getId()),eq(mSession));
     }
 
     public void testDeprecatedDocumentBuilderPassesThroughArguments() throws IOException {
