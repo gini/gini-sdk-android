@@ -46,8 +46,8 @@ public class BearerJsonObjectRequestTest extends TestCase {
         Session session = new Session("1234-5678-9012", new Date());
         JSONObject payload = new JSONObject();
         payload.put("foo", "bar");
-        BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com", payload, session, null, null, retryPolicy, MediaTypes.GINI_JSON_V1);
+        BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com", payload, session, null, null, retryPolicy, MediaTypes.GINI_JSON_V2);
 
-        assertEquals(MediaTypes.GINI_JSON_V1, request.getBodyContentType());
+        assertEquals(MediaTypes.GINI_JSON_V2, request.getBodyContentType());
     }
 }

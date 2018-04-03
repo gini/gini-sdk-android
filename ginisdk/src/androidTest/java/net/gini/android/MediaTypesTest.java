@@ -8,6 +8,10 @@ public class MediaTypesTest extends AndroidTestCase {
         assertEquals("application/vnd.gini.v1+json", MediaTypes.GINI_JSON_V1);
     }
 
+    public void testGINI_JSON_V2() {
+        assertEquals("application/vnd.gini.v2+json", MediaTypes.GINI_JSON_V1);
+    }
+
     public void testGINI_JSON_INCUBATOR() {
         assertEquals("application/vnd.gini.incubator+json", MediaTypes.GINI_JSON_INCUBATOR);
     }
