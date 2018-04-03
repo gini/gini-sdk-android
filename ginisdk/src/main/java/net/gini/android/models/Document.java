@@ -57,14 +57,14 @@ public class Document implements Parcelable {
     private final String mFilename;
     private final Date mCreationDate;
     private final SourceClassification mSourceClassification;
-    private final Uri mLocation;
+    private final Uri mUri;
     private final List<Uri> mParents;
     private final List<Uri> mSubdocuments;
 
     public Document(final String id, final ProcessingState state, final String filename,
             final Integer pageCount,
             final Date creationDate, final SourceClassification sourceClassification,
-            final Uri location, final List<Uri> parents,
+            final Uri uri, final List<Uri> parents,
             final List<Uri> subdocuments) {
         mId = checkNotNull(id);
         mState = checkNotNull(state);
@@ -72,7 +72,7 @@ public class Document implements Parcelable {
         mFilename = filename;
         mCreationDate = creationDate;
         mSourceClassification = sourceClassification;
-        mLocation = location;
+        mUri = uri;
         mParents = parents;
         mSubdocuments = subdocuments;
     }
@@ -112,8 +112,8 @@ public class Document implements Parcelable {
         return mCreationDate;
     }
 
-    public Uri getLocation() {
-        return mLocation;
+    public Uri getUri() {
+        return mUri;
     }
 
     public List<Uri> getParents() {
@@ -185,14 +185,14 @@ public class Document implements Parcelable {
         final Date creationDate = (Date) in.readSerializable();
         final SourceClassification sourceClassification = SourceClassification.valueOf(
                 in.readString());
-        final Uri location = in.readParcelable(Document.class.getClassLoader());
+        final Uri uri = in.readParcelable(Document.class.getClassLoader());
         final List<Uri> parents = new ArrayList<>();
         in.readTypedList(parents, Uri.CREATOR);
         //noinspection unchecked
         final List<Uri> subdocuments = new ArrayList<>();
         in.readTypedList(subdocuments, Uri.CREATOR);
         return new Document(documentId, processingState, fileName, pageCount, creationDate,
-                sourceClassification, location, subdocuments, subdocuments);
+                sourceClassification, uri, subdocuments, subdocuments);
     }
 
     @Override
@@ -208,7 +208,7 @@ public class Document implements Parcelable {
         dest.writeString(getFilename());
         dest.writeSerializable(getCreationDate());
         dest.writeString(getSourceClassification().toString());
-        dest.writeParcelable(getLocation(), flags);
+        dest.writeParcelable(getUri(), flags);
         dest.writeTypedList(getParents());
         dest.writeTypedList(getSubdocuments());
     }
