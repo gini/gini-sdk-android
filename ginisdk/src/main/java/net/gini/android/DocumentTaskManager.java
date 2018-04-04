@@ -271,6 +271,12 @@ public class DocumentTaskManager {
      *                     possible values.
      *
      * @return A Task which will resolve to the Document instance of the freshly created document.
+     *
+     * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
+     * document and then call {@link #createCompositeDocument(Map, DocumentType)}
+     * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
+     * returned composite document can be used to poll the processing state, to retrieve extractions
+     * and to send feedback.
      */
     public Task<Document> createDocument(final byte[] document, @Nullable final String filename,
             @Nullable final DocumentType documentType) {
@@ -296,8 +302,6 @@ public class DocumentTaskManager {
     /**
      * Uploads the given photo of a document and creates a new Gini document.
      *
-     * @deprecated Use {@link #createDocument(Bitmap, String, DocumentType)} instead.
-     *
      * @param document        A Bitmap representing the image
      * @param filename        Optional the filename of the given document.
      * @param documentType    Optional a document type hint. See the documentation for the document type hints for
@@ -306,6 +310,12 @@ public class DocumentTaskManager {
      *                        Between 0 and 90.
      *
      * @return A Task which will resolve to the Document instance of the freshly created document.
+     *
+     * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
+     * document and then call {@link #createCompositeDocument(Map, DocumentType)}
+     * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
+     * returned composite document can be used to poll the processing state, to retrieve extractions
+     * and to send feedback.
      */
     @Deprecated
     public Task<Document> createDocument(final Bitmap document, @Nullable final String filename,
@@ -321,6 +331,12 @@ public class DocumentTaskManager {
      * @param documentType    Optional a document type hint.
      *
      * @return A Task which will resolve to the Document instance of the freshly created document.
+     *
+     * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
+     * document and then call {@link #createCompositeDocument(Map, DocumentType)}
+     * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
+     * returned composite document can be used to poll the processing state, to retrieve extractions
+     * and to send feedback.
      */
     public Task<Document> createDocument(final Bitmap document, @Nullable final String filename,
                                           @Nullable final DocumentType documentType) {
