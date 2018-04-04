@@ -3,6 +3,7 @@ package net.gini.android.models;
 import static net.gini.android.helpers.ParcelHelper.doRoundTrip;
 
 import android.net.Uri;
+import android.support.test.filters.SmallTest;
 import android.test.AndroidTestCase;
 
 import org.json.JSONException;
@@ -13,6 +14,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 
+@SmallTest
 public class DocumentTests extends AndroidTestCase {
 
     private JSONObject createDocumentJSON() throws IOException, JSONException {

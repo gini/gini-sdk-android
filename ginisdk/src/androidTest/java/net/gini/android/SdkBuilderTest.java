@@ -1,5 +1,6 @@
 package net.gini.android;
 
+import android.support.test.filters.SmallTest;
 import android.test.AndroidTestCase;
 
 import com.android.volley.Cache;
@@ -10,6 +11,7 @@ import net.gini.android.authorization.SessionManager;
 
 import bolts.Task;
 
+@SmallTest
 public class SdkBuilderTest extends AndroidTestCase {
 
     public void testBuilderReturnsSdkInstance() {

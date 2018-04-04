@@ -1,10 +1,12 @@
 package net.gini.android;
 
+import android.support.test.filters.SmallTest;
 import android.test.AndroidTestCase;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.NoCache;
 
+@SmallTest
 public class RequestQueueBuilderTest extends AndroidTestCase {
 
     public void testCreateDefaultRequestQueue() throws Exception {

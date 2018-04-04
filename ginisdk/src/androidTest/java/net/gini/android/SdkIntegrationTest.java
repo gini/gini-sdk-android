@@ -7,6 +7,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
+import android.support.test.filters.LargeTest;
 import android.support.test.filters.SdkSuppress;
 import android.test.AndroidTestCase;
 import android.util.Log;
@@ -31,6 +32,7 @@ import java.util.Properties;
 import bolts.Continuation;
 import bolts.Task;
 
+@LargeTest
 public class SdkIntegrationTest extends AndroidTestCase {
 
     private Gini gini;

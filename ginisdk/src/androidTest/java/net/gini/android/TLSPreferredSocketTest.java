@@ -1,5 +1,6 @@
 package net.gini.android;
 
+import android.support.test.filters.SmallTest;
 import android.test.AndroidTestCase;
 
 import java.io.IOException;
@@ -9,6 +10,7 @@ import javax.net.ssl.HandshakeCompletedListener;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 
+@SmallTest
 public class TLSPreferredSocketTest extends AndroidTestCase {
 
     public void testSSLv3RemovalFromProtocols() {

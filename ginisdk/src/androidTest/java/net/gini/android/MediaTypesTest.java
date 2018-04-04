@@ -1,8 +1,9 @@
 package net.gini.android;
 
+import android.support.test.filters.SmallTest;
 import android.test.AndroidTestCase;
 
-
+@SmallTest
 public class MediaTypesTest extends AndroidTestCase {
     public void testGINI_JSON_V1() {
         assertEquals("application/vnd.gini.v1+json", MediaTypes.GINI_JSON_V1);

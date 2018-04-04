@@ -13,6 +13,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.support.test.filters.MediumTest;
 import android.test.InstrumentationTestCase;
 
 import net.gini.android.DocumentTaskManager.DocumentType;
@@ -42,6 +43,7 @@ import java.util.Map;
 
 import bolts.Task;
 
+@MediumTest
 public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
     private DocumentTaskManager mDocumentTaskManager;

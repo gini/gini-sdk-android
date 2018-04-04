@@ -11,6 +11,7 @@ import static net.gini.android.helpers.TestUtils.areEqualURIs;
 import static org.mockito.Mockito.verify;
 
 import android.net.Uri;
+import android.support.test.filters.MediumTest;
 import android.test.InstrumentationTestCase;
 
 import com.android.volley.AuthFailureError;
@@ -30,6 +31,7 @@ import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.Map;
 
+@MediumTest
 public class ApiCommunicatorTests extends InstrumentationTestCase {
     private ApiCommunicator mApiCommunicator;
     private RequestQueue mRequestQueue;
