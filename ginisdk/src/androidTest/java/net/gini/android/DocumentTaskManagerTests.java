@@ -36,6 +36,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -283,7 +284,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         when(mApiCommunicator.getDocument(eq(createdDocumentUri), any(Session.class))).thenReturn(
                 createDocumentJSONTask("1234"));
 
-        final Map<Document, Integer> partialDocuments = new HashMap<>();
+        final LinkedHashMap<Document, Integer> partialDocuments = new LinkedHashMap<>();
         partialDocuments.put(createDocument("1111"), 90);
         partialDocuments.put(createDocument("2222"), 180);
 
@@ -312,7 +313,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         when(mApiCommunicator.getDocument(eq(createdDocumentUri), any(Session.class))).thenReturn(
                 createDocumentJSONTask("1234"));
 
-        final Map<Document, Integer> partialDocuments = new HashMap<>();
+        final LinkedHashMap<Document, Integer> partialDocuments = new LinkedHashMap<>();
         partialDocuments.put(createDocument("1111"), -90);
         partialDocuments.put(createDocument("2222"), 450);
 

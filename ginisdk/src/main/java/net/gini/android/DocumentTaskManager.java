@@ -25,6 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -214,7 +215,7 @@ public class DocumentTaskManager {
      *
      * @return A Task which will resolve to the Document instance of the freshly created document.
      */
-    public Task<Document> createCompositeDocument(@NonNull final Map<Document, Integer> documentRotationMap, @Nullable final DocumentType documentType) {
+    public Task<Document> createCompositeDocument(@NonNull final LinkedHashMap<Document, Integer> documentRotationMap, @Nullable final DocumentType documentType) {
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
             @Override
             public Task<Uri> then(Task<Session> sessionTask) throws Exception {
@@ -237,14 +238,14 @@ public class DocumentTaskManager {
 
     private byte[] createCompositeJson(@NonNull final List<Document> documents)
             throws JSONException {
-        final Map<Document, Integer> documentRotationMap = new HashMap<>();
+        final LinkedHashMap<Document, Integer> documentRotationMap = new LinkedHashMap<>();
         for (final Document document : documents) {
             documentRotationMap.put(document, 0);
         }
         return createCompositeJson(documentRotationMap);
     }
 
-    private byte[] createCompositeJson(@NonNull final Map<Document, Integer> documentRotationMap)
+    private byte[] createCompositeJson(@NonNull final LinkedHashMap<Document, Integer> documentRotationMap)
             throws JSONException {
         final JSONObject jsonObject = new JSONObject();
         final JSONArray subdocuments = new JSONArray();
@@ -273,7 +274,7 @@ public class DocumentTaskManager {
      * @return A Task which will resolve to the Document instance of the freshly created document.
      *
      * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
-     * document and then call {@link #createCompositeDocument(Map, DocumentType)}
+     * document and then call {@link #createCompositeDocument(LinkedHashMap, DocumentType)}
      * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
      * returned composite document can be used to poll the processing state, to retrieve extractions
      * and to send feedback.
@@ -312,7 +313,7 @@ public class DocumentTaskManager {
      * @return A Task which will resolve to the Document instance of the freshly created document.
      *
      * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
-     * document and then call {@link #createCompositeDocument(Map, DocumentType)}
+     * document and then call {@link #createCompositeDocument(LinkedHashMap, DocumentType)}
      * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
      * returned composite document can be used to poll the processing state, to retrieve extractions
      * and to send feedback.
@@ -333,7 +334,7 @@ public class DocumentTaskManager {
      * @return A Task which will resolve to the Document instance of the freshly created document.
      *
      * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
-     * document and then call {@link #createCompositeDocument(Map, DocumentType)}
+     * document and then call {@link #createCompositeDocument(LinkedHashMap, DocumentType)}
      * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
      * returned composite document can be used to poll the processing state, to retrieve extractions
      * and to send feedback.
