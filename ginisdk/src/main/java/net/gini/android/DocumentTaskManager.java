@@ -203,12 +203,60 @@ public class DocumentTaskManager {
         }, Task.BACKGROUND_EXECUTOR);
     }
 
+    /**
+     * Creates a new Gini composite document. The input Map must contain the partial documents as keys. These will be
+     * part of the multi-page document. The value for each partial document key is the amount in degrees the document
+     * has been rotated by the user.
+     *
+     * @param documentRotationMap A map of partial documents and their rotation in degrees
+     * @param documentType        Optional a document type hint. See the documentation for the document type hints for
+     *                            possible values
+     *
+     * @return A Task which will resolve to the Document instance of the freshly created document.
+     */
+    public Task<Document> createCompositeDocument(@NonNull final Map<Document, Integer> documentRotationMap, @Nullable final DocumentType documentType) {
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(Task<Session> sessionTask) throws Exception {
+                String apiDoctypeHint = null;
+                if (documentType != null) {
+                    apiDoctypeHint = documentType.getApiDoctypeHint();
+                }
+                final Session session = sessionTask.getResult();
+                final byte[] compositeJson = createCompositeJson(documentRotationMap);
+                return mApiCommunicator
+                        .uploadDocument(compositeJson, MediaTypes.GINI_DOCUMENT_JSON_V2, null, apiDoctypeHint, session);
+            }
+        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
+            @Override
+            public Task<Document> then(Task<Uri> uploadTask) throws Exception {
+                return getDocument(uploadTask.getResult());
+            }
+        }, Task.BACKGROUND_EXECUTOR);
+    }
+
     private byte[] createCompositeJson(@NonNull final List<Document> documents)
+            throws JSONException {
+        final Map<Document, Integer> documentRotationMap = new HashMap<>();
+        for (final Document document : documents) {
+            documentRotationMap.put(document, 0);
+        }
+        return createCompositeJson(documentRotationMap);
+    }
+
+    private byte[] createCompositeJson(@NonNull final Map<Document, Integer> documentRotationMap)
             throws JSONException {
         final JSONObject jsonObject = new JSONObject();
         final JSONArray subdocuments = new JSONArray();
-        for (final Document document : documents) {
-            subdocuments.put(document.getUri());
+        for (final Map.Entry<Document, Integer> entry : documentRotationMap.entrySet()) {
+            final Document document = entry.getKey();
+            int rotation = entry.getValue();
+            // Converts input degrees to degrees between [0,360)
+            rotation = ((rotation % 360) + 360) % 360;
+            final JSONObject partialDoc = new JSONObject();
+            partialDoc.put("document", document.getUri());
+            partialDoc.put("rotationDelta", rotation);
+            subdocuments.put(partialDoc);
         }
         jsonObject.put("subdocuments", subdocuments);
         return jsonObject.toString().getBytes(CHARSET_UTF8);
