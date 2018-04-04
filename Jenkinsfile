@@ -98,7 +98,6 @@ pipeline {
         }
         stage('Build Documentation') {
             when {
-                branch 'master'
                 expression {
                   def tag = sh(returnStdout: true, script: 'git tag --contains $(git rev-parse HEAD)').trim()
                   return !tag.isEmpty()
@@ -113,7 +112,6 @@ pipeline {
         }
         stage('Release Documentation') {
             when {
-                branch 'master'
                 expression {
                     def tag = sh(returnStdout: true, script: 'git tag --contains $(git rev-parse HEAD)').trim()
                     return !tag.isEmpty()
@@ -136,7 +134,6 @@ pipeline {
         }
         stage('Release Library') {
             when {
-                branch 'master'
                 expression {
                     def tag = sh(returnStdout: true, script: 'git tag --contains $(git rev-parse HEAD)').trim()
                     return !tag.isEmpty()
