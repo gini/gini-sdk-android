@@ -21,7 +21,7 @@
 #   {module name}/build/outputs/code-coverage/targeted/{device/emulator id}-${module name}-${variant name}-coverage.ec
 #
 set -e
-set -x
+#set -x
 
 if [ $# -lt 4 ]; then
     echo "Pass in the module name, variant name, package name and target device/emulator id"
