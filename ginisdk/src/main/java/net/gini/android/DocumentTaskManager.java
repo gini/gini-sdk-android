@@ -97,13 +97,16 @@ public class DocumentTaskManager {
             };
 
     /**
-     * Deletes a document.
+     * Deletes a Gini partial document and all its parent composite documents.
+     * <br>
+     * Partial documents can be deleted only, if they don't belong to any composite documents and
+     * this method deletes the parents before deleting the partial document.
      *
-     * @param documentId The id of an existing document
+     * @param documentId The id of an existing partial document
      *
      * @return A Task which will resolve to an empty string.
      */
-    public Task<String> deleteDocument(@NonNull final String documentId) {
+    public Task<String> deletePartialDocumentAndParents(@NonNull final String documentId) {
         return getDocument(documentId).onSuccessTask(new Continuation<Document, Task<Void>>() {
             @Override
             public Task<Void> then(Task<Document> documentTask) throws Exception {
@@ -116,6 +119,23 @@ public class DocumentTaskManager {
                 return mSessionManager.getSession();
             }
         }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Session, Task<String>>() {
+            @Override
+            public Task<String> then(final Task<Session> task) throws Exception {
+                final Session session = task.getResult();
+                return mApiCommunicator.deleteDocument(documentId, session);
+            }
+        });
+    }
+
+    /**
+     * Deletes a Gini document.
+     *
+     * @param documentId The id of an existing document
+     *
+     * @return A Task which will resolve to an empty string.
+     */
+    public Task<String> deleteDocument(@NonNull final String documentId) {
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<String>>() {
             @Override
             public Task<String> then(final Task<Session> task) throws Exception {
                 final Session session = task.getResult();

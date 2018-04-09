@@ -343,7 +343,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         when(mApiCommunicator.deleteDocument(eq(document.getId()), any(Session.class)))
                 .thenReturn(Task.forResult(""));
 
-        mDocumentTaskManager.deleteDocument(document.getId()).waitForCompletion();
+        mDocumentTaskManager.deletePartialDocumentAndParents(document.getId()).waitForCompletion();
 
         // No parent uris to delete
         verify(mApiCommunicator, never())
@@ -363,7 +363,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
         final Document document = createDocument(documentId);
 
-        mDocumentTaskManager.deleteDocument(documentId).waitForCompletion();
+        mDocumentTaskManager.deletePartialDocumentAndParents(documentId).waitForCompletion();
 
         final InOrder inOrder = Mockito.inOrder(mApiCommunicator);
 
