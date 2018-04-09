@@ -2,6 +2,12 @@
 Changelog
 =========
 
+2.0.0-beta.2 (2018-04-09)
+=========================
+
+- Delete method for partial documents which deletes its parents, too.
+- Delete method for any document which fails for partial documents that have parents.
+
 2.0.0-beta.1 (2018-04-04)
 =========================
 
