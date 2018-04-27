@@ -13,7 +13,7 @@ public class MediaTypes {
     public static final String APPLICATION_JSON = "application/json";
     public static final String APPLICATION_FORM_URLENCODED = "application/x-www-form-urlencoded";
     public static final String GINI_PARTIAL = "application/vnd.gini.v2.partial";
-    public static final String GINI_DOCUMENT_JSON_V2 = "application/vnd.gini.v2.document+json";
+    public static final String GINI_DOCUMENT_JSON_V2 = "application/vnd.gini.v2.composite+json";
 
     public static String forPartialDocument(@NonNull final String mediaType) {
         final String subtype = getSubtype(mediaType);

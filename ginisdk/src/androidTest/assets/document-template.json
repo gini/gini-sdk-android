@@ -19,10 +19,14 @@
     "extractions": "https://api.gini.net/documents/${id}/extractions",
     "layout": "https://api.gini.net/documents/${id}/layout",
     "document": "https://api.gini.net/documents/${id}",
-    "processed": "https://api.gini.net/documents/${id}/processed",
-    "parents": [
-      "https://api.gini.net/documents/1111",
-      "https://api.gini.net/documents/2222"
-    ]
-  }
+    "processed": "https://api.gini.net/documents/${id}/processed"
+  },
+  "compositeDocuments": [
+    {
+      "document": "https://api.gini.net/documents/1111"
+    },
+    {
+      "document": "https://api.gini.net/documents/2222"
+    }
+  ]
 }

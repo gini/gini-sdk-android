@@ -25,9 +25,13 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
 
 import bolts.Continuation;
 import bolts.Task;
@@ -276,7 +280,214 @@ public class SdkIntegrationTest extends AndroidTestCase {
         uploadDocument(uploadBuilder);
     }
 
+    public void testCreatePartialDocument() throws Exception {
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("multi-page-p1.png");
+        assertNotNull("test image multi-page-p1.png could not be loaded", testDocumentAsStream);
 
+        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
+
+        final Task<Document> task = gini.getDocumentTaskManager()
+                .createPartialDocument(testDocument, "image/png", null, null);
+        task.waitForCompletion();
+
+        final Document partialDocument = task.getResult();
+        assertNotNull(partialDocument);
+    }
+
+    public void testDeletePartialDocumentWithoutParents() throws Exception {
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("multi-page-p1.png");
+        assertNotNull("test image multi-page-p1.png could not be loaded", testDocumentAsStream);
+
+        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
+
+        final Task<String> task = gini.getDocumentTaskManager()
+                .createPartialDocument(testDocument, "image/png", null, null)
+                .onSuccessTask(new Continuation<Document, Task<String>>() {
+                    @Override
+                    public Task<String> then(final Task<Document> task) throws Exception {
+                        return gini.getDocumentTaskManager().deleteDocument(task.getResult().getId());
+                    }
+                });
+        task.waitForCompletion();
+
+        assertNotNull(task.getResult());
+    }
+
+    public void testDeletePartialDocumentWithParents() throws Exception {
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream page1Stream = assetManager.open("multi-page-p1.png");
+        assertNotNull("test image multi-page-p1.png could not be loaded", page1Stream);
+
+        final byte[] page1 = TestUtils.createByteArray(page1Stream);
+
+        final AtomicReference<Document> partialDocument = new AtomicReference<>();
+        final Task<String> task = gini.getDocumentTaskManager()
+                .createPartialDocument(page1, "image/png", null, null)
+                .onSuccessTask(new Continuation<Document, Task<Document>>() {
+                    @Override
+                    public Task<Document> then(final Task<Document> task) throws Exception {
+                        final Document document = task.getResult();
+                        partialDocument.set(document);
+                        final LinkedHashMap<Document, Integer> documentRotationDeltaMap = new LinkedHashMap<>();
+                        documentRotationDeltaMap.put(document, 0);
+                        return gini.getDocumentTaskManager().createCompositeDocument(documentRotationDeltaMap, null);
+                    }
+                }).onSuccessTask(new Continuation<Document, Task<String>>() {
+                    @Override
+                    public Task<String> then(final Task<Document> task) throws Exception {
+                        return gini.getDocumentTaskManager().deletePartialDocumentAndParents(partialDocument.get().getId());
+                    }
+                });
+        task.waitForCompletion();
+
+        assertNotNull(task.getResult());
+    }
+
+    public void testDeletePartialDocumentFailsWhenNotDeletingParents() throws Exception {
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream page1Stream = assetManager.open("multi-page-p1.png");
+        assertNotNull("test image multi-page-p1.png could not be loaded", page1Stream);
+
+        final byte[] page1 = TestUtils.createByteArray(page1Stream);
+
+        final AtomicReference<Document> partialDocument = new AtomicReference<>();
+        final Task<String> task = gini.getDocumentTaskManager()
+                .createPartialDocument(page1, "image/png", null, null)
+                .onSuccessTask(new Continuation<Document, Task<Document>>() {
+                    @Override
+                    public Task<Document> then(final Task<Document> task) throws Exception {
+                        final Document document = task.getResult();
+                        partialDocument.set(document);
+                        final LinkedHashMap<Document, Integer> documentRotationDeltaMap = new LinkedHashMap<>();
+                        documentRotationDeltaMap.put(document, 0);
+                        return gini.getDocumentTaskManager().createCompositeDocument(documentRotationDeltaMap, null);
+                    }
+                }).onSuccessTask(new Continuation<Document, Task<String>>() {
+                    @Override
+                    public Task<String> then(final Task<Document> task) throws Exception {
+                        return gini.getDocumentTaskManager().deleteDocument(partialDocument.get().getId());
+                    }
+                });
+        task.waitForCompletion();
+
+        assertTrue(task.isFaulted());
+    }
+
+    public void testProcessCompositeDocument() throws Exception {
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream page1Stream = assetManager.open("multi-page-p1.png");
+        assertNotNull("test image multi-page-p1.png could not be loaded", page1Stream);
+        final InputStream page2Stream = assetManager.open("multi-page-p2.png");
+        assertNotNull("test image multi-page-p2.png could not be loaded", page2Stream);
+        final InputStream page3Stream = assetManager.open("multi-page-p3.png");
+        assertNotNull("test image multi-page-p3.png could not be loaded", page3Stream);
+
+        final byte[] page1 = TestUtils.createByteArray(page1Stream);
+        final byte[] page2 = TestUtils.createByteArray(page2Stream);
+        final byte[] page3 = TestUtils.createByteArray(page3Stream);
+
+        final List<Document> partialDocuments = new ArrayList<>();
+        final AtomicReference<Document> compositeDocument = new AtomicReference<>();
+        final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
+        final Task<Map<String, SpecificExtraction>> task = documentTaskManager
+                .createPartialDocument(page1, "image/png", null, null)
+                .onSuccessTask(new Continuation<Document, Task<Document>>() {
+                    @Override
+                    public Task<Document> then(final Task<Document> task) throws Exception {
+                        partialDocuments.add(task.getResult());
+                        return documentTaskManager.createPartialDocument(page2, "image/png", null, null);
+                    }
+                })
+                .onSuccessTask(new Continuation<Document, Task<Document>>() {
+                    @Override
+                    public Task<Document> then(final Task<Document> task) throws Exception {
+                        partialDocuments.add(task.getResult());
+                        return documentTaskManager.createPartialDocument(page3, "image/png", null, null);
+                    }
+                })
+                .onSuccessTask(new Continuation<Document, Task<Document>>() {
+                    @Override
+                    public Task<Document> then(final Task<Document> task) throws Exception {
+                        partialDocuments.add(task.getResult());
+                        final LinkedHashMap<Document, Integer> documentRotationDeltaMap = new LinkedHashMap<>();
+                        for (final Document partialDocument : partialDocuments) {
+                            documentRotationDeltaMap.put(partialDocument, 0);
+                        }
+                        return documentTaskManager.createCompositeDocument(documentRotationDeltaMap, null);
+                    }
+                }).onSuccessTask(new Continuation<Document, Task<Document>>() {
+                    @Override
+                    public Task<Document> then(final Task<Document> task) throws Exception {
+                        compositeDocument.set(task.getResult());
+                        return documentTaskManager.pollDocument(task.getResult());
+                    }
+                }).onSuccessTask(new Continuation<Document, Task<Map<String, SpecificExtraction>>>() {
+                    @Override
+                    public Task<Map<String, SpecificExtraction>> then(final Task<Document> task) throws Exception {
+                        return documentTaskManager.getExtractions(task.getResult());
+                    }
+                });
+        task.waitForCompletion();
+
+        assertEquals(3, partialDocuments.size());
+        final Map<String, SpecificExtraction> extractions = task.getResult();
+        assertNotNull(extractions);
+
+        assertEquals("IBAN should be found", "DE96490501010082009697", extractions.get("iban").getValue());
+        assertEquals("Amount to pay should be found", "145.00:EUR", extractions.get("amountToPay").getValue());
+        assertEquals("BIC should be found", "WELADED1MIN", extractions.get("bic").getValue());
+        assertEquals("Payee should be found", "Mindener Stadtwerke GmbH", extractions.get("paymentRecipient").getValue());
+        assertEquals("Payment reference should be found", "ReNr TST-00019, KdNr 765432", extractions.get("paymentReference").getValue());
+
+        // all extractions are correct, that means we have nothing to correct and will only send positive feedback
+        // we should only send feedback for extractions we have seen and accepted
+        Map<String, SpecificExtraction> feedback = new HashMap<String, SpecificExtraction>();
+        feedback.put("iban", extractions.get("iban"));
+        feedback.put("amountToPay", extractions.get("amountToPay"));
+        feedback.put("bic", extractions.get("bic"));
+        feedback.put("paymentRecipient", extractions.get("senderName"));
+        feedback.put("paymentReference", extractions.get("paymentReference"));
+
+        final Task<Document> sendFeedback = documentTaskManager.sendFeedbackForExtractions(compositeDocument.get(), feedback);
+        sendFeedback.waitForCompletion();
+        if (sendFeedback.isFaulted()) {
+            Log.e("TEST", Log.getStackTraceString(sendFeedback.getError()));
+        }
+        assertTrue("Sending feedback should be completed", sendFeedback.isCompleted());
+        assertFalse("Sending feedback should be successful", sendFeedback.isFaulted());
+    }
+
+    public void testDeleteCompositeDocument() throws Exception {
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream page1Stream = assetManager.open("multi-page-p1.png");
+        assertNotNull("test image multi-page-p1.png could not be loaded", page1Stream);
+
+        final byte[] page1 = TestUtils.createByteArray(page1Stream);
+
+        final AtomicReference<Document> partialDocument = new AtomicReference<>();
+        final Task<String> task = gini.getDocumentTaskManager()
+                .createPartialDocument(page1, "image/png", null, null)
+                .onSuccessTask(new Continuation<Document, Task<Document>>() {
+                    @Override
+                    public Task<Document> then(final Task<Document> task) throws Exception {
+                        final Document document = task.getResult();
+                        partialDocument.set(document);
+                        final LinkedHashMap<Document, Integer> documentRotationDeltaMap = new LinkedHashMap<>();
+                        documentRotationDeltaMap.put(document, 0);
+                        return gini.getDocumentTaskManager().createCompositeDocument(documentRotationDeltaMap, null);
+                    }
+                }).onSuccessTask(new Continuation<Document, Task<String>>() {
+                    @Override
+                    public Task<String> then(final Task<Document> task) throws Exception {
+                        return gini.getDocumentTaskManager().deleteDocument(task.getResult().getId());
+                    }
+                });
+        task.waitForCompletion();
+
+        assertNotNull(task.getResult());
+    }
 
     private String extractEmailDomain(String email) {
         String[] components = email.split("@");

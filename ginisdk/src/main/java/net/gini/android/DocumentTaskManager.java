@@ -114,7 +114,7 @@ public class DocumentTaskManager {
             @Override
             public Task<Void> then(Task<Document> documentTask) throws Exception {
                 final Document document = documentTask.getResult();
-                return deleteDocuments(document.getParents());
+                return deleteDocuments(document.getCompositeDocuments());
             }
         }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Void, Task<Session>>() {
             @Override
@@ -271,7 +271,7 @@ public class DocumentTaskManager {
     private byte[] createCompositeJson(@NonNull final LinkedHashMap<Document, Integer> documentRotationMap)
             throws JSONException {
         final JSONObject jsonObject = new JSONObject();
-        final JSONArray subdocuments = new JSONArray();
+        final JSONArray partialDocuments = new JSONArray();
         for (final Map.Entry<Document, Integer> entry : documentRotationMap.entrySet()) {
             final Document document = entry.getKey();
             int rotation = entry.getValue();
@@ -280,9 +280,9 @@ public class DocumentTaskManager {
             final JSONObject partialDoc = new JSONObject();
             partialDoc.put("document", document.getUri());
             partialDoc.put("rotationDelta", rotation);
-            subdocuments.put(partialDoc);
+            partialDocuments.put(partialDoc);
         }
-        jsonObject.put("subdocuments", subdocuments);
+        jsonObject.put("partialDocuments", partialDocuments);
         return jsonObject.toString().getBytes(CHARSET_UTF8);
     }
 

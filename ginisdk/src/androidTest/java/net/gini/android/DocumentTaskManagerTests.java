@@ -243,7 +243,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
         verify(mApiCommunicator)
                 .uploadDocument(any(byte[].class),
-                        eq("application/vnd.gini.v2.document+json"), eq((String) null),
+                        eq("application/vnd.gini.v2.composite+json"), eq((String) null),
                         eq("Invoice"),
                         eq(mSession));
     }
@@ -261,7 +261,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         partialDocuments.add(createDocument("1111"));
         partialDocuments.add(createDocument("2222"));
 
-        final String jsonString = "{ \"subdocuments\": [ "
+        final String jsonString = "{ \"partialDocuments\": [ "
                 + "{ \"document\": \"https://api.gini.net/documents/1111\", \"rotationDelta\": 0 }, "
                 + "{ \"document\": \"https://api.gini.net/documents/2222\", \"rotationDelta\": 0 } "
                 + "] }";
@@ -272,7 +272,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
         verify(mApiCommunicator)
                 .uploadDocument(eq(jsonBytes),
-                        eq("application/vnd.gini.v2.document+json"), eq((String) null),
+                        eq("application/vnd.gini.v2.composite+json"), eq((String) null),
                         eq("Invoice"),
                         eq(mSession));
     }
@@ -290,7 +290,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         partialDocuments.put(createDocument("1111"), 90);
         partialDocuments.put(createDocument("2222"), 180);
 
-        final String jsonString = "{ \"subdocuments\": [ "
+        final String jsonString = "{ \"partialDocuments\": [ "
                 + "{ \"document\": \"https://api.gini.net/documents/1111\", \"rotationDelta\": 90 }, "
                 + "{ \"document\": \"https://api.gini.net/documents/2222\", \"rotationDelta\": 180 } "
                 + "] }";
@@ -301,7 +301,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
         verify(mApiCommunicator)
                 .uploadDocument(eq(jsonBytes),
-                        eq("application/vnd.gini.v2.document+json"), eq((String) null),
+                        eq("application/vnd.gini.v2.composite+json"), eq((String) null),
                         eq("Invoice"),
                         eq(mSession));
     }
@@ -319,7 +319,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         partialDocuments.put(createDocument("1111"), -90);
         partialDocuments.put(createDocument("2222"), 450);
 
-        final String jsonString = "{ \"subdocuments\": [ "
+        final String jsonString = "{ \"partialDocuments\": [ "
                 + "{ \"document\": \"https://api.gini.net/documents/1111\", \"rotationDelta\": 270 }, "
                 + "{ \"document\": \"https://api.gini.net/documents/2222\", \"rotationDelta\": 90 } "
                 + "] }";
@@ -330,7 +330,7 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
 
         verify(mApiCommunicator)
                 .uploadDocument(eq(jsonBytes),
-                        eq("application/vnd.gini.v2.document+json"), eq((String) null),
+                        eq("application/vnd.gini.v2.composite+json"), eq((String) null),
                         eq("Invoice"),
                         eq(mSession));
     }
@@ -368,9 +368,9 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         final InOrder inOrder = Mockito.inOrder(mApiCommunicator);
 
         inOrder.verify(mApiCommunicator, times(1))
-                .deleteDocument(eq(document.getParents().get(0)),eq(mSession));
+                .deleteDocument(eq(document.getCompositeDocuments().get(0)),eq(mSession));
         inOrder.verify(mApiCommunicator, times(1))
-                .deleteDocument(eq(document.getParents().get(1)),eq(mSession));
+                .deleteDocument(eq(document.getCompositeDocuments().get(1)),eq(mSession));
         inOrder.verify(mApiCommunicator, times(1))
                 .deleteDocument(eq(document.getId()),eq(mSession));
     }
