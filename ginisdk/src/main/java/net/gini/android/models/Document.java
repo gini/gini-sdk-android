@@ -47,6 +47,7 @@ public class Document implements Parcelable {
         SANDWICH,
         NATIVE,
         TEXT,
+        COMPOSITE,
         UNKNOWN
     }
 
