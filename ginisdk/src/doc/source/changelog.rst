@@ -2,6 +2,12 @@
 Changelog
 =========
 
+2.0.0-beta.3 (2018-04-27)
+=========================
+
+- Document polling can be cancelled.
+- Updated json formats to match final versions.
+
 2.0.0-beta.2 (2018-04-09)
 =========================
 
