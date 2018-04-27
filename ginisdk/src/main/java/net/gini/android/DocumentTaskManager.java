@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import bolts.Continuation;
 import bolts.Task;
@@ -37,6 +38,8 @@ import bolts.Task;
  * provides high level methods to handle document related tasks easily.
  */
 public class DocumentTaskManager {
+
+    private Map<Document, Boolean> mDocumentPollingsInProgress = new ConcurrentHashMap<>();
 
     /**
      * The available document type hints. See the documentation for more information.
@@ -503,22 +506,41 @@ public class DocumentTaskManager {
         if (document.getState() != Document.ProcessingState.PENDING) {
             return Task.forResult(document);
         }
+        mDocumentPollingsInProgress.put(document, false);
         final String documentId = document.getId();
         return getDocument(documentId).continueWithTask(new Continuation<Document, Task<Document>>() {
             @Override
             public Task<Document> then(Task<Document> task) throws Exception {
                 if (task.isFaulted() || task.isCancelled()
                         || task.getResult().getState() != Document.ProcessingState.PENDING) {
+                    mDocumentPollingsInProgress.remove(document);
                     return task;
                 } else {
-                    // The continuation is executed in a background thread by Bolts, so it does not block the UI
-                    // when we sleep here. Infinite recursions are also prevented by Bolts (the task will then resolve
-                    // to a failure).
-                    Thread.sleep(POLLING_INTERVAL);
-                    return pollDocument(document);
+                    if (mDocumentPollingsInProgress.containsKey(document)
+                            && mDocumentPollingsInProgress.get(document)) {
+                        mDocumentPollingsInProgress.remove(document);
+                        return Task.cancelled();
+                    } else {
+                        // The continuation is executed in a background thread by Bolts, so it does not block the UI
+                        // when we sleep here. Infinite recursions are also prevented by Bolts (the task will then resolve
+                        // to a failure).
+                        Thread.sleep(POLLING_INTERVAL);
+                        return pollDocument(document);
+                    }
                 }
             }
         }, Task.BACKGROUND_EXECUTOR);
+    }
+
+    /**
+     * Cancels document polling.
+     *
+     * @param document The document which is being polled
+     */
+    public void cancelDocumentPolling(final Document document) {
+        if (mDocumentPollingsInProgress.containsKey(document)) {
+            mDocumentPollingsInProgress.put(document, true);
+        }
     }
 
     /**

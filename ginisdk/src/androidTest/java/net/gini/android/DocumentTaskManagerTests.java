@@ -546,6 +546,49 @@ public class DocumentTaskManagerTests extends InstrumentationTestCase {
         assertEquals(Document.ProcessingState.ERROR, polledDocument.getState());
     }
 
+    @SuppressWarnings("unchecked")
+    public void testPollDocumentCancellation() throws IOException, JSONException, InterruptedException {
+        when(mApiCommunicator.getDocument(eq("1234"), any(Session.class))).thenReturn(
+                createDocumentJSONTask("1234", "PENDING"), createDocumentJSONTask("1234", "PENDING"));
+        Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
+                Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
+
+        Task<Document> documentTask = mDocumentTaskManager.pollDocument(document);
+        mDocumentTaskManager.cancelDocumentPolling(document);
+        documentTask.waitForCompletion();
+
+        assertTrue(documentTask.isCancelled());
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testPollDocumentCancellationAffectsSpecifiedDocumentOnly() throws IOException, JSONException, InterruptedException {
+        Document completedDocument = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
+                Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
+        when(mApiCommunicator.getDocument(eq(completedDocument.getId()), any(Session.class))).thenReturn(
+                createDocumentJSONTask(completedDocument.getId(), "PENDING"), createDocumentJSONTask(completedDocument.getId(), "COMPLETED"));
+
+        Document cancelledDocument = new Document("5678", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
+                Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
+        when(mApiCommunicator.getDocument(eq(cancelledDocument.getId()), any(Session.class))).thenReturn(
+                createDocumentJSONTask(cancelledDocument.getId(), "PENDING"), createDocumentJSONTask(cancelledDocument.getId(), "PENDING"));
+
+
+        Task<Document> completedDocumentTask = mDocumentTaskManager.pollDocument(completedDocument);
+        Task<Document> cancelledDocumenTask = mDocumentTaskManager.pollDocument(cancelledDocument);
+        mDocumentTaskManager.cancelDocumentPolling(cancelledDocument);
+        completedDocumentTask.waitForCompletion();
+        cancelledDocumenTask.waitForCompletion();
+
+        assertTrue(cancelledDocumenTask.isCancelled());
+        Document completedPolledDocument = completedDocumentTask.getResult();
+        assertNotNull(completedPolledDocument);
+        assertEquals("1234", completedPolledDocument.getId());
+        assertEquals(Document.ProcessingState.COMPLETED, completedPolledDocument.getState());
+    }
+
     public void testSendFeedbackThrowsWithNullArguments() throws JSONException {
         final Document document = new Document("1234", Document.ProcessingState.PENDING, "foobar.jpg", 1, new Date(),
                                                Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
