@@ -155,8 +155,8 @@ public class DocumentTaskManager {
             public Task<Void> then(Task<Session> sessionTask) throws Exception {
                 final Session session = sessionTask.getResult();
                 final List<Task<String>> deleteTasks = new ArrayList<>();
-                for (final Uri parentUri : documentUris) {
-                    deleteTasks.add(mApiCommunicator.deleteDocument(parentUri, session));
+                for (final Uri documentUri : documentUris) {
+                    deleteTasks.add(mApiCommunicator.deleteDocument(documentUri, session));
                 }
                 return Task.whenAll(deleteTasks);
             }
