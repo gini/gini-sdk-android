@@ -26,6 +26,7 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -84,7 +85,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
 
         final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder(testDocument).setDocumentType("RemittanceSlip");
-        uploadDocument(uploadBuilder);
+        processDocument(uploadBuilder);
     }
 
     public void testProcessDocumentBitmap() throws IOException, InterruptedException, JSONException {
@@ -94,7 +95,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
 
         final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        uploadDocument(uploadBuilder);
+        processDocument(uploadBuilder);
     }
 
     public void testProcessDocumentByteArray() throws IOException, InterruptedException, JSONException {
@@ -104,7 +105,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
 
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        uploadDocument(uploadBuilder);
+        processDocument(uploadBuilder);
     }
 
     public void testProcessDocumentWithCustomCache() throws IOException, JSONException, InterruptedException {
@@ -121,7 +122,36 @@ public class SdkIntegrationTest extends AndroidTestCase {
 
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        uploadDocument(uploadBuilder);
+        processDocument(uploadBuilder);
+    }
+
+    public void testSendFeedback() throws Exception {
+        final AssetManager assetManager = getContext().getResources().getAssets();
+        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
+
+        final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        final Map<Document, Map<String, SpecificExtraction>> documentExtractions = processDocument(
+                uploadBuilder);
+        final Document document = documentExtractions.keySet().iterator().next();
+        final Map<String, SpecificExtraction> extractions = documentExtractions.values().iterator().next();
+
+        // All extractions are correct, that means we have nothing to correct and will only send positive feedback
+        // we should only send feedback for extractions we have seen and accepted
+        final Map<String, SpecificExtraction> feedback = new HashMap<>();
+        feedback.put("iban", extractions.get("iban"));
+        feedback.put("amountToPay", extractions.get("amountToPay"));
+        feedback.put("bic", extractions.get("bic"));
+        feedback.put("senderName", extractions.get("senderName"));
+
+        final Task<Document> sendFeedback = gini.getDocumentTaskManager().sendFeedbackForExtractions(document, feedback);
+        sendFeedback.waitForCompletion();
+        if (sendFeedback.isFaulted()) {
+            Log.e("TEST", Log.getStackTraceString(sendFeedback.getError()));
+        }
+        assertTrue("Sending feedback should be completed", sendFeedback.isCompleted());
+        assertFalse("Sending feedback should be successful", sendFeedback.isFaulted());
     }
 
     public void testDocumentUploadWorksAfterNewUserWasCreatedIfUserWasInvalid() throws IOException, JSONException, InterruptedException {
@@ -143,7 +173,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
 
         final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        uploadDocument(uploadBuilder);
+        processDocument(uploadBuilder);
 
         // Verify that a new user was created
         assertNotSame(invalidUserCredentials.getUsername(), credentialsStore.getUserCredentials().getUsername());
@@ -165,7 +195,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
 
         final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        uploadDocument(uploadBuilder);
+        processDocument(uploadBuilder);
 
         // Create another sdk instance with a new email domain (to simulate an app update)
         // and verify that the new email domain is used
@@ -177,7 +207,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
                 setCredentialsStore(credentialsStore).
                 build();
 
-        uploadDocument(uploadBuilder);
+        processDocument(uploadBuilder);
 
         UserCredentials newUserCredentials = credentialsStore.getUserCredentials();
         assertEquals(newEmailDomain, extractEmailDomain(newUserCredentials.getUsername()));
@@ -197,7 +227,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
 
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        uploadDocument(uploadBuilder);
+        processDocument(uploadBuilder);
     }
 
     public void testPublicKeyPinningWithCustomCache() throws Exception {
@@ -216,7 +246,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
 
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        uploadDocument(uploadBuilder);
+        processDocument(uploadBuilder);
     }
 
     @SdkSuppress(maxSdkVersion = Build.VERSION_CODES.JELLY_BEAN_MR1)
@@ -277,7 +307,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
 
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        uploadDocument(uploadBuilder);
+        processDocument(uploadBuilder);
     }
 
     public void testCreatePartialDocument() throws Exception {
@@ -497,7 +527,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
         return "";
     }
 
-    private void uploadDocument(DocumentUploadBuilder uploadBuilder) throws InterruptedException, JSONException {
+    private Map<Document, Map<String, SpecificExtraction>> processDocument(DocumentUploadBuilder uploadBuilder) throws InterruptedException, JSONException {
         final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
 
         final Task<Document> upload = uploadBuilder.upload(documentTaskManager);
@@ -530,20 +560,6 @@ public class SdkIntegrationTest extends AndroidTestCase {
         assertEquals("BIC should be found", "COLSDE33", extractions.get("bic").getValue());
         assertEquals("Payee should be found", "Uno Flüchtlingshilfe", extractions.get("senderName").getValue());
 
-        // all extractions are correct, that means we have nothing to correct and will only send positive feedback
-        // we should only send feedback for extractions we have seen and accepted
-        Map<String, SpecificExtraction> feedback = new HashMap<String, SpecificExtraction>();
-        feedback.put("iban", extractions.get("iban"));
-        feedback.put("amountToPay", extractions.get("amountToPay"));
-        feedback.put("bic", extractions.get("bic"));
-        feedback.put("senderName", extractions.get("senderName"));
-
-        final Task<Document> sendFeedback = documentTaskManager.sendFeedbackForExtractions(upload.getResult(), feedback);
-        sendFeedback.waitForCompletion();
-        if (sendFeedback.isFaulted()) {
-            Log.e("TEST", Log.getStackTraceString(sendFeedback.getError()));
-        }
-        assertTrue("Sending feedback should be completed", sendFeedback.isCompleted());
-        assertFalse("Sending feedback should be successful", sendFeedback.isFaulted());
+        return Collections.singletonMap(upload.getResult(), extractions);
     }
 }

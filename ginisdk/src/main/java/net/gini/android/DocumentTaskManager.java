@@ -133,6 +133,8 @@ public class DocumentTaskManager {
     /**
      * Deletes a Gini document.
      *
+     * For deleting partial documents use {@link #deletePartialDocumentAndParents(String)} instead.
+     *
      * @param documentId The id of an existing document
      *
      * @return A Task which will resolve to an empty string.
