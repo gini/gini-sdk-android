@@ -2,6 +2,11 @@
 Changelog
 =========
 
+2.0.0-rc.1 (2018-05-04)
+=======================
+
+- Improved javadoc for ``DocumentTaskManager#deleteDocument()``.
+
 2.0.0-beta.3 (2018-04-27)
 =========================
 
