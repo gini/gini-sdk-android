@@ -1,11 +1,13 @@
 package net.gini.android.models;
 
+import static net.gini.android.helpers.ParcelHelper.doRoundTrip;
+
+import android.support.test.filters.SmallTest;
 import android.test.AndroidTestCase;
 
 import java.util.ArrayList;
 
-import static net.gini.android.helpers.ParcelHelper.doRoundTrip;
-
+@SmallTest
 public class SpecificExtractionTest extends AndroidTestCase {
 
     public void testGetName() {

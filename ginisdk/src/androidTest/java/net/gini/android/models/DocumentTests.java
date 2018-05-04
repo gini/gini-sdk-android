@@ -2,6 +2,8 @@ package net.gini.android.models;
 
 import static net.gini.android.helpers.ParcelHelper.doRoundTrip;
 
+import android.net.Uri;
+import android.support.test.filters.SmallTest;
 import android.test.AndroidTestCase;
 
 import org.json.JSONException;
@@ -9,8 +11,10 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
 
+@SmallTest
 public class DocumentTests extends AndroidTestCase {
 
     private JSONObject createDocumentJSON() throws IOException, JSONException {
@@ -32,7 +36,8 @@ public class DocumentTests extends AndroidTestCase {
     public void testDocumentIdGetter() {
         Document document = new Document("1234-5678-9012-3456", Document.ProcessingState.COMPLETED,
                                          "foobar.jpg", 1, new Date(),
-                                         Document.SourceClassification.NATIVE);
+                                         Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
 
         assertEquals("1234-5678-9012-3456", document.getId());
     }
@@ -40,7 +45,8 @@ public class DocumentTests extends AndroidTestCase {
     public void testDocumentState() {
         Document document = new Document("1234-5678-9012-3456", Document.ProcessingState.COMPLETED,
                                          "foobar.jpg", 1, new Date(),
-                                         Document.SourceClassification.NATIVE);
+                                         Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
 
         assertEquals(Document.ProcessingState.COMPLETED, document.getState());
     }
@@ -92,7 +98,8 @@ public class DocumentTests extends AndroidTestCase {
         final Document originalDocument =
                 new Document("1234-5678-9012-3456", Document.ProcessingState.COMPLETED,
                              "foobar.jpg", 1, date,
-                             Document.SourceClassification.NATIVE);
+                             Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                        new ArrayList<Uri>());
 
         final Document restoredDocument = doRoundTrip(originalDocument, Document.CREATOR);
 

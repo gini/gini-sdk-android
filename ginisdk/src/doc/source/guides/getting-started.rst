@@ -21,7 +21,7 @@ dependency. In order to gain access to the aar file, you have to add the Gini Ma
     }
 
     dependencies {
-        compile ('net.gini:gini-android-sdk:1.5.0@aar'){
+        compile ('net.gini:gini-android-sdk:2.0.0-beta.3@aar'){
             transitive = true
         }
         ...

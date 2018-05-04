@@ -1,9 +1,11 @@
 package net.gini.android.models;
 
-import android.test.AndroidTestCase;
-
 import static net.gini.android.helpers.ParcelHelper.doRoundTrip;
 
+import android.support.test.filters.SmallTest;
+import android.test.AndroidTestCase;
+
+@SmallTest
 public class ExtractionTest extends AndroidTestCase {
     public Box createEmptyBox() {
         return new Box(1, 0, 0, 0, 0);

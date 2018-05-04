@@ -2,6 +2,25 @@
 Changelog
 =========
 
+2.0.0-beta.3 (2018-04-27)
+=========================
+
+- Document polling can be cancelled.
+- Updated json formats to match final versions.
+
+2.0.0-beta.2 (2018-04-09)
+=========================
+
+- Delete method for partial documents which deletes its parents, too.
+- Delete method for any document which fails for partial documents that have parents.
+
+2.0.0-beta.1 (2018-04-04)
+=========================
+
+- Support for composite (multi-page) document analysis. A composite document consists of one or more partial documents.
+For each page you need to create a partial document. Using these you can create a composite document for which you can
+get the extractions after polling has finished.
+
 1.5.0 (2018-02-08)
 ===================
 

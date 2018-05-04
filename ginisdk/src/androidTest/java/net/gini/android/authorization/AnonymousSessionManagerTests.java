@@ -1,5 +1,13 @@
 package net.gini.android.authorization;
 
+import static net.gini.android.Utils.CHARSET_UTF8;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import android.support.test.filters.MediumTest;
 import android.test.InstrumentationTestCase;
 
 import com.android.volley.NetworkResponse;
@@ -16,15 +24,7 @@ import java.util.UUID;
 
 import bolts.Task;
 
-import static net.gini.android.Utils.CHARSET_UTF8;
-import static net.gini.android.Utils.mapToUrlEncodedString;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-
+@MediumTest
 public class AnonymousSessionManagerTests extends InstrumentationTestCase {
     private AnonymousSessionManager mAnonymousSessionSessionManager;
     private UserCenterManager mUserCenterManager;

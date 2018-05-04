@@ -3,13 +3,19 @@ package net.gini.android.models;
 
 import static net.gini.android.Utils.checkNotNull;
 
+import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class Document implements Parcelable {
 
@@ -41,6 +47,7 @@ public class Document implements Parcelable {
         SANDWICH,
         NATIVE,
         TEXT,
+        COMPOSITE,
         UNKNOWN
     }
 
@@ -51,16 +58,24 @@ public class Document implements Parcelable {
     private final String mFilename;
     private final Date mCreationDate;
     private final SourceClassification mSourceClassification;
+    private final Uri mUri;
+    private final List<Uri> mCompositeDocuments;
+    private final List<Uri> mPartialDocuments;
 
     public Document(final String id, final ProcessingState state, final String filename,
-                    final Integer pageCount,
-                    final Date creationDate, final SourceClassification sourceClassification) {
+            final Integer pageCount,
+            final Date creationDate, final SourceClassification sourceClassification,
+            final Uri uri, final List<Uri> compositeDocuments,
+            final List<Uri> partialDocuments) {
         mId = checkNotNull(id);
         mState = checkNotNull(state);
         mPageCount = pageCount;
         mFilename = filename;
         mCreationDate = creationDate;
         mSourceClassification = sourceClassification;
+        mUri = uri;
+        mCompositeDocuments = compositeDocuments;
+        mPartialDocuments = partialDocuments;
     }
 
     /**
@@ -98,6 +113,18 @@ public class Document implements Parcelable {
         return mCreationDate;
     }
 
+    public Uri getUri() {
+        return mUri;
+    }
+
+    public List<Uri> getCompositeDocuments() {
+        return mCompositeDocuments;
+    }
+
+    public List<Uri> getPartialDocuments() {
+        return mPartialDocuments;
+    }
+
     /**
      * Classification of the source file.
      */
@@ -130,8 +157,27 @@ public class Document implements Parcelable {
         } catch (IllegalArgumentException e) {
             sourceClassification = SourceClassification.UNKNOWN;
         }
+        final Uri documentUri = Uri.parse(responseData.getJSONObject("_links").getString("document"));
+        final List<Uri> compositeDocumentUris = parseOptionalDocumentLinkArray(responseData.optJSONArray("compositeDocuments"));
+        final List<Uri> partialDocumentUris = parseOptionalDocumentLinkArray(responseData.optJSONArray("partialDocuments"));
         return new Document(documentId, processingState, fileName, pageCount, creationDate,
-                            sourceClassification);
+                sourceClassification, documentUri, compositeDocumentUris, partialDocumentUris);
+    }
+
+    private static List<Uri> parseOptionalDocumentLinkArray(@Nullable final JSONArray links) {
+        final List<Uri> uris = new ArrayList<>();
+        if (links != null) {
+            for (int i = 0; i < links.length(); i++) {
+                final JSONObject jsonObject = links.optJSONObject(i);
+                if (jsonObject != null) {
+                    final String uriString = jsonObject.optString("document");
+                    if (!TextUtils.isEmpty(uriString)) {
+                        uris.add(Uri.parse(uriString));
+                    }
+                }
+            }
+        }
+        return uris;
     }
 
     private static Document fromParcel(final Parcel in) {
@@ -142,8 +188,14 @@ public class Document implements Parcelable {
         final Date creationDate = (Date) in.readSerializable();
         final SourceClassification sourceClassification = SourceClassification.valueOf(
                 in.readString());
+        final Uri uri = in.readParcelable(Document.class.getClassLoader());
+        final List<Uri> parents = new ArrayList<>();
+        in.readTypedList(parents, Uri.CREATOR);
+        //noinspection unchecked
+        final List<Uri> subdocuments = new ArrayList<>();
+        in.readTypedList(subdocuments, Uri.CREATOR);
         return new Document(documentId, processingState, fileName, pageCount, creationDate,
-                            sourceClassification);
+                sourceClassification, uri, subdocuments, subdocuments);
     }
 
     @Override
@@ -159,6 +211,9 @@ public class Document implements Parcelable {
         dest.writeString(getFilename());
         dest.writeSerializable(getCreationDate());
         dest.writeString(getSourceClassification().toString());
+        dest.writeParcelable(getUri(), flags);
+        dest.writeTypedList(getCompositeDocuments());
+        dest.writeTypedList(getPartialDocuments());
     }
 
     public static final Parcelable.Creator<Document> CREATOR = new Parcelable.Creator<Document>() {
