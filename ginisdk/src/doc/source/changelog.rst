@@ -22,9 +22,9 @@ Changelog
 2.0.0-beta.1 (2018-04-04)
 =========================
 
-- Support for composite (multi-page) document analysis. A composite document consists of one or more partial documents.
-For each page you need to create a partial document. Using these you can create a composite document for which you can
-get the extractions after polling has finished.
+- Support for composite (multi-page) document analysis. A composite document consists of one or more
+  partial documents. For each page you need to create a partial document. Using these you can create a
+  composite document for which you can get the extractions after polling has finished.
 
 1.5.0 (2018-02-08)
 ===================
