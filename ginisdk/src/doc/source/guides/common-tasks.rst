@@ -64,16 +64,6 @@ upload. For retrieving extractions see :ref:`getting-extractions`.
     The filename (``myFirstDocument.jpg`` in the example) is not required, it could be ``null``, but
     setting a filename is a good praxis for human readable document identification.
 
-Working with optional arguments
--------------------------------
-
-You may have noticed that we used ``null`` as the argument for the document's doctype in the
-example. This is completely valid since the argument is annoted with the ``Nullable`` annotation
-(``@org.jetbrains.annotations.Nullable``). All methods that accept null arguments use the
-``@Nullable`` annotation for those arguments. Consider all arguments which do not have the
-``@Nullable`` annotation as mandatory. The method will raise a ``NullPointerException`` if you pass
-``null`` to such arguments.
-
 Setting the document type hint
 ------------------------------
 
