@@ -304,7 +304,7 @@ public class DocumentTaskManager {
      * returned composite document can be used to poll the processing state, to retrieve extractions
      * and to send feedback.
      */
-    public Task<Document> createDocument(final byte[] document, @Nullable final String filename,
+    public Task<Document> createDocument(@NonNull final byte[] document, @Nullable final String filename,
             @Nullable final DocumentType documentType) {
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
             @Override
@@ -344,7 +344,7 @@ public class DocumentTaskManager {
      * and to send feedback.
      */
     @Deprecated
-    public Task<Document> createDocument(final Bitmap document, @Nullable final String filename,
+    public Task<Document> createDocument(@NonNull final Bitmap document, @Nullable final String filename,
                                          @Nullable final String documentType, final int compressionRate) {
         return createDocumentInternal(document, filename, documentType, compressionRate);
     }
@@ -364,7 +364,7 @@ public class DocumentTaskManager {
      * returned composite document can be used to poll the processing state, to retrieve extractions
      * and to send feedback.
      */
-    public Task<Document> createDocument(final Bitmap document, @Nullable final String filename,
+    public Task<Document> createDocument(@NonNull final Bitmap document, @Nullable final String filename,
                                           @Nullable final DocumentType documentType) {
         String apiDoctypeHint = null;
         if (documentType != null) {
@@ -373,7 +373,7 @@ public class DocumentTaskManager {
         return createDocumentInternal(document, filename, apiDoctypeHint, DEFAULT_COMPRESSION);
     }
 
-    private Task<Document> createDocumentInternal(final Bitmap document, @Nullable final String filename,
+    private Task<Document> createDocumentInternal(@NonNull final Bitmap document, @Nullable final String filename,
                                          @Nullable final String apiDoctypeHint, final int compressionRate) {
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
             @Override
@@ -403,7 +403,7 @@ public class DocumentTaskManager {
      * <a href="http://developer.gini.net/gini-api/html/document_extractions.html">Gini API documentation</a>
      * for a list of the names of the specific extractions.
      */
-    public Task<Map<String, SpecificExtraction>> getExtractions(final Document document) {
+    public Task<Map<String, SpecificExtraction>> getExtractions(@NonNull final Document document) {
         final String documentId = document.getId();
         return mSessionManager.getSession()
                 .onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
@@ -457,7 +457,7 @@ public class DocumentTaskManager {
      *
      * @return A document instance representing all the document's metadata.
      */
-    public Task<Document> getDocument(final String documentId) {
+    public Task<Document> getDocument(@NonNull final String documentId) {
         checkNotNull(documentId);
         return mSessionManager.getSession()
                 .onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
@@ -481,7 +481,7 @@ public class DocumentTaskManager {
      *
      * @return A document instance representing all the document's metadata.
      */
-    public Task<Document> getDocument(final Uri documentUri) {
+    public Task<Document> getDocument(@NonNull final Uri documentUri) {
         checkNotNull(documentUri);
         return mSessionManager.getSession()
                 .onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
@@ -504,7 +504,7 @@ public class DocumentTaskManager {
      *
      * @param document The document which will be polled.
      */
-    public Task<Document> pollDocument(final Document document) {
+    public Task<Document> pollDocument(@NonNull final Document document) {
         if (document.getState() != Document.ProcessingState.PENDING) {
             return Task.forResult(document);
         }
@@ -539,7 +539,7 @@ public class DocumentTaskManager {
      *
      * @param document The document which is being polled
      */
-    public void cancelDocumentPolling(final Document document) {
+    public void cancelDocumentPolling(@NonNull final Document document) {
         if (mDocumentPollingsInProgress.containsKey(document)) {
             mDocumentPollingsInProgress.put(document, true);
         }
@@ -560,8 +560,8 @@ public class DocumentTaskManager {
      *
      * @throws JSONException When a value of an extraction is not JSON serializable.
      */
-    public Task<Document> sendFeedbackForExtractions(final Document document,
-                                                     final Map<String, SpecificExtraction> extractions)
+    public Task<Document> sendFeedbackForExtractions(@NonNull final Document document,
+            @NonNull final Map<String, SpecificExtraction> extractions)
             throws JSONException {
         final String documentId = document.getId();
         final JSONObject feedbackForExtractions = new JSONObject();
@@ -604,8 +604,8 @@ public class DocumentTaskManager {
      * @return A Task which will resolve to an error ID. This is a unique identifier for your error report
      * and can be used to refer to the reported error towards the Gini support.
      */
-    public Task<String> reportDocument(final Document document, final @Nullable String summary,
-                                       final @Nullable String description) {
+    public Task<String> reportDocument(@NonNull final Document document, @Nullable final String summary,
+            @Nullable final String description) {
         final String documentId = document.getId();
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
             @Override
@@ -630,7 +630,7 @@ public class DocumentTaskManager {
      *
      * @return A task which will resolve to a string containing the layout xml.
      */
-    public Task<JSONObject> getLayout(final Document document) {
+    public Task<JSONObject> getLayout(@NonNull final Document document) {
         final String documentId = document.getId();
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
             @Override
@@ -651,7 +651,7 @@ public class DocumentTaskManager {
      *
      * @throws JSONException If the JSON data does not have the expected structure or if there is invalid data.
      */
-    protected HashMap<String, List<Extraction>> extractionCandidatesFromApiResponse(final JSONObject responseData)
+    protected HashMap<String, List<Extraction>> extractionCandidatesFromApiResponse(@NonNull final JSONObject responseData)
             throws JSONException {
         final HashMap<String, List<Extraction>> candidatesByEntity = new HashMap<String, List<Extraction>>();
 
@@ -679,7 +679,7 @@ public class DocumentTaskManager {
      *
      * @throws JSONException If the JSON data does not have the expected structure or if there is invalid data.
      */
-    protected Extraction extractionFromApiResponse(final JSONObject responseData) throws JSONException {
+    protected Extraction extractionFromApiResponse(@NonNull final JSONObject responseData) throws JSONException {
         final String entity = responseData.getString("entity");
         final String value = responseData.getString("value");
         // The box is optional for some extractions.
@@ -713,7 +713,7 @@ public class DocumentTaskManager {
          * @param documentBitmap A Bitmap representing the image.
          */
         @Deprecated
-        public DocumentUploadBuilder(final Bitmap documentBitmap) {
+        public DocumentUploadBuilder(@NonNull final Bitmap documentBitmap) {
             mDocumentBitmap = documentBitmap;
             mCompressionRate = DocumentTaskManager.DEFAULT_COMPRESSION;
         }
@@ -721,7 +721,7 @@ public class DocumentTaskManager {
         /**
          * Set the document as a byte array. If a {@link Bitmap} was also set, the bitmap will be used.
          */
-        public DocumentUploadBuilder setDocumentBytes(byte[] documentBytes) {
+        public DocumentUploadBuilder setDocumentBytes(@NonNull byte[] documentBytes) {
             this.mDocumentBytes = documentBytes;
             return this;
         }
@@ -729,7 +729,7 @@ public class DocumentTaskManager {
         /**
          * Set the document as a {@link Bitmap}. This bitmap will be used instead of the byte array, if both were set.
          */
-        public DocumentUploadBuilder setDocumentBitmap(Bitmap documentBitmap) {
+        public DocumentUploadBuilder setDocumentBitmap(@NonNull Bitmap documentBitmap) {
             this.mDocumentBitmap = documentBitmap;
             return this;
         }
@@ -737,7 +737,7 @@ public class DocumentTaskManager {
         /**
          * Set the document' s filename.
          */
-        public DocumentUploadBuilder setFilename(final String filename) {
+        public DocumentUploadBuilder setFilename(@NonNull final String filename) {
             mFilename = filename;
             return this;
         }
@@ -749,7 +749,7 @@ public class DocumentTaskManager {
          * @deprecated Use {@link #setDocumentType(DocumentType)} instead.
          */
         @Deprecated
-        public DocumentUploadBuilder setDocumentType(final String documentType) {
+        public DocumentUploadBuilder setDocumentType(@NonNull final String documentType) {
             mDocumentType = documentType;
             return this;
         }
@@ -758,7 +758,7 @@ public class DocumentTaskManager {
          * Set the document's type. (This feature is called document type hint in the Gini API documentation). By
          * providing the doctype, Gini’s document processing is optimized in many ways.
          */
-        public DocumentUploadBuilder setDocumentType(final DocumentType documentType) {
+        public DocumentUploadBuilder setDocumentType(@NonNull final DocumentType documentType) {
             mDocumentTypeHint = documentType;
             return this;
         }
@@ -783,7 +783,7 @@ public class DocumentTaskManager {
          *
          * @return A task which will resolve to a Document instance.
          */
-        public Task<Document> upload(final DocumentTaskManager documentTaskManager) {
+        public Task<Document> upload(@NonNull final DocumentTaskManager documentTaskManager) {
             if (mDocumentBitmap != null) {
                 if (mDocumentTypeHint != null) {
                     return documentTaskManager.createDocument(mDocumentBitmap, mFilename, mDocumentTypeHint);
