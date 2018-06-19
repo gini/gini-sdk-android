@@ -182,10 +182,11 @@ feedback.
 Report an extraction error to Gini
 ==================================
 
-If the processing result for a document was not satisfactory for the user, your app can give her the
-opportunity to report a error directly to Gini. Gini will return a error identifier which can be
-used to refer to it towards the Gini support. The user must agree that Gini can use this document
-for debugging and error analysis. The code example below shows how to send the error report to Gini.
+If the processing result for a document was not satisfactory for the user, your app can enable your
+user the opportunity to report an error directly to Gini. Gini will return an error identifier which
+can be used to refer to it towards the Gini support. The user must agree that Gini can use this
+document for debugging and error analysis. The code example below shows how to send the error report
+to Gini.
 
 .. code-block:: java
 
