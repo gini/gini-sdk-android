@@ -2,6 +2,12 @@
 Changelog
 =========
 
+2.0.0-rc.2 (2018-07-05)
+=======================
+
+- Updated the documentation for composite documents.
+- Minor fixes and improvements.
+
 2.0.0-rc.1 (2018-05-04)
 =======================
 
