@@ -1,12 +1,13 @@
 package net.gini.android;
 
+import android.support.test.filters.SmallTest;
 import android.test.AndroidTestCase;
 
 import com.android.volley.VolleyError;
 
 import bolts.Task;
 
-
+@SmallTest
 public class RequestTaskCompletionSourceTests extends AndroidTestCase {
 
     public void testNewRequestTaskCompletionSource() {

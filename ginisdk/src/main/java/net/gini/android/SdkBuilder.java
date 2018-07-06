@@ -4,6 +4,7 @@ import static net.gini.android.Utils.checkNotNull;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.support.annotation.NonNull;
 import android.support.annotation.XmlRes;
 
 import com.android.volley.Cache;
@@ -59,8 +60,8 @@ public class SdkBuilder {
      * @param clientSecret Your application's client secret for the Gini API.
      * @param emailDomain  The email domain which is used for created Gini users.
      */
-    public SdkBuilder(final Context context, final String clientId, final String clientSecret,
-            final String emailDomain) {
+    public SdkBuilder(@NonNull final Context context, @NonNull final String clientId,
+            @NonNull final String clientSecret, @NonNull final String emailDomain) {
         mContext = context;
         mEmailDomain = emailDomain;
         mClientSecret = clientSecret;
@@ -74,7 +75,7 @@ public class SdkBuilder {
      * @param context        Your application's Context instance (Android).
      * @param sessionManager The SessionManager to use.
      */
-    public SdkBuilder(final Context context, final SessionManager sessionManager) {
+    public SdkBuilder(@NonNull final Context context, @NonNull final SessionManager sessionManager) {
         mContext = context;
         mSessionManager = sessionManager;
     }
@@ -96,7 +97,7 @@ public class SdkBuilder {
      * @param newUrl The URL of the Gini API which is used by the requests of the Gini SDK.
      * @return The builder instance to enable chaining.
      */
-    public SdkBuilder setApiBaseUrl(String newUrl) {
+    public SdkBuilder setApiBaseUrl(@NonNull String newUrl) {
         if (!newUrl.endsWith("/")) {
             newUrl += "/";
         }
@@ -110,7 +111,7 @@ public class SdkBuilder {
      * @param newUrl The URL of the Gini User Center API which is used by the requests of the Gini SDK.
      * @return The builder instance to enable chaining.
      */
-    public SdkBuilder setUserCenterApiBaseUrl(String newUrl) {
+    public SdkBuilder setUserCenterApiBaseUrl(@NonNull String newUrl) {
         if (!newUrl.endsWith("/")) {
             newUrl += "/";
         }
@@ -169,7 +170,7 @@ public class SdkBuilder {
      * @param credentialsStore A credentials store instance (specified by the CredentialsStore interface).
      * @return The builder instance to enable chaining.
      */
-    public SdkBuilder setCredentialsStore(CredentialsStore credentialsStore) {
+    public SdkBuilder setCredentialsStore(@NonNull CredentialsStore credentialsStore) {
         mCredentialsStore = checkNotNull(credentialsStore);
         return this;
     }
@@ -181,7 +182,7 @@ public class SdkBuilder {
      * @param cache A cache instance (specified by the com.android.volley.Cache interface).
      * @return The builder instance to enable chaining.
      */
-    public SdkBuilder setCache(Cache cache) {
+    public SdkBuilder setCache(@NonNull Cache cache) {
         mCache = cache;
         return this;
     }
@@ -201,6 +202,7 @@ public class SdkBuilder {
      *
      * @return The RequestQueue instance.
      */
+    @NonNull
     private synchronized RequestQueue getRequestQueue() {
         if (mRequestQueue == null) {
             RequestQueueBuilder requestQueueBuilder = new RequestQueueBuilder(mContext);
@@ -216,6 +218,7 @@ public class SdkBuilder {
         return mRequestQueue;
     }
 
+    @NonNull
     private List<String> getHostnames() {
         final List<String> hostnames = new ArrayList<>(2);
         try {
@@ -236,6 +239,7 @@ public class SdkBuilder {
      *
      * @return The ApiCommunicator instance.
      */
+    @NonNull
     private synchronized ApiCommunicator getApiCommunicator() {
         if (mApiCommunicator == null) {
             mApiCommunicator = new ApiCommunicator(mApiBaseUrl, getRequestQueue(),
@@ -252,6 +256,7 @@ public class SdkBuilder {
      *
      * @return The CredentialsStore instance.
      */
+    @NonNull
     private synchronized CredentialsStore getCredentialsStore() {
         if (mCredentialsStore == null) {
             SharedPreferences sharedPreferences = mContext.getSharedPreferences("Gini",
@@ -267,6 +272,7 @@ public class SdkBuilder {
      *
      * @return The ApiCommunicator instance.
      */
+    @NonNull
     private synchronized UserCenterAPICommunicator getUserCenterAPICommunicator() {
         if (mUserCenterApiCommunicator == null) {
             mUserCenterApiCommunicator =
@@ -283,6 +289,7 @@ public class SdkBuilder {
      *
      * @return The RetryPolicyFactory instance.
      */
+    @NonNull
     private synchronized RetryPolicyFactory getRetryPolicyFactory() {
         if (mRetryPolicyFactory == null) {
             mRetryPolicyFactory = new DefaultRetryPolicyFactory(mTimeoutInMs, mMaxRetries,
@@ -296,6 +303,7 @@ public class SdkBuilder {
      *
      * @return The UserCenterManager instance.
      */
+    @NonNull
     private synchronized UserCenterManager getUserCenterManager() {
         if (mUserCenterManager == null) {
             mUserCenterManager = new UserCenterManager(getUserCenterAPICommunicator());
@@ -308,6 +316,7 @@ public class SdkBuilder {
      *
      * @return The DocumentTaskManager instance.
      */
+    @NonNull
     private synchronized DocumentTaskManager getDocumentTaskManager() {
         if (mDocumentTaskManager == null) {
             mDocumentTaskManager = new DocumentTaskManager(getApiCommunicator(),
@@ -322,6 +331,7 @@ public class SdkBuilder {
      *
      * @return The SessionManager instance.
      */
+    @NonNull
     public synchronized SessionManager getSessionManager() {
         if (mSessionManager == null) {
             mSessionManager = new AnonymousSessionManager(mEmailDomain, getUserCenterManager(),

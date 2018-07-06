@@ -1,11 +1,16 @@
 package net.gini.android.authorization;
 
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
+
 import android.net.Uri;
+import android.support.test.filters.SmallTest;
 import android.test.InstrumentationTestCase;
 
 import org.json.JSONException;
-
 import org.json.JSONObject;
 import org.mockito.Mockito;
 
@@ -13,12 +18,7 @@ import java.util.Date;
 
 import bolts.Task;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
-
-
+@SmallTest
 public class UserCenterManagerTest extends InstrumentationTestCase {
     private UserCenterManager mUserCenterManager;
     private UserCenterAPICommunicator mMockUserCenterAPICommunicator;

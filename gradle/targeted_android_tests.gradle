@@ -7,6 +7,8 @@ android.libraryVariants.all { variant ->
 Required parameters:
     testTarget - id of the device or emulator to run the tests on
     packageName - package name of the library
+Optional parameter:
+    instrumentArgs - additional arguments for 'am instrument'
 """
         dependsOn "assemble${variant.name.capitalize()}AndroidTest"
         doLast {
@@ -16,9 +18,10 @@ Required parameters:
             if (!project.hasProperty("testTarget")) {
                 throw new IllegalStateException("Missing property testTarget")
             }
+            def instrumentArguments = project.hasProperty("instrumentArgs") ? instrumentArgs : ""
             exec {
                 workingDir "${rootProject.projectDir}"
-                commandLine "scripts/targeted-android-tests.sh", "${module.name}", "${variant.name}", "${packageName}", "${testTarget}"
+                commandLine "scripts/targeted-android-tests.sh", "${module.name}", "${variant.name}", "${packageName}", "${testTarget}", "${instrumentArguments}"
             }
         }
     }

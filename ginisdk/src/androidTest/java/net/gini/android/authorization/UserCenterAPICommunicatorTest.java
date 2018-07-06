@@ -2,11 +2,10 @@ package net.gini.android.authorization;
 
 import static net.gini.android.helpers.TestUtils.areEqualURIQueries;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import android.os.SystemClock;
+import android.support.test.filters.MediumTest;
 import android.test.InstrumentationTestCase;
 
 import com.android.volley.AuthFailureError;
@@ -26,7 +25,7 @@ import java.util.Date;
 
 import bolts.Task;
 
-
+@MediumTest
 public class UserCenterAPICommunicatorTest extends InstrumentationTestCase {
     private UserCenterAPICommunicator apiManager;
     private RequestQueue mRequestQueue;

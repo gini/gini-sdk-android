@@ -11,6 +11,7 @@ import static net.gini.android.helpers.TestUtils.areEqualURIs;
 import static org.mockito.Mockito.verify;
 
 import android.net.Uri;
+import android.support.test.filters.MediumTest;
 import android.test.InstrumentationTestCase;
 
 import com.android.volley.AuthFailureError;
@@ -30,6 +31,7 @@ import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.Map;
 
+@MediumTest
 public class ApiCommunicatorTests extends InstrumentationTestCase {
     private ApiCommunicator mApiCommunicator;
     private RequestQueue mRequestQueue;
@@ -139,7 +141,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         verify(mRequestQueue).add(requestCaptor.capture());
         Map headers = requestCaptor.getValue().getHeaders();
         final String acceptHeader = (String) headers.get("Accept");
-        assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V1));
+        assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V2));
     }
 
     public void testUploadDocumentHasCorrectBody() throws AuthFailureError {
@@ -235,7 +237,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
 
     public void testDeleteDocumentThrowsWithWrongArguments() {
         try {
-            mApiCommunicator.deleteDocument(null, null);
+            mApiCommunicator.deleteDocument((String) null, null);
             fail("Exception not thrown");
         } catch (NullPointerException ignored) {
         }
@@ -247,7 +249,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         }
 
         try {
-            mApiCommunicator.deleteDocument(null, createSession());
+            mApiCommunicator.deleteDocument((String) null, createSession());
             fail("Exception not thrown");
         } catch (NullPointerException ignored) {
         }
@@ -330,7 +332,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
-        assertTrue(((String) request.getHeaders().get("Accept")).contains(MediaTypes.GINI_JSON_V1));
+        assertTrue(((String) request.getHeaders().get("Accept")).contains(MediaTypes.GINI_JSON_V2));
     }
 
     public void testGetExtractionsThrowsWithNullArguments() {
@@ -384,7 +386,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
-        assertTrue(((String) request.getHeaders().get("Accept")).contains(MediaTypes.GINI_JSON_V1));
+        assertTrue(((String) request.getHeaders().get("Accept")).contains(MediaTypes.GINI_JSON_V2));
     }
 
     public void testGetIncubatorExtractionsThrowsWithNullArguments() {
@@ -498,7 +500,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
-        assertTrue(((String) request.getHeaders().get("Accept")).contains(MediaTypes.GINI_JSON_V1));
+        assertTrue(((String) request.getHeaders().get("Accept")).contains(MediaTypes.GINI_JSON_V2));
     }
 
     public void testSendFeedbackThrowsExceptionWithNullArguments() throws JSONException {
@@ -570,7 +572,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
         final String acceptHeader = (String) request.getHeaders().get("Accept");
-        assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V1));
+        assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V2));
     }
 
     public void testGetPreviewThrowsWithNullArguments() {
@@ -655,7 +657,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
         final String acceptHeader = (String) request.getHeaders().get("Accept");
-        assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V1));
+        assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V2));
     }
 
     public void testGetLayoutHasCorrectAuthorizationHeader() throws AuthFailureError {
@@ -690,7 +692,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
         final String acceptHeader = (String) request.getHeaders().get("Accept");
-        assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V1));
+        assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V2));
     }
 
     public void testGetDocumentListHasCorrectAuthorizationHeader() throws AuthFailureError {
@@ -737,7 +739,7 @@ public class ApiCommunicatorTests extends InstrumentationTestCase {
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
         final String acceptHeader = (String) request.getHeaders().get("Accept");
-        assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V1));
+        assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V2));
     }
 
     public void testSearchDocumentsHasCorrectAuthorizationHeader() throws AuthFailureError {

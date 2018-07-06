@@ -1,6 +1,7 @@
 package net.gini.android;
 
 
+import android.support.test.filters.SmallTest;
 import android.test.AndroidTestCase;
 
 import net.gini.android.authorization.Session;
@@ -10,7 +11,7 @@ import org.json.JSONObject;
 
 import java.util.Date;
 
-
+@SmallTest
 public class SessionTest extends AndroidTestCase {
     /** Helper method which creates a valid JSON object that can be used in tests. */
     public JSONObject createTestResponse() throws JSONException{

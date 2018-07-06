@@ -1,12 +1,13 @@
 package net.gini.android.authorization;
 
-import android.content.SharedPreferences;
-import android.test.AndroidTestCase;
-
 import static android.content.Context.MODE_PRIVATE;
 import static android.content.SharedPreferences.Editor;
 
+import android.content.SharedPreferences;
+import android.support.test.filters.SmallTest;
+import android.test.AndroidTestCase;
 
+@SmallTest
 public class SharedPreferencesCredentialsStoreTests extends AndroidTestCase {
 
     private SharedPreferencesCredentialsStore mCredentialsStore;

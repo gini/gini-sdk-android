@@ -19,6 +19,12 @@ uploadArchives {
                     )
                 }
             }
+
+            if (project.hasProperty('mavenLocalRepoUrl')) {
+                repository(url: mavenLocalRepoUrl) {
+                    uniqueVersion = false
+                }
+            }
         }
     }
 }

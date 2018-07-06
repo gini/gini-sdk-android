@@ -6,3 +6,6 @@
 
 *.iml
 **/test.properties
+
+# Visual Studio Code
+.vscode

@@ -34,7 +34,7 @@ pipeline {
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
                     withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
-                        sh "./gradlew ginisdk:targetedDebugAndroidTest -PpackageName=net.gini.android -PtestTarget=emulator-$emulatorPort -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
+                        sh "./gradlew ginisdk:targetedDebugAndroidTest -PpackageName=net.gini.android -PtestTarget=emulator-$emulatorPort -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestUserCenterUri='https://user.gini.net' -PinstrumentArgs='-e size small -e size medium'"
                     }
                 }
             }
@@ -57,7 +57,7 @@ pipeline {
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
                     withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
-                        sh "./gradlew ginisdk:targetedDebugAndroidTest -PpackageName=net.gini.android -PtestTarget=emulator-$emulatorPort -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
+                        sh "./gradlew ginisdk:targetedDebugAndroidTest -PpackageName=net.gini.android -PtestTarget=emulator-$emulatorPort -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestUserCenterUri='https://user.gini.net' -PinstrumentArgs='-e size small -e size medium'"
                     }
                 }
             }
@@ -80,7 +80,7 @@ pipeline {
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
                     withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
-                        sh "./gradlew ginisdk:targetedDebugAndroidTest -PpackageName=net.gini.android -PtestTarget=emulator-$emulatorPort -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
+                        sh "./gradlew ginisdk:targetedDebugAndroidTest -PpackageName=net.gini.android -PtestTarget=emulator-$emulatorPort -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestUserCenterUri='https://user.gini.net' -PinstrumentArgs='-e size small -e size medium'"
                     }
                 }
             }
@@ -98,7 +98,6 @@ pipeline {
         }
         stage('Build Documentation') {
             when {
-                branch 'master'
                 expression {
                   def tag = sh(returnStdout: true, script: 'git tag --contains $(git rev-parse HEAD)').trim()
                   return !tag.isEmpty()
@@ -113,7 +112,6 @@ pipeline {
         }
         stage('Release Documentation') {
             when {
-                branch 'master'
                 expression {
                     def tag = sh(returnStdout: true, script: 'git tag --contains $(git rev-parse HEAD)').trim()
                     return !tag.isEmpty()
@@ -136,7 +134,6 @@ pipeline {
         }
         stage('Release Library') {
             when {
-                branch 'master'
                 expression {
                     def tag = sh(returnStdout: true, script: 'git tag --contains $(git rev-parse HEAD)').trim()
                     return !tag.isEmpty()

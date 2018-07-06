@@ -2,10 +2,12 @@ package net.gini.android;
 
 import static android.graphics.Bitmap.CompressFormat.JPEG;
 
+import static net.gini.android.Utils.CHARSET_UTF8;
 import static net.gini.android.Utils.checkNotNull;
 
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import net.gini.android.authorization.Session;
@@ -23,8 +25,10 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import bolts.Continuation;
 import bolts.Task;
@@ -34,6 +38,8 @@ import bolts.Task;
  * provides high level methods to handle document related tasks easily.
  */
 public class DocumentTaskManager {
+
+    private Map<Document, Boolean> mDocumentPollingsInProgress = new ConcurrentHashMap<>();
 
     /**
      * The available document type hints. See the documentation for more information.
@@ -94,6 +100,195 @@ public class DocumentTaskManager {
             };
 
     /**
+     * Deletes a Gini partial document and all its parent composite documents.
+     * <br>
+     * Partial documents can be deleted only, if they don't belong to any composite documents and
+     * this method deletes the parents before deleting the partial document.
+     *
+     * @param documentId The id of an existing partial document
+     *
+     * @return A Task which will resolve to an empty string.
+     */
+    public Task<String> deletePartialDocumentAndParents(@NonNull final String documentId) {
+        return getDocument(documentId).onSuccessTask(new Continuation<Document, Task<Void>>() {
+            @Override
+            public Task<Void> then(Task<Document> documentTask) throws Exception {
+                final Document document = documentTask.getResult();
+                return deleteDocuments(document.getCompositeDocuments());
+            }
+        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Void, Task<Session>>() {
+            @Override
+            public Task<Session> then(final Task<Void> task) throws Exception {
+                return mSessionManager.getSession();
+            }
+        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Session, Task<String>>() {
+            @Override
+            public Task<String> then(final Task<Session> task) throws Exception {
+                final Session session = task.getResult();
+                return mApiCommunicator.deleteDocument(documentId, session);
+            }
+        });
+    }
+
+    /**
+     * Deletes a Gini document.
+     *
+     * For deleting partial documents use {@link #deletePartialDocumentAndParents(String)} instead.
+     *
+     * @param documentId The id of an existing document
+     *
+     * @return A Task which will resolve to an empty string.
+     */
+    public Task<String> deleteDocument(@NonNull final String documentId) {
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<String>>() {
+            @Override
+            public Task<String> then(final Task<Session> task) throws Exception {
+                final Session session = task.getResult();
+                return mApiCommunicator.deleteDocument(documentId, session);
+            }
+        });
+    }
+
+    private Task<Void> deleteDocuments(@NonNull final List<Uri> documentUris) {
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Void>>() {
+            @Override
+            public Task<Void> then(Task<Session> sessionTask) throws Exception {
+                final Session session = sessionTask.getResult();
+                final List<Task<String>> deleteTasks = new ArrayList<>();
+                for (final Uri documentUri : documentUris) {
+                    deleteTasks.add(mApiCommunicator.deleteDocument(documentUri, session));
+                }
+                return Task.whenAll(deleteTasks);
+            }
+        }, Task.BACKGROUND_EXECUTOR);
+    }
+
+
+
+    /**
+     * Uploads raw data and creates a new Gini partial document.
+     *
+     * @param document     A byte array representing an image, a pdf or UTF-8 encoded text
+     * @param contentType  The media type of the uploaded data
+     * @param filename     Optional the filename of the given document
+     * @param documentType Optional a document type hint. See the documentation for the document type hints for
+     *                     possible values
+     *
+     * @return A Task which will resolve to the Document instance of the freshly created document.
+     */
+    public Task<Document> createPartialDocument(@NonNull final byte[] document, @NonNull final String contentType,
+            @Nullable final String filename, @Nullable final DocumentType documentType) {
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(Task<Session> sessionTask) throws Exception {
+                String apiDoctypeHint = null;
+                if (documentType != null) {
+                    apiDoctypeHint = documentType.getApiDoctypeHint();
+                }
+                final Session session = sessionTask.getResult();
+                final String partialDocumentMediaType = MediaTypes
+                        .forPartialDocument(checkNotNull(contentType));
+                return mApiCommunicator
+                        .uploadDocument(document, partialDocumentMediaType, filename, apiDoctypeHint, session);
+            }
+        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
+            @Override
+            public Task<Document> then(Task<Uri> uploadTask) throws Exception {
+                return getDocument(uploadTask.getResult());
+            }
+        }, Task.BACKGROUND_EXECUTOR);
+    }
+
+    /**
+     * Creates a new Gini composite document.
+     *
+     * @param documents    A list of partial documents which should be part of a multi-page document
+     * @param documentType Optional a document type hint. See the documentation for the document type hints for
+     *                     possible values
+     *
+     * @return A Task which will resolve to the Document instance of the freshly created document.
+     */
+    public Task<Document> createCompositeDocument(@NonNull final List<Document> documents, @Nullable final DocumentType documentType) {
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(Task<Session> sessionTask) throws Exception {
+                String apiDoctypeHint = null;
+                if (documentType != null) {
+                    apiDoctypeHint = documentType.getApiDoctypeHint();
+                }
+                final Session session = sessionTask.getResult();
+                final byte[] compositeJson = createCompositeJson(documents);
+                return mApiCommunicator
+                        .uploadDocument(compositeJson, MediaTypes.GINI_DOCUMENT_JSON_V2, null, apiDoctypeHint, session);
+            }
+        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
+            @Override
+            public Task<Document> then(Task<Uri> uploadTask) throws Exception {
+                return getDocument(uploadTask.getResult());
+            }
+        }, Task.BACKGROUND_EXECUTOR);
+    }
+
+    /**
+     * Creates a new Gini composite document. The input Map must contain the partial documents as keys. These will be
+     * part of the multi-page document. The value for each partial document key is the amount in degrees the document
+     * has been rotated by the user.
+     *
+     * @param documentRotationMap A map of partial documents and their rotation in degrees
+     * @param documentType        Optional a document type hint. See the documentation for the document type hints for
+     *                            possible values
+     *
+     * @return A Task which will resolve to the Document instance of the freshly created document.
+     */
+    public Task<Document> createCompositeDocument(@NonNull final LinkedHashMap<Document, Integer> documentRotationMap, @Nullable final DocumentType documentType) {
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(Task<Session> sessionTask) throws Exception {
+                String apiDoctypeHint = null;
+                if (documentType != null) {
+                    apiDoctypeHint = documentType.getApiDoctypeHint();
+                }
+                final Session session = sessionTask.getResult();
+                final byte[] compositeJson = createCompositeJson(documentRotationMap);
+                return mApiCommunicator
+                        .uploadDocument(compositeJson, MediaTypes.GINI_DOCUMENT_JSON_V2, null, apiDoctypeHint, session);
+            }
+        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
+            @Override
+            public Task<Document> then(Task<Uri> uploadTask) throws Exception {
+                return getDocument(uploadTask.getResult());
+            }
+        }, Task.BACKGROUND_EXECUTOR);
+    }
+
+    private byte[] createCompositeJson(@NonNull final List<Document> documents)
+            throws JSONException {
+        final LinkedHashMap<Document, Integer> documentRotationMap = new LinkedHashMap<>();
+        for (final Document document : documents) {
+            documentRotationMap.put(document, 0);
+        }
+        return createCompositeJson(documentRotationMap);
+    }
+
+    private byte[] createCompositeJson(@NonNull final LinkedHashMap<Document, Integer> documentRotationMap)
+            throws JSONException {
+        final JSONObject jsonObject = new JSONObject();
+        final JSONArray partialDocuments = new JSONArray();
+        for (final Map.Entry<Document, Integer> entry : documentRotationMap.entrySet()) {
+            final Document document = entry.getKey();
+            int rotation = entry.getValue();
+            // Converts input degrees to degrees between [0,360)
+            rotation = ((rotation % 360) + 360) % 360;
+            final JSONObject partialDoc = new JSONObject();
+            partialDoc.put("document", document.getUri());
+            partialDoc.put("rotationDelta", rotation);
+            partialDocuments.put(partialDoc);
+        }
+        jsonObject.put("partialDocuments", partialDocuments);
+        return jsonObject.toString().getBytes(CHARSET_UTF8);
+    }
+
+    /**
      * Uploads raw data and creates a new Gini document.
      *
      * @param document     A byte array representing an image, a pdf or UTF-8 encoded text
@@ -102,9 +297,15 @@ public class DocumentTaskManager {
      *                     possible values.
      *
      * @return A Task which will resolve to the Document instance of the freshly created document.
+     *
+     * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
+     * document and then call {@link #createCompositeDocument(LinkedHashMap, DocumentType)}
+     * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
+     * returned composite document can be used to poll the processing state, to retrieve extractions
+     * and to send feedback.
      */
-    public Task<Document> createDocument(final byte[] document, @Nullable final String filename,
-                                         @Nullable final DocumentType documentType) {
+    public Task<Document> createDocument(@NonNull final byte[] document, @Nullable final String filename,
+            @Nullable final DocumentType documentType) {
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
             @Override
             public Task<Uri> then(Task<Session> sessionTask) throws Exception {
@@ -127,8 +328,6 @@ public class DocumentTaskManager {
     /**
      * Uploads the given photo of a document and creates a new Gini document.
      *
-     * @deprecated Use {@link #createDocument(Bitmap, String, DocumentType)} instead.
-     *
      * @param document        A Bitmap representing the image
      * @param filename        Optional the filename of the given document.
      * @param documentType    Optional a document type hint. See the documentation for the document type hints for
@@ -137,9 +336,15 @@ public class DocumentTaskManager {
      *                        Between 0 and 90.
      *
      * @return A Task which will resolve to the Document instance of the freshly created document.
+     *
+     * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
+     * document and then call {@link #createCompositeDocument(LinkedHashMap, DocumentType)}
+     * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
+     * returned composite document can be used to poll the processing state, to retrieve extractions
+     * and to send feedback.
      */
     @Deprecated
-    public Task<Document> createDocument(final Bitmap document, @Nullable final String filename,
+    public Task<Document> createDocument(@NonNull final Bitmap document, @Nullable final String filename,
                                          @Nullable final String documentType, final int compressionRate) {
         return createDocumentInternal(document, filename, documentType, compressionRate);
     }
@@ -152,8 +357,14 @@ public class DocumentTaskManager {
      * @param documentType    Optional a document type hint.
      *
      * @return A Task which will resolve to the Document instance of the freshly created document.
+     *
+     * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
+     * document and then call {@link #createCompositeDocument(LinkedHashMap, DocumentType)}
+     * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
+     * returned composite document can be used to poll the processing state, to retrieve extractions
+     * and to send feedback.
      */
-    public Task<Document> createDocument(final Bitmap document, @Nullable final String filename,
+    public Task<Document> createDocument(@NonNull final Bitmap document, @Nullable final String filename,
                                           @Nullable final DocumentType documentType) {
         String apiDoctypeHint = null;
         if (documentType != null) {
@@ -162,7 +373,7 @@ public class DocumentTaskManager {
         return createDocumentInternal(document, filename, apiDoctypeHint, DEFAULT_COMPRESSION);
     }
 
-    private Task<Document> createDocumentInternal(final Bitmap document, @Nullable final String filename,
+    private Task<Document> createDocumentInternal(@NonNull final Bitmap document, @Nullable final String filename,
                                          @Nullable final String apiDoctypeHint, final int compressionRate) {
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
             @Override
@@ -192,7 +403,7 @@ public class DocumentTaskManager {
      * <a href="http://developer.gini.net/gini-api/html/document_extractions.html">Gini API documentation</a>
      * for a list of the names of the specific extractions.
      */
-    public Task<Map<String, SpecificExtraction>> getExtractions(final Document document) {
+    public Task<Map<String, SpecificExtraction>> getExtractions(@NonNull final Document document) {
         final String documentId = document.getId();
         return mSessionManager.getSession()
                 .onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
@@ -246,7 +457,7 @@ public class DocumentTaskManager {
      *
      * @return A document instance representing all the document's metadata.
      */
-    public Task<Document> getDocument(final String documentId) {
+    public Task<Document> getDocument(@NonNull final String documentId) {
         checkNotNull(documentId);
         return mSessionManager.getSession()
                 .onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
@@ -270,7 +481,7 @@ public class DocumentTaskManager {
      *
      * @return A document instance representing all the document's metadata.
      */
-    public Task<Document> getDocument(final Uri documentUri) {
+    public Task<Document> getDocument(@NonNull final Uri documentUri) {
         checkNotNull(documentUri);
         return mSessionManager.getSession()
                 .onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
@@ -293,26 +504,45 @@ public class DocumentTaskManager {
      *
      * @param document The document which will be polled.
      */
-    public Task<Document> pollDocument(final Document document) {
+    public Task<Document> pollDocument(@NonNull final Document document) {
         if (document.getState() != Document.ProcessingState.PENDING) {
             return Task.forResult(document);
         }
+        mDocumentPollingsInProgress.put(document, false);
         final String documentId = document.getId();
         return getDocument(documentId).continueWithTask(new Continuation<Document, Task<Document>>() {
             @Override
             public Task<Document> then(Task<Document> task) throws Exception {
                 if (task.isFaulted() || task.isCancelled()
                         || task.getResult().getState() != Document.ProcessingState.PENDING) {
+                    mDocumentPollingsInProgress.remove(document);
                     return task;
                 } else {
-                    // The continuation is executed in a background thread by Bolts, so it does not block the UI
-                    // when we sleep here. Infinite recursions are also prevented by Bolts (the task will then resolve
-                    // to a failure).
-                    Thread.sleep(POLLING_INTERVAL);
-                    return pollDocument(document);
+                    if (mDocumentPollingsInProgress.containsKey(document)
+                            && mDocumentPollingsInProgress.get(document)) {
+                        mDocumentPollingsInProgress.remove(document);
+                        return Task.cancelled();
+                    } else {
+                        // The continuation is executed in a background thread by Bolts, so it does not block the UI
+                        // when we sleep here. Infinite recursions are also prevented by Bolts (the task will then resolve
+                        // to a failure).
+                        Thread.sleep(POLLING_INTERVAL);
+                        return pollDocument(document);
+                    }
                 }
             }
         }, Task.BACKGROUND_EXECUTOR);
+    }
+
+    /**
+     * Cancels document polling.
+     *
+     * @param document The document which is being polled
+     */
+    public void cancelDocumentPolling(@NonNull final Document document) {
+        if (mDocumentPollingsInProgress.containsKey(document)) {
+            mDocumentPollingsInProgress.put(document, true);
+        }
     }
 
     /**
@@ -330,8 +560,8 @@ public class DocumentTaskManager {
      *
      * @throws JSONException When a value of an extraction is not JSON serializable.
      */
-    public Task<Document> sendFeedbackForExtractions(final Document document,
-                                                     final Map<String, SpecificExtraction> extractions)
+    public Task<Document> sendFeedbackForExtractions(@NonNull final Document document,
+            @NonNull final Map<String, SpecificExtraction> extractions)
             throws JSONException {
         final String documentId = document.getId();
         final JSONObject feedbackForExtractions = new JSONObject();
@@ -374,8 +604,8 @@ public class DocumentTaskManager {
      * @return A Task which will resolve to an error ID. This is a unique identifier for your error report
      * and can be used to refer to the reported error towards the Gini support.
      */
-    public Task<String> reportDocument(final Document document, final @Nullable String summary,
-                                       final @Nullable String description) {
+    public Task<String> reportDocument(@NonNull final Document document, @Nullable final String summary,
+            @Nullable final String description) {
         final String documentId = document.getId();
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
             @Override
@@ -400,7 +630,7 @@ public class DocumentTaskManager {
      *
      * @return A task which will resolve to a string containing the layout xml.
      */
-    public Task<JSONObject> getLayout(final Document document) {
+    public Task<JSONObject> getLayout(@NonNull final Document document) {
         final String documentId = document.getId();
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
             @Override
@@ -421,7 +651,7 @@ public class DocumentTaskManager {
      *
      * @throws JSONException If the JSON data does not have the expected structure or if there is invalid data.
      */
-    protected HashMap<String, List<Extraction>> extractionCandidatesFromApiResponse(final JSONObject responseData)
+    protected HashMap<String, List<Extraction>> extractionCandidatesFromApiResponse(@NonNull final JSONObject responseData)
             throws JSONException {
         final HashMap<String, List<Extraction>> candidatesByEntity = new HashMap<String, List<Extraction>>();
 
@@ -449,7 +679,7 @@ public class DocumentTaskManager {
      *
      * @throws JSONException If the JSON data does not have the expected structure or if there is invalid data.
      */
-    protected Extraction extractionFromApiResponse(final JSONObject responseData) throws JSONException {
+    protected Extraction extractionFromApiResponse(@NonNull final JSONObject responseData) throws JSONException {
         final String entity = responseData.getString("entity");
         final String value = responseData.getString("value");
         // The box is optional for some extractions.
@@ -483,7 +713,7 @@ public class DocumentTaskManager {
          * @param documentBitmap A Bitmap representing the image.
          */
         @Deprecated
-        public DocumentUploadBuilder(final Bitmap documentBitmap) {
+        public DocumentUploadBuilder(@NonNull final Bitmap documentBitmap) {
             mDocumentBitmap = documentBitmap;
             mCompressionRate = DocumentTaskManager.DEFAULT_COMPRESSION;
         }
@@ -491,7 +721,7 @@ public class DocumentTaskManager {
         /**
          * Set the document as a byte array. If a {@link Bitmap} was also set, the bitmap will be used.
          */
-        public DocumentUploadBuilder setDocumentBytes(byte[] documentBytes) {
+        public DocumentUploadBuilder setDocumentBytes(@NonNull byte[] documentBytes) {
             this.mDocumentBytes = documentBytes;
             return this;
         }
@@ -499,7 +729,7 @@ public class DocumentTaskManager {
         /**
          * Set the document as a {@link Bitmap}. This bitmap will be used instead of the byte array, if both were set.
          */
-        public DocumentUploadBuilder setDocumentBitmap(Bitmap documentBitmap) {
+        public DocumentUploadBuilder setDocumentBitmap(@NonNull Bitmap documentBitmap) {
             this.mDocumentBitmap = documentBitmap;
             return this;
         }
@@ -507,7 +737,7 @@ public class DocumentTaskManager {
         /**
          * Set the document' s filename.
          */
-        public DocumentUploadBuilder setFilename(final String filename) {
+        public DocumentUploadBuilder setFilename(@NonNull final String filename) {
             mFilename = filename;
             return this;
         }
@@ -519,7 +749,7 @@ public class DocumentTaskManager {
          * @deprecated Use {@link #setDocumentType(DocumentType)} instead.
          */
         @Deprecated
-        public DocumentUploadBuilder setDocumentType(final String documentType) {
+        public DocumentUploadBuilder setDocumentType(@NonNull final String documentType) {
             mDocumentType = documentType;
             return this;
         }
@@ -528,7 +758,7 @@ public class DocumentTaskManager {
          * Set the document's type. (This feature is called document type hint in the Gini API documentation). By
          * providing the doctype, Gini’s document processing is optimized in many ways.
          */
-        public DocumentUploadBuilder setDocumentType(final DocumentType documentType) {
+        public DocumentUploadBuilder setDocumentType(@NonNull final DocumentType documentType) {
             mDocumentTypeHint = documentType;
             return this;
         }
@@ -553,7 +783,7 @@ public class DocumentTaskManager {
          *
          * @return A task which will resolve to a Document instance.
          */
-        public Task<Document> upload(final DocumentTaskManager documentTaskManager) {
+        public Task<Document> upload(@NonNull final DocumentTaskManager documentTaskManager) {
             if (mDocumentBitmap != null) {
                 if (mDocumentTypeHint != null) {
                     return documentTaskManager.createDocument(mDocumentBitmap, mFilename, mDocumentTypeHint);
