@@ -2,6 +2,14 @@
 Changelog
 =========
 
+2.0.0 (2018-07-06)
+=========================
+
+- Support for composite document analysis to analyse document's with multiple pages. A composite
+  document consists of one or more partial documents. For each picture of a document's page a
+  partial document has to be created. Using these a composite document can be created for which
+  extractions may be retrieved after polling has finished.
+
 1.5.0 (2018-02-08)
 ===================
 
