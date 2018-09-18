@@ -8,8 +8,9 @@ Getting started
 First of all: Add the Library to your Build
 ===========================================
 
-The gini sdk is provided as a aar archive. You can integrate it in your gradle based project by adding it as
-dependency. In order to gain access to the aar file, you have to add the Gini Maven repository to your build script.
+The gini sdk is provided as a aar archive. You can integrate it in your gradle based project by
+adding it as dependency. In order to gain access to the aar file, you have to add the Gini Maven
+repository to your build script.
 
 .. code-block:: groovy
 
@@ -31,28 +32,32 @@ Integrating the Gini SDK
 ========================
 
 
-The Gini SDK provides the ``Gini`` class which is a façade to all functionality of the Gini SDK. We recommend using an
-instance of this class singleton-like. By saying singleton-like we mean that you somehow manage to create and keep
-one instance at application start. Instead of creating a new instance every time when you need to interact with the
-Gini API, you reuse this instance. This has the benefits that the SDK can reuse sessions between requests to the
-Gini API which may save a noteworthy number of HTTP requests.
+The Gini SDK provides the ``Gini`` class which is a façade to all functionality of the Gini SDK. We
+recommend using an instance of this class singleton-like. By saying singleton-like we mean that you
+somehow manage to create and keep one instance at application start. Instead of creating a new
+instance every time when you need to interact with the Gini API, you reuse this instance. This has
+the benefits that the SDK can reuse sessions between requests to the Gini API which may save a
+noteworthy number of HTTP requests.
 
 Creating the Gini SDK instance
 ------------------------------
 
-In order to create an instance of the ``Gini`` class, you need both your client id and your client secret. If you don't
-have a client id and client secret yet, you need to register your application with Gini. `See the Gini API documentation
-to find out how to register your Application with Gini <http://developer.gini.net/gini-api/html/guides/oauth2.html#first-of-all-register-your-application-with-gini>`_.
+In order to create an instance of the ``Gini`` class, you need both your client id and your client
+secret. If you don't have a client id and client secret yet, you need to register your application
+with Gini. `See the Gini API documentation to find out how to register your Application with Gini
+<http://developer.gini.net/gini-api/html/guides/oauth2.html#first-of-all-register-your-application-with-gini>`_.
 
-All requests to the Gini API are made on behalf of a user. This means particularly that all created documents are bound
-to a specific user account. But since you are most likely only interested in the results of the semantic document
-analysis and not in a cloud document storage system, the Gini API has the feature of "anonymous users". This means that
-user accounts are created on the fly and the user account is unknown to your application's user.
+All requests to the Gini API are made on behalf of a user. This means particularly that all created
+documents are bound to a specific user account. But since you are most likely only interested in the
+results of the semantic document analysis and not in a cloud document storage system, the Gini API
+has the feature of "anonymous users". This means that user accounts are created on the fly and the
+user account is unknown to your application's user.
 
-The following example describes how to use the Gini API in your application with such anonymous user accounts. To use
-the Gini API, you must create an instance of the ``Gini`` class. The ``Gini`` instance is configured and created with the
-help of the ``SdkBuilder`` class. In this example, the anonymous users are created with the email domain "example.com".
-An example of a username created with this configuration would be ``550e8400-e29b-11d4-a716-446655440000@example.com``
+The following example describes how to use the Gini API in your application with such anonymous user
+accounts. To use the Gini API, you must create an instance of the ``Gini`` class. The ``Gini``
+instance is configured and created with the help of the ``SdkBuilder`` class. In this example, the
+anonymous users are created with the email domain "example.com". An example of a username created
+with this configuration would be ``550e8400-e29b-11d4-a716-446655440000@example.com``
 
 .. code-block:: java
 
@@ -61,9 +66,10 @@ An example of a username created with this configuration would be ``550e8400-e29
     
     ...
     
-    // The Gini instance is a facade to all available managers of the Gini SDK. Configure and create the SDK with
-    // the SdkBuilder.
-    Gini gini = new SdkBuilder(getContext(), "gini-client-id", "GiniClientSecret", "example.com").build();
+    // The Gini instance is a facade to all available managers of the Gini SDK. Configure and 
+    // create the SDK with the SdkBuilder.
+    Gini gini = new SdkBuilder(getContext(), "gini-client-id", "GiniClientSecret", "example.com")
+            .build();
     // The DocumentTaskManager provides the high-level API to work with documents.
     DocumentTaskManager documentManager = gini.getDocumentTaskManager();
 
@@ -73,16 +79,28 @@ Congratulations, you successfully integrated the Gini SDK.
 Public Key Pinning
 ==================
 
-Since version 1.5.0 public key pinning is provided using the `Android Network Security Configuration <https://developer.android.com/training/articles/security-config.html>`_ and `TrustKit <https://github.com/datatheorem/TrustKit-Android>`_. The previous configuration through the `SdkBuilder` was removed.
+Since version 1.5.0 public key pinning is provided using the `Android Network Security Configuration
+<https://developer.android.com/training/articles/security-config.html>`_ and `TrustKit
+<https://github.com/datatheorem/TrustKit-Android>`_. The previous configuration through the
+`SdkBuilder` was removed.
 
-To use public key pinning you need to create an `Android network security configuration <https://developer.android.com/training/articles/security-config.html>`_ xml file. This configuration is supported natively on Android Nougat (API Level 24) and newer. For versions between API Level 17 and 23 the Gini SDK relies on `TrustKit <https://github.com/datatheorem/TrustKit-Android>`_. On API Levels 15 and 16 our own pinning implementation is used.
+To use public key pinning you need to create an `Android network security configuration
+<https://developer.android.com/training/articles/security-config.html>`_ xml file. This
+configuration is supported natively on Android Nougat (API Level 24) and newer. For versions between
+API Level 17 and 23 the Gini SDK relies on `TrustKit
+<https://github.com/datatheorem/TrustKit-Android>`_. On API Levels 15 and 16 our own pinning
+implementation is used.
 
-We recommend reading the `Android Network Security Configuration <https://developer.android.com/training/articles/security-config.html>`_ guide and the `TrustKit limitations for API Levels 17 to 23 <https://github.com/datatheorem/TrustKit-Android#limitations>`_.
+We recommend reading the `Android Network Security Configuration
+<https://developer.android.com/training/articles/security-config.html>`_ guide and the `TrustKit
+limitations for API Levels 17 to 23 <https://github.com/datatheorem/TrustKit-Android#limitations>`_.
 
 Configure Pinning
 -----------------
 
-The following sample configuration shows how to set the public key pin for the two domains the Gini SDK uses by default (``api.gini.net`` and ``user.gini.net``). It should be saved under ``res/xml/network_security_config.xml``:
+The following sample configuration shows how to set the public key pin for the two domains the Gini
+SDK uses by default (``api.gini.net`` and ``user.gini.net``). It should be saved under
+``res/xml/network_security_config.xml``:
 
 .. code-block:: xml
 
@@ -110,21 +128,30 @@ The following sample configuration shows how to set the public key pin for the t
 
 .. note::
 
-    If you set different base urls when instantiating the Gini SDK with the ``SdkBuilder`` make sure you set matching domains in the network security configuration xml.
+    If you set different base urls when instantiating the Gini SDK with the ``SdkBuilder`` make sure
+    you set matching domains in the network security configuration xml.
 
 .. warning::
 
-    The above digests serve as an example only. You should **always** create the digest yourself from the
-    Gini API's public key and use that one (see `Extract Hash From gini.net`_). If you received a digest from us then **always**
-    validate it by comparing it to the digest you created from the public key (see `Extract Hash From Public Key`_). Failing to validate a
-    digest can lead to security vulnerabilities.
+    The above digests serve as an example only. You should **always** create the digest yourself
+    from the Gini API's public key and use that one (see `Extract Hash From gini.net`_). If you
+    received a digest from us then **always** validate it by comparing it to the digest you created
+    from the public key (see `Extract Hash From Public Key`_). Failing to validate a digest may lead
+    to security vulnerabilities.
 
 TrustKit
 --------
 
-The `TrustKit <https://github.com/datatheorem/TrustKit-Android>`_ configuration tag ``<trustkit-config>`` is required in order to disable TrustKit reporting and to enforce public key pinning. This is important because without it TrustKit won't throw ``CertificateExceptions`` if the local public keys didn't match any of the remote ones, effectively disabling pinning. The only downside of enforcing pinning is that two public key hashes are required. In the example above we create and used a "zero" key hash as a placeholder. Setting the same key hash twice won't help since key hashes are stored in a set. Ideally you should use a backup public key hash as the second one.
+The `TrustKit <https://github.com/datatheorem/TrustKit-Android>`_ configuration tag
+``<trustkit-config>`` is required in order to disable TrustKit reporting and to enforce public key
+pinning. This is important because without it TrustKit won't throw ``CertificateExceptions`` if the
+local public keys didn't match any of the remote ones, effectively disabling pinning. The only
+downside of enforcing pinning is that two public key hashes are required. In the example above we
+create and used a "zero" key hash as a placeholder. Setting the same key hash twice won't help since
+key hashes are stored in a set. Ideally you should use a backup public key hash as the second one.
 
-In your ``AndroidManifest.xml`` you need to set the ``android:networkSecurityConfig`` attribute on the ``<application>`` tag to point to the xml:
+In your ``AndroidManifest.xml`` you need to set the ``android:networkSecurityConfig`` attribute on
+the ``<application>`` tag to point to the xml:
 
 .. code-block:: xml
 
@@ -138,7 +165,8 @@ In your ``AndroidManifest.xml`` you need to set the ``android:networkSecurityCon
 Enable Pinning
 --------------
 
-For the Gini SDK to know about the xml you need to set the xml resource id using the ``SdkBuilder#setNetworkSecurityConfigResId()`` method:
+For the Gini SDK to know about the xml you need to set the xml resource id using the
+``SdkBuilder#setNetworkSecurityConfigResId()`` method:
 
 .. code-block:: java
 
@@ -149,7 +177,8 @@ For the Gini SDK to know about the xml you need to set the xml resource id using
 Extract Hash From gini.net
 --------------------------
 
-The current Gini API public key SHA256 hash digest in Base64 encoding can be extracted with the following openssl commands:
+The current Gini API public key SHA256 hash digest in Base64 encoding can be extracted with the
+following openssl commands:
 
 .. code-block:: bash
 
@@ -158,7 +187,8 @@ The current Gini API public key SHA256 hash digest in Base64 encoding can be ext
 Extract Hash From Public Key
 ----------------------------
 
-You can also extract the hash from a public key. The following example shows how to extract it from a public key named ``gini.pub``:
+You can also extract the hash from a public key. The following example shows how to extract it from
+a public key named ``gini.pub``:
 
 .. code-block:: bash
 
