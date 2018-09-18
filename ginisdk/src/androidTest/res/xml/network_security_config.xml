@@ -4,18 +4,18 @@
         <trustkit-config
             disableDefaultReportUri="true"
             enforcePinning="true" />
-        <domain>api.gini.net</domain>
+        <domain includeSubdomains="false">api.gini.net</domain>
         <pin-set>
-            <!-- *.gini.net -->
+            <!-- old *.gini.net public key-->
             <pin digest="SHA-256">yGLLyvZLo2NNXeBNKJwx1PlCtm+YEVU6h2hxVpRa4l4=</pin>
-            <!-- some invalid key created with '$ echo "0" | openssl dgst -sha256 -binary | openssl enc -base64' -->
-            <pin digest="SHA-256">micfKpFrC27mzsskJvCzIG7wdFeL5V2byU9vP+Orhqo=</pin>
+            <!-- new *.gini.net public key, active from around mid August 2018 -->
+            <pin digest="SHA-256">cNzbGowA+LNeQ681yMm8ulHxXiGojHE8qAjI+M7bIxU=</pin>
         </pin-set>
         <domain-config>
             <trustkit-config
                 disableDefaultReportUri="true"
                 enforcePinning="true" />
-            <domain>user.gini.net</domain>
+            <domain includeSubdomains="false">user.gini.net</domain>
         </domain-config>
     </domain-config>
 </network-security-config>

@@ -7,7 +7,7 @@
         <domain>api.gini.net</domain>
         <pin-set>
             <!-- *.gini.net -->
-            <pin digest="SHA-256">yGLLyvZLo2NNXeBNKJwx1PlCtm+YEVU6h2hxVpRa4l4=</pin>
+            <pin digest="SHA-256">cNzbGowA+LNeQ681yMm8ulHxXiGojHE8qAjI+M7bIxU=</pin>
             <!-- fotoueberweisung.net -->
             <pin digest="SHA-256">5MrKlfPJKoIKf+SzQcuOisMuosa5SIo/nh/qFTYTJGs=</pin>
         </pin-set>
