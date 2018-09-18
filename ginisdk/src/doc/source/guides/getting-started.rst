@@ -79,6 +79,9 @@ To use public key pinning you need to create an `Android network security config
 
 We recommend reading the `Android Network Security Configuration <https://developer.android.com/training/articles/security-config.html>`_ guide and the `TrustKit limitations for API Levels 17 to 23 <https://github.com/datatheorem/TrustKit-Android#limitations>`_.
 
+Configure Pinning
+-----------------
+
 The following sample configuration shows how to set the public key pin for the two domains the Gini SDK uses by default (``api.gini.net`` and ``user.gini.net``). It should be saved under ``res/xml/network_security_config.xml``:
 
 .. code-block:: xml
@@ -91,10 +94,10 @@ The following sample configuration shows how to set the public key pin for the t
                 enforcePinning="true" />
             <domain includeSubdomains="false">api.gini.net</domain>
             <pin-set>
-                <!-- *.gini.net public key-->
+                <!-- old *.gini.net public key-->
                 <pin digest="SHA-256">yGLLyvZLo2NNXeBNKJwx1PlCtm+YEVU6h2hxVpRa4l4=</pin>
-                <!-- some invalid key created with '$ echo "0" | openssl dgst -sha256 -binary | openssl enc -base64' -->
-                <pin digest="SHA-256">micfKpFrC27mzsskJvCzIG7wdFeL5V2byU9vP+Orhqo=</pin>
+                <!-- new *.gini.net public key, active from around mid September 2018 -->
+                <pin digest="SHA-256">cNzbGowA+LNeQ681yMm8ulHxXiGojHE8qAjI+M7bIxU=</pin>
             </pin-set>
             <domain-config>
                 <trustkit-config
@@ -109,6 +112,16 @@ The following sample configuration shows how to set the public key pin for the t
 
     If you set different base urls when instantiating the Gini SDK with the ``SdkBuilder`` make sure you set matching domains in the network security configuration xml.
 
+.. warning::
+
+    The above digests serve as an example only. You should **always** create the digest yourself from the
+    Gini API's public key and use that one (see `Extract Hash From gini.net`_). If you received a digest from us then **always**
+    validate it by comparing it to the digest you created from the public key (see `Extract Hash From Public Key`_). Failing to validate a
+    digest can lead to security vulnerabilities.
+
+TrustKit
+--------
+
 The `TrustKit <https://github.com/datatheorem/TrustKit-Android>`_ configuration tag ``<trustkit-config>`` is required in order to disable TrustKit reporting and to enforce public key pinning. This is important because without it TrustKit won't throw ``CertificateExceptions`` if the local public keys didn't match any of the remote ones, effectively disabling pinning. The only downside of enforcing pinning is that two public key hashes are required. In the example above we create and used a "zero" key hash as a placeholder. Setting the same key hash twice won't help since key hashes are stored in a set. Ideally you should use a backup public key hash as the second one.
 
 In your ``AndroidManifest.xml`` you need to set the ``android:networkSecurityConfig`` attribute on the ``<application>`` tag to point to the xml:
@@ -122,6 +135,9 @@ In your ``AndroidManifest.xml`` you need to set the ``android:networkSecurityCon
         ...
     </manifest>
 
+Enable Pinning
+--------------
+
 For the Gini SDK to know about the xml you need to set the xml resource id using the ``SdkBuilder#setNetworkSecurityConfigResId()`` method:
 
 .. code-block:: java
@@ -130,8 +146,20 @@ For the Gini SDK to know about the xml you need to set the xml resource id using
             .setNetworkSecurityConfigResId(R.xml.network_security_config)
             .build();
 
-The Gini API public key SHA256 hash in Base64 encoding can be extracted with the following openssl commands:
+Extract Hash From gini.net
+--------------------------
+
+The current Gini API public key SHA256 hash digest in Base64 encoding can be extracted with the following openssl commands:
 
 .. code-block:: bash
 
     $ openssl s_client -servername gini.net -connect gini.net:443 | openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64
+
+Extract Hash From Public Key
+----------------------------
+
+You can also extract the hash from a public key. The following example shows how to extract it from a public key named ``gini.pub``:
+
+.. code-block:: bash
+
+    $ cat gini.pub | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64
