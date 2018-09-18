@@ -2,8 +2,13 @@
 Changelog
 =========
 
+2.0.1 (2018-09-18)
+==================
+
+- Removed ``allowBackup`` from the manifest.
+
 2.0.0 (2018-07-06)
-=========================
+==================
 
 - Support for composite document analysis to analyse document's with multiple pages. A composite
   document consists of one or more partial documents. For each picture of a document's page a
