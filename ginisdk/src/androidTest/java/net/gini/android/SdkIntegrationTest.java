@@ -15,7 +15,7 @@ import android.util.Log;
 import com.android.volley.toolbox.NoCache;
 
 import net.gini.android.DocumentTaskManager.DocumentUploadBuilder;
-import net.gini.android.authorization.SharedPreferencesCredentialsStore;
+import net.gini.android.authorization.EncryptedCredentialsStore;
 import net.gini.android.authorization.UserCredentials;
 import net.gini.android.helpers.TestUtils;
 import net.gini.android.models.Document;
@@ -155,7 +155,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
     }
 
     public void testDocumentUploadWorksAfterNewUserWasCreatedIfUserWasInvalid() throws IOException, JSONException, InterruptedException {
-        SharedPreferencesCredentialsStore credentialsStore = new SharedPreferencesCredentialsStore(getContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE));
+        EncryptedCredentialsStore credentialsStore = new EncryptedCredentialsStore(getContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE), getContext());
         gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUri).
                 setUserCenterApiBaseUrl(userCenterUri).
@@ -181,7 +181,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
 
     public void testEmailDomainIsUpdatedForExistingUserIfEmailDomainWasChanged() throws IOException, JSONException, InterruptedException {
         // Upload a document to make sure we have a valid user
-        SharedPreferencesCredentialsStore credentialsStore = new SharedPreferencesCredentialsStore(getContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE));
+        EncryptedCredentialsStore credentialsStore = new EncryptedCredentialsStore(getContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE), getContext());
         gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUri).
                 setUserCenterApiBaseUrl(userCenterUri).

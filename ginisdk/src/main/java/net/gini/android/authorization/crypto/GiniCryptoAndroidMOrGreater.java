@@ -5,7 +5,6 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
-import android.util.Base64;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -18,9 +17,7 @@ import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
@@ -36,46 +33,34 @@ public class GiniCryptoAndroidMOrGreater extends GiniCrypto {
     private static final String ANDROID_KEY_STORE = "AndroidKeyStore";
     private static final String SECRET_KEY_ALIAS = "GiniCryptoKey";
     private static final String AES_MODE = "AES/GCM/NoPadding";
-    private static final byte[] FIXED_IV = new byte[12];
 
-    @Override
-    public String encrypt(@NonNull final String text) throws GiniCryptoException {
+    GiniCryptoAndroidMOrGreater() {
+    }
+
+    Cipher createCipher(int cipherOpMode, @NonNull byte[] iv)
+            throws GiniCryptoException {
         try {
-            Cipher cipher = Cipher.getInstance(AES_MODE);
-            cipher.init(Cipher.ENCRYPT_MODE, getSecretKey(), new GCMParameterSpec(128, FIXED_IV));
-            byte[] encodedBytes = cipher.doFinal(text.getBytes());
-            return Base64.encodeToString(encodedBytes, Base64.DEFAULT);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | KeyStoreException
-                | InvalidKeyException | InvalidAlgorithmParameterException
-                | UnrecoverableKeyException | BadPaddingException | NoSuchProviderException
-                | IllegalBlockSizeException | CertificateException | IOException e) {
+            final Cipher cipher = Cipher.getInstance(AES_MODE);
+            cipher.init(cipherOpMode, getSecretKey(), new GCMParameterSpec(128, iv));
+            return cipher;
+        } catch (NoSuchPaddingException | InvalidAlgorithmParameterException | InvalidKeyException
+                | NoSuchAlgorithmException e) {
             throw new GiniCryptoException(e);
         }
     }
 
     @Override
-    public String decrypt(@NonNull final String encrypted) throws GiniCryptoException {
+    Key getSecretKey() throws GiniCryptoException {
         try {
-            Cipher cipher = Cipher.getInstance(AES_MODE);
-            cipher.init(Cipher.DECRYPT_MODE, getSecretKey(), new GCMParameterSpec(128, FIXED_IV));
-            final byte[] encryptedBytes = Base64.decode(encrypted, Base64.DEFAULT);
-            final byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
-            return new String(decryptedBytes);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | KeyStoreException
-                | InvalidKeyException | InvalidAlgorithmParameterException
-                | UnrecoverableKeyException | BadPaddingException | NoSuchProviderException
-                | IllegalBlockSizeException | CertificateException | IOException e) {
+            if (!hasSecretKey()) {
+                generateSecretKey();
+            }
+            return getKeyStore().getKey(SECRET_KEY_ALIAS, null);
+        } catch (IOException | CertificateException | UnrecoverableKeyException
+                | NoSuchAlgorithmException | NoSuchProviderException
+                | InvalidAlgorithmParameterException | KeyStoreException e) {
             throw new GiniCryptoException(e);
         }
-    }
-
-    private Key getSecretKey()
-            throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException,
-            NoSuchProviderException, InvalidAlgorithmParameterException, UnrecoverableKeyException {
-        if (!hasSecretKey()) {
-            generateSecretKey();
-        }
-        return getKeyStore().getKey(SECRET_KEY_ALIAS, null);
     }
 
     private boolean hasSecretKey()

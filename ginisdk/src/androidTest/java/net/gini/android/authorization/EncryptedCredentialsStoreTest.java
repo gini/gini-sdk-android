@@ -111,14 +111,29 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
         assertNull(mCredentialsStore.getUserCredentials());
     }
 
-    public void testSetsEncryptedFlag() {
+    public void testSetsEncryptionVersion() {
         // Given
         final UserCredentials userCredentials = new UserCredentials("testuser@gini.net",
                 "12345678");
         mCredentialsStore.storeUserCredentials(userCredentials);
         // Then
-        final boolean encryptedFlag = mCredentialsStore.mSharedPreferences.getBoolean(
-                EncryptedCredentialsStore.ENCRYPTED_KEY, false);
-        assertTrue(encryptedFlag);
+        final int encryptionVersion = mCredentialsStore.mSharedPreferences.getInt(
+                EncryptedCredentialsStore.ENCRYPTION_VERSION_KEY, 0);
+        assertEquals(encryptionVersion, EncryptedCredentialsStore.ENCRYPTION_VERSION);
+    }
+
+    public void testEncryptionIsDifferentForSameCredentials() {
+        // Given
+        final UserCredentials userCredentials = new UserCredentials("testuser@gini.net",
+                "12345678");
+        mCredentialsStore.storeUserCredentials(userCredentials);
+        final UserCredentials encryptedCredentials1 = mCredentialsStore.mSharedPreferencesCredentialsStore.getUserCredentials();
+        // When
+        mCredentialsStore.storeUserCredentials(userCredentials);
+        final UserCredentials encryptedCredentials2 = mCredentialsStore.mSharedPreferencesCredentialsStore.getUserCredentials();
+        // Then
+        assertTrue(!encryptedCredentials1.getUsername().equals(encryptedCredentials2.getUsername()));
+        assertTrue(!encryptedCredentials1.getPassword().equals(encryptedCredentials2.getPassword()));
+
     }
 }

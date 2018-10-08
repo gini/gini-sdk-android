@@ -17,7 +17,8 @@ import net.gini.android.authorization.crypto.GiniCryptoException;
  */
 public class EncryptedCredentialsStore implements CredentialsStore {
 
-    static final String ENCRYPTED_KEY = "GiniEncrypted";
+    static final String ENCRYPTION_VERSION_KEY = "GiniEncryptionVersion";
+    static final int ENCRYPTION_VERSION = 1;
 
     @VisibleForTesting
     final SharedPreferences mSharedPreferences;
@@ -44,32 +45,31 @@ public class EncryptedCredentialsStore implements CredentialsStore {
     }
 
     private boolean isEncrypted() {
-        return mSharedPreferences.getBoolean(ENCRYPTED_KEY, false);
+        return mSharedPreferences.getInt(ENCRYPTION_VERSION_KEY, 0) != 0;
     }
 
-    private void setEncryptedFlag() {
+    private void setEncryptionVersion() {
         mSharedPreferences.edit()
-                .putBoolean(ENCRYPTED_KEY, true)
+                .putInt(ENCRYPTION_VERSION_KEY, ENCRYPTION_VERSION)
                 .apply();
     }
 
-    private void removeEncryptedFlag() {
+    private void removeEncryptionVersion() {
         mSharedPreferences.edit()
-                .remove(ENCRYPTED_KEY)
+                .remove(ENCRYPTION_VERSION_KEY)
                 .apply();
     }
 
     @Override
     public boolean storeUserCredentials(UserCredentials userCredentials) {
-        final UserCredentials encryptedUserCredentials;
         try {
-            encryptedUserCredentials = new UserCredentials(
+            final UserCredentials encryptedUserCredentials = new UserCredentials(
                     mCrypto.encrypt(userCredentials.getUsername()),
                     mCrypto.encrypt(userCredentials.getPassword()));
             final boolean stored = mSharedPreferencesCredentialsStore.storeUserCredentials(
                     encryptedUserCredentials);
             if (stored) {
-                setEncryptedFlag();
+                setEncryptionVersion();
             }
             return stored;
         } catch (GiniCryptoException ignored) {
@@ -93,7 +93,7 @@ public class EncryptedCredentialsStore implements CredentialsStore {
 
     @Override
     public boolean deleteUserCredentials() {
-        removeEncryptedFlag();
+        removeEncryptionVersion();
         return mSharedPreferencesCredentialsStore.deleteUserCredentials();
     }
 }
