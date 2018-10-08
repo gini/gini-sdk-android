@@ -13,8 +13,8 @@ import com.android.volley.RequestQueue;
 
 import net.gini.android.authorization.AnonymousSessionManager;
 import net.gini.android.authorization.CredentialsStore;
+import net.gini.android.authorization.EncryptedCredentialsStore;
 import net.gini.android.authorization.SessionManager;
-import net.gini.android.authorization.SharedPreferencesCredentialsStore;
 import net.gini.android.authorization.UserCenterAPICommunicator;
 import net.gini.android.authorization.UserCenterManager;
 import net.gini.android.requests.DefaultRetryPolicyFactory;
@@ -261,7 +261,7 @@ public class SdkBuilder {
         if (mCredentialsStore == null) {
             SharedPreferences sharedPreferences = mContext.getSharedPreferences("Gini",
                     Context.MODE_PRIVATE);
-            mCredentialsStore = new SharedPreferencesCredentialsStore(sharedPreferences);
+            mCredentialsStore = new EncryptedCredentialsStore(sharedPreferences, mContext);
         }
         return mCredentialsStore;
     }
