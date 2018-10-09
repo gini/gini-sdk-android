@@ -1,7 +1,5 @@
 package net.gini.android.authorization;
 
-import static net.gini.android.Utils.checkNotNull;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
@@ -27,7 +25,7 @@ public class EncryptedCredentialsStore implements CredentialsStore {
 
     public EncryptedCredentialsStore(@NonNull final SharedPreferences sharedPreferences,
             @NonNull final Context context) {
-        mSharedPreferences = checkNotNull(sharedPreferences);
+        mSharedPreferences = sharedPreferences;
         mSharedPreferencesCredentialsStore = new SharedPreferencesCredentialsStore(
                 sharedPreferences);
         mCrypto = GiniCrypto.newInstance(sharedPreferences, context);

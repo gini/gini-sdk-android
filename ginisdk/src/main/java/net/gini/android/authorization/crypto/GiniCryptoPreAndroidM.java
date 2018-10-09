@@ -1,7 +1,5 @@
 package net.gini.android.authorization.crypto;
 
-import static net.gini.android.Utils.checkNotNull;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.security.KeyPairGeneratorSpec;
@@ -50,8 +48,8 @@ public class GiniCryptoPreAndroidM extends GiniCrypto {
 
     GiniCryptoPreAndroidM(@NonNull final SharedPreferences sharedPreferences,
             @NonNull final Context context) {
-        mSharedPreferences = checkNotNull(sharedPreferences);
-        mContext = checkNotNull(context);
+        mSharedPreferences = sharedPreferences;
+        mContext = context;
     }
 
     Cipher createCipher(int cipherOpMode, @NonNull byte[] iv)
