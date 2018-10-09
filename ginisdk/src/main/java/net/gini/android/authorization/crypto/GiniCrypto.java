@@ -20,6 +20,10 @@ import javax.crypto.IllegalBlockSizeException;
  */
 public abstract class GiniCrypto {
 
+    static final String ANDROID_KEY_STORE = "AndroidKeyStore";
+    static final String SECRET_KEY_ALIAS = "GiniCryptoKey";
+    static final String AES_MODE = "AES/GCM/NoPadding";
+
     public static GiniCrypto newInstance(@NonNull final SharedPreferences sharedPreferences,
             @NonNull final Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

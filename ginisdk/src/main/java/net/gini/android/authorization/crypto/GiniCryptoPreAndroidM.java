@@ -35,13 +35,10 @@ import javax.security.auth.x500.X500Principal;
  *
  * Copyright (c) 2018 Gini GmbH.
  */
-public class GiniCryptoPreAndroidM extends GiniCrypto {
+class GiniCryptoPreAndroidM extends GiniCrypto {
 
-    private static final String ANDROID_KEY_STORE = "AndroidKeyStore";
-    private static final String SECRET_KEY_ALIAS = "GiniCryptoKey";
     private static final String AES_KEY = "GiniKey";
     private static final String RSA_MODE = "RSA/ECB/PKCS1Padding";
-    private static final String AES_MODE = "AES/GCM/NoPadding";
 
     private final SharedPreferences mSharedPreferences;
     private final Context mContext;
