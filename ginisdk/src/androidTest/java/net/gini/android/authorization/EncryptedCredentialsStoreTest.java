@@ -34,12 +34,12 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
         // Given
         final UserCredentials userCredentials = new UserCredentials("testuser@gini.net",
                 "12345678");
-        mCredentialsStore.mSharedPreferencesCredentialsStore.storeUserCredentials(userCredentials);
+        mCredentialsStore.storeUserCredentialsWithoutEncryption(userCredentials);
         // When
         mCredentialsStore.encryptExistingCredentials();
         // Then
         final UserCredentials encryptedUserCredentials =
-                mCredentialsStore.mSharedPreferencesCredentialsStore.getUserCredentials();
+                mCredentialsStore.getEncryptedUserCredentials();
         assertTrue(!userCredentials.getUsername().equals(encryptedUserCredentials.getUsername()));
         assertTrue(!userCredentials.getPassword().equals(encryptedUserCredentials.getPassword()));
     }
@@ -48,7 +48,7 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
         // Given
         final UserCredentials userCredentials = new UserCredentials("testuser@gini.net",
                 "12345678");
-        mCredentialsStore.mSharedPreferencesCredentialsStore.storeUserCredentials(userCredentials);
+        mCredentialsStore.storeUserCredentialsWithoutEncryption(userCredentials);
         // When
         mCredentialsStore.encryptExistingCredentials();
         // Then
@@ -63,12 +63,12 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
                 "12345678");
         mCredentialsStore.storeUserCredentials(userCredentials);
         final UserCredentials encryptedUserCredentialsBefore =
-                mCredentialsStore.mSharedPreferencesCredentialsStore.getUserCredentials();
+                mCredentialsStore.getEncryptedUserCredentials();
         // When
         mCredentialsStore.encryptExistingCredentials();
         // Then
         final UserCredentials encryptedUserCredentialsAfter =
-                mCredentialsStore.mSharedPreferencesCredentialsStore.getUserCredentials();
+                mCredentialsStore.getEncryptedUserCredentials();
         assertEquals(encryptedUserCredentialsBefore.getUsername(),
                 encryptedUserCredentialsAfter.getUsername());
         assertEquals(encryptedUserCredentialsBefore.getPassword(),
@@ -82,7 +82,7 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
         mCredentialsStore.storeUserCredentials(userCredentials);
         // Then
         final UserCredentials encryptedUserCredentials =
-                mCredentialsStore.mSharedPreferencesCredentialsStore.getUserCredentials();
+                mCredentialsStore.getEncryptedUserCredentials();
         assertTrue(!userCredentials.getUsername().equals(encryptedUserCredentials.getUsername()));
         assertTrue(!userCredentials.getPassword().equals(encryptedUserCredentials.getPassword()));
     }
@@ -116,8 +116,7 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
                 "12345678");
         mCredentialsStore.storeUserCredentials(userCredentials);
         // Then
-        final int encryptionVersion = mCredentialsStore.mSharedPreferences.getInt(
-                EncryptedCredentialsStore.ENCRYPTION_VERSION_KEY, 0);
+        final int encryptionVersion = mCredentialsStore.getEncryptionVersion();
         assertEquals(encryptionVersion, EncryptedCredentialsStore.ENCRYPTION_VERSION);
     }
 
@@ -126,10 +125,10 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
         final UserCredentials userCredentials = new UserCredentials("testuser@gini.net",
                 "12345678");
         mCredentialsStore.storeUserCredentials(userCredentials);
-        final UserCredentials encryptedCredentials1 = mCredentialsStore.mSharedPreferencesCredentialsStore.getUserCredentials();
+        final UserCredentials encryptedCredentials1 = mCredentialsStore.getEncryptedUserCredentials();
         // When
         mCredentialsStore.storeUserCredentials(userCredentials);
-        final UserCredentials encryptedCredentials2 = mCredentialsStore.mSharedPreferencesCredentialsStore.getUserCredentials();
+        final UserCredentials encryptedCredentials2 = mCredentialsStore.getEncryptedUserCredentials();
         // Then
         assertTrue(!encryptedCredentials1.getUsername().equals(encryptedCredentials2.getUsername()));
         assertTrue(!encryptedCredentials1.getPassword().equals(encryptedCredentials2.getPassword()));

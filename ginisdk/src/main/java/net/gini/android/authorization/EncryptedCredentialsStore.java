@@ -17,13 +17,12 @@ import net.gini.android.authorization.crypto.GiniCryptoException;
  */
 public class EncryptedCredentialsStore implements CredentialsStore {
 
-    static final String ENCRYPTION_VERSION_KEY = "GiniEncryptionVersion";
+    @VisibleForTesting
     static final int ENCRYPTION_VERSION = 1;
-
-    @VisibleForTesting
-    final SharedPreferences mSharedPreferences;
-    @VisibleForTesting
-    final SharedPreferencesCredentialsStore mSharedPreferencesCredentialsStore;
+    private static final String ENCRYPTION_VERSION_KEY = "GiniEncryptionVersion";
+    
+    private final SharedPreferences mSharedPreferences;
+    private final SharedPreferencesCredentialsStore mSharedPreferencesCredentialsStore;
     private final GiniCrypto mCrypto;
 
     public EncryptedCredentialsStore(@NonNull final SharedPreferences sharedPreferences,
@@ -48,18 +47,6 @@ public class EncryptedCredentialsStore implements CredentialsStore {
         return mSharedPreferences.getInt(ENCRYPTION_VERSION_KEY, 0) != 0;
     }
 
-    private void setEncryptionVersion() {
-        mSharedPreferences.edit()
-                .putInt(ENCRYPTION_VERSION_KEY, ENCRYPTION_VERSION)
-                .apply();
-    }
-
-    private void removeEncryptionVersion() {
-        mSharedPreferences.edit()
-                .remove(ENCRYPTION_VERSION_KEY)
-                .apply();
-    }
-
     @Override
     public boolean storeUserCredentials(UserCredentials userCredentials) {
         try {
@@ -75,6 +62,12 @@ public class EncryptedCredentialsStore implements CredentialsStore {
         } catch (GiniCryptoException ignored) {
         }
         return false;
+    }
+
+    private void setEncryptionVersion() {
+        mSharedPreferences.edit()
+                .putInt(ENCRYPTION_VERSION_KEY, ENCRYPTION_VERSION)
+                .apply();
     }
 
     @Override
@@ -95,5 +88,26 @@ public class EncryptedCredentialsStore implements CredentialsStore {
     public boolean deleteUserCredentials() {
         removeEncryptionVersion();
         return mSharedPreferencesCredentialsStore.deleteUserCredentials();
+    }
+
+    private void removeEncryptionVersion() {
+        mSharedPreferences.edit()
+                .remove(ENCRYPTION_VERSION_KEY)
+                .apply();
+    }
+
+    @VisibleForTesting
+    UserCredentials getEncryptedUserCredentials() {
+        return mSharedPreferencesCredentialsStore.getUserCredentials();
+    }
+
+    @VisibleForTesting
+    void storeUserCredentialsWithoutEncryption(@NonNull final UserCredentials userCredentials) {
+        mSharedPreferencesCredentialsStore.storeUserCredentials(userCredentials);
+    }
+
+    @VisibleForTesting
+    int getEncryptionVersion() {
+        return mSharedPreferences.getInt(ENCRYPTION_VERSION_KEY, 0);
     }
 }
