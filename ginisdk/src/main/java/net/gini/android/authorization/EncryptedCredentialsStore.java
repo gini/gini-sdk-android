@@ -39,6 +39,11 @@ public class EncryptedCredentialsStore implements CredentialsStore {
         }
     }
 
+    @VisibleForTesting
+    GiniCrypto getGiniCrypto() {
+        return mCrypto;
+    }
+
     private boolean isEncrypted() {
         return mSharedPreferences.getInt(ENCRYPTION_VERSION_KEY, 0) != 0;
     }

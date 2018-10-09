@@ -73,7 +73,8 @@ class GiniCryptoPreAndroidM extends GiniCrypto {
         }
     }
 
-    private KeyStore getKeyStore()
+    @Override
+    KeyStore getKeyStore()
             throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
         final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
         keyStore.load(null);

@@ -64,7 +64,8 @@ class GiniCryptoAndroidMOrGreater extends GiniCrypto {
         return getKeyStore().containsAlias(SECRET_KEY_ALIAS);
     }
 
-    private KeyStore getKeyStore()
+    @Override
+    KeyStore getKeyStore()
             throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
         final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
         keyStore.load(null);

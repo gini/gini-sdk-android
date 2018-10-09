@@ -5,6 +5,8 @@ import static android.content.Context.MODE_PRIVATE;
 import android.content.SharedPreferences;
 import android.test.AndroidTestCase;
 
+import net.gini.android.authorization.crypto.GiniCryptoHelper;
+
 /**
  * Created by Alpar Szotyori on 08.10.2018.
  *
@@ -132,6 +134,17 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
         // Then
         assertTrue(!encryptedCredentials1.getUsername().equals(encryptedCredentials2.getUsername()));
         assertTrue(!encryptedCredentials1.getPassword().equals(encryptedCredentials2.getPassword()));
+    }
 
+    public void testReturnsNullCredentialsIfTheEncryptionKeyChanged() throws Exception {
+        // Given
+        final UserCredentials userCredentials = new UserCredentials("testuser@gini.net",
+                "12345678");
+        mCredentialsStore.storeUserCredentials(userCredentials);
+        // When
+        GiniCryptoHelper.deleteSecretKey(mCredentialsStore.getGiniCrypto());
+        // Then
+        final UserCredentials encryptedUserCredentials = mCredentialsStore.getUserCredentials();
+        assertNull(encryptedUserCredentials);
     }
 }
