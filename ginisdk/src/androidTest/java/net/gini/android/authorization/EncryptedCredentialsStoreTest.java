@@ -57,23 +57,22 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
         assertEquals(userCredentials.getPassword(), decryptedUserCredentials.getPassword());
     }
 
-
     public void testDoesNotEncryptAlreadyEncryptedCredentials() {
         // Given
         final UserCredentials userCredentials = new UserCredentials("testuser@gini.net",
                 "12345678");
         mCredentialsStore.storeUserCredentials(userCredentials);
-        final UserCredentials encrpytedUserCredentialsBefore =
+        final UserCredentials encryptedUserCredentialsBefore =
                 mCredentialsStore.mSharedPreferencesCredentialsStore.getUserCredentials();
         // When
         mCredentialsStore.encryptExistingCredentials();
         // Then
-        final UserCredentials encrpytedUserCredentialsAfter =
+        final UserCredentials encryptedUserCredentialsAfter =
                 mCredentialsStore.mSharedPreferencesCredentialsStore.getUserCredentials();
-        assertEquals(encrpytedUserCredentialsBefore.getUsername(),
-                encrpytedUserCredentialsAfter.getUsername());
-        assertEquals(encrpytedUserCredentialsBefore.getPassword(),
-                encrpytedUserCredentialsAfter.getPassword());
+        assertEquals(encryptedUserCredentialsBefore.getUsername(),
+                encryptedUserCredentialsAfter.getUsername());
+        assertEquals(encryptedUserCredentialsBefore.getPassword(),
+                encryptedUserCredentialsAfter.getPassword());
     }
 
     public void testEncryptsCredentials() {
