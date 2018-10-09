@@ -36,7 +36,7 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
                 "12345678");
         mCredentialsStore.storeUserCredentialsWithoutEncryption(userCredentials);
         // When
-        mCredentialsStore.encryptExistingCredentials();
+        mCredentialsStore.encryptExistingPlaintextCredentials();
         // Then
         final UserCredentials encryptedUserCredentials =
                 mCredentialsStore.getEncryptedUserCredentials();
@@ -50,7 +50,7 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
                 "12345678");
         mCredentialsStore.storeUserCredentialsWithoutEncryption(userCredentials);
         // When
-        mCredentialsStore.encryptExistingCredentials();
+        mCredentialsStore.encryptExistingPlaintextCredentials();
         // Then
         final UserCredentials decryptedUserCredentials = mCredentialsStore.getUserCredentials();
         assertEquals(userCredentials.getUsername(), decryptedUserCredentials.getUsername());
@@ -65,7 +65,7 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
         final UserCredentials encryptedUserCredentialsBefore =
                 mCredentialsStore.getEncryptedUserCredentials();
         // When
-        mCredentialsStore.encryptExistingCredentials();
+        mCredentialsStore.encryptExistingPlaintextCredentials();
         // Then
         final UserCredentials encryptedUserCredentialsAfter =
                 mCredentialsStore.getEncryptedUserCredentials();

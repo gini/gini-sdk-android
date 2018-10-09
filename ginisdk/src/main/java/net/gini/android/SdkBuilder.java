@@ -251,7 +251,7 @@ public class SdkBuilder {
     /**
      * Helper method to create (and store) the instance of the CredentialsStore implementation which is used to store
      * user credentials. If the credentials store was previously configured via the builder, the previously configured
-     * instance is used. Otherwise, a net.gini.android.authorization.SharedPreferencesCredentialsStore instance is
+     * instance is used. Otherwise, a net.gini.android.authorization.EncryptedCredentialsStore instance is
      * created by default.
      *
      * @return The CredentialsStore instance.
@@ -261,7 +261,10 @@ public class SdkBuilder {
         if (mCredentialsStore == null) {
             SharedPreferences sharedPreferences = mContext.getSharedPreferences("Gini",
                     Context.MODE_PRIVATE);
-            mCredentialsStore = new EncryptedCredentialsStore(sharedPreferences, mContext);
+            final EncryptedCredentialsStore encryptedCredentialsStore = new EncryptedCredentialsStore(
+                    sharedPreferences, mContext);
+            encryptedCredentialsStore.encryptExistingPlaintextCredentials();
+            mCredentialsStore = encryptedCredentialsStore;
         }
         return mCredentialsStore;
     }

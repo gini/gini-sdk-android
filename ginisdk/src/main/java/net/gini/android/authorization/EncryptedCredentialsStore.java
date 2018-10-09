@@ -29,11 +29,9 @@ public class EncryptedCredentialsStore implements CredentialsStore {
         mSharedPreferencesCredentialsStore = new SharedPreferencesCredentialsStore(
                 sharedPreferences);
         mCrypto = GiniCrypto.newInstance(sharedPreferences, context);
-        encryptExistingCredentials();
     }
 
-    @VisibleForTesting
-    void encryptExistingCredentials() {
+    public void encryptExistingPlaintextCredentials() {
         final UserCredentials userCredentials =
                 mSharedPreferencesCredentialsStore.getUserCredentials();
         if (userCredentials != null && !isEncrypted()) {
