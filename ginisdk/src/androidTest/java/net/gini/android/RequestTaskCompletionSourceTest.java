@@ -8,7 +8,7 @@ import com.android.volley.VolleyError;
 import bolts.Task;
 
 @SmallTest
-public class RequestTaskCompletionSourceTests extends AndroidTestCase {
+public class RequestTaskCompletionSourceTest extends AndroidTestCase {
 
     public void testNewRequestTaskCompletionSource() {
         assertNotNull(RequestTaskCompletionSource.newCompletionSource());

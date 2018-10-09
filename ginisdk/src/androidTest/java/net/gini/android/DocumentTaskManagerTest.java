@@ -44,7 +44,7 @@ import java.util.Map;
 import bolts.Task;
 
 @MediumTest
-public class DocumentTaskManagerTests extends InstrumentationTestCase {
+public class DocumentTaskManagerTest extends InstrumentationTestCase {
 
     private DocumentTaskManager mDocumentTaskManager;
     private SessionManager mSessionManager;
