@@ -468,11 +468,12 @@ public class SdkIntegrationTest extends AndroidTestCase {
         assertEquals("IBAN should be found", "DE96490501010082009697", extractions.get("iban").getValue());
         final String amountToPay = extractions.get("amountToPay").getValue();
         assertTrue("Amount to pay should be found: "
-                        + "expected one of <[145.00:EUR, 77.00:EUR, 588.60:EUR]> but was:<["
+                        + "expected one of <[145.00:EUR, 77.00:EUR, 588.60:EUR, 700.43:EUR]> but was:<["
                         + amountToPay +"]>",
                 amountToPay.equals("145.00:EUR")
                         || amountToPay.equals("77.00:EUR")
-                        || amountToPay.equals("588.60:EUR"));
+                        || amountToPay.equals("588.60:EUR")
+                        || amountToPay.equals("700.43:EUR"));
         assertEquals("BIC should be found", "WELADED1MIN", extractions.get("bic").getValue());
         assertEquals("Payee should be found", "Mindener Stadtwerke GmbH", extractions.get("paymentRecipient").getValue());
         assertEquals("Payment reference should be found", "ReNr TST-00019, KdNr 765432", extractions.get("paymentReference").getValue());
