@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 @SmallTest
-public class DocumentTests extends AndroidTestCase {
+public class DocumentTest extends AndroidTestCase {
 
     private JSONObject createDocumentJSON() throws IOException, JSONException {
         return createDocumentJSON("document.json");

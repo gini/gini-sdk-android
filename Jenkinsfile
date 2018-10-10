@@ -21,7 +21,7 @@ pipeline {
             steps {
                 script {
                     avd.deleteCorrupt()
-                    avd.create("api-16-nexus-5x", "system-images;android-16;google_apis;x86", "Nexus 5X")
+                    avd.create("api-19-nexus-5x", "system-images;android-19;google_apis;x86", "Nexus 5X")
                     avd.create("api-22-nexus-5x", "system-images;android-22;google_apis;x86", "Nexus 5X")
                     avd.create("api-26-nexus-5x", "system-images;android-26;google_apis;x86", "Nexus 5X")
                 }
@@ -73,10 +73,10 @@ pipeline {
                 }
             }
         }
-        stage('Instrumentation Tests - API Level 16') {
+        stage('Instrumentation Tests - API Level 19') {
             steps {
                 script {
-                    def emulatorPort = emulator.start(avd.createName("api-16-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -gpu on -camera-back emulated -no-snapshot-save -no-snapshot-load")
+                    def emulatorPort = emulator.start(avd.createName("api-19-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -gpu on -camera-back emulated -no-snapshot-save -no-snapshot-load")
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
                     withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {

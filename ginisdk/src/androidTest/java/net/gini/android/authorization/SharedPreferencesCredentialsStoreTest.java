@@ -8,7 +8,7 @@ import android.support.test.filters.SmallTest;
 import android.test.AndroidTestCase;
 
 @SmallTest
-public class SharedPreferencesCredentialsStoreTests extends AndroidTestCase {
+public class SharedPreferencesCredentialsStoreTest extends AndroidTestCase {
 
     private SharedPreferencesCredentialsStore mCredentialsStore;
     private SharedPreferences mSharedPreferences;
