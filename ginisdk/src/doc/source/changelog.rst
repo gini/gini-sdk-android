@@ -2,6 +2,15 @@
 Changelog
 =========
 
+2.1.0 (2018-10-12)
+==================
+
+- Anonymous user credentials are encrypted by default. Existing user credentials are automatically
+encrypted on first usage. IMPORTANT: This change affects how credentials are stored only if no
+custom CredentialsStore implementation was set. If you require encryption either don't use a custom
+CredentialsStore or use the ``EncryptedCredentialsStore``.
+- We raised the minimum Android SDK version to 19.
+
 2.0.1 (2018-09-18)
 ==================
 
@@ -19,7 +28,9 @@ Changelog
 ===================
 
 - Min API Level increased to 15.
-- Public key pinning with `Android Network Security Configuration and TrustKit <guides/getting-started.html#public-key-pinning>`_. Previous public key pinning configuration was removed.
+- Public key pinning with `Android Network Security Configuration and TrustKit
+<guides/getting-started.html#public-key-pinning>`_. Previous public key pinning configuration was
+removed.
 
 1.4.3 (2018-02-05)
 ===================

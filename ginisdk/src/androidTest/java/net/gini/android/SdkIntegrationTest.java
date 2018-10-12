@@ -15,7 +15,7 @@ import android.util.Log;
 import com.android.volley.toolbox.NoCache;
 
 import net.gini.android.DocumentTaskManager.DocumentUploadBuilder;
-import net.gini.android.authorization.SharedPreferencesCredentialsStore;
+import net.gini.android.authorization.EncryptedCredentialsStore;
 import net.gini.android.authorization.UserCredentials;
 import net.gini.android.helpers.TestUtils;
 import net.gini.android.models.Document;
@@ -155,7 +155,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
     }
 
     public void testDocumentUploadWorksAfterNewUserWasCreatedIfUserWasInvalid() throws IOException, JSONException, InterruptedException {
-        SharedPreferencesCredentialsStore credentialsStore = new SharedPreferencesCredentialsStore(getContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE));
+        EncryptedCredentialsStore credentialsStore = new EncryptedCredentialsStore(getContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE), getContext());
         gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUri).
                 setUserCenterApiBaseUrl(userCenterUri).
@@ -181,7 +181,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
 
     public void testEmailDomainIsUpdatedForExistingUserIfEmailDomainWasChanged() throws IOException, JSONException, InterruptedException {
         // Upload a document to make sure we have a valid user
-        SharedPreferencesCredentialsStore credentialsStore = new SharedPreferencesCredentialsStore(getContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE));
+        EncryptedCredentialsStore credentialsStore = new EncryptedCredentialsStore(getContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE), getContext());
         gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUri).
                 setUserCenterApiBaseUrl(userCenterUri).
@@ -468,11 +468,12 @@ public class SdkIntegrationTest extends AndroidTestCase {
         assertEquals("IBAN should be found", "DE96490501010082009697", extractions.get("iban").getValue());
         final String amountToPay = extractions.get("amountToPay").getValue();
         assertTrue("Amount to pay should be found: "
-                        + "expected one of <[145.00:EUR, 77.00:EUR, 588.60:EUR]> but was:<["
+                        + "expected one of <[145.00:EUR, 77.00:EUR, 588.60:EUR, 700.43:EUR]> but was:<["
                         + amountToPay +"]>",
                 amountToPay.equals("145.00:EUR")
                         || amountToPay.equals("77.00:EUR")
-                        || amountToPay.equals("588.60:EUR"));
+                        || amountToPay.equals("588.60:EUR")
+                        || amountToPay.equals("700.43:EUR"));
         assertEquals("BIC should be found", "WELADED1MIN", extractions.get("bic").getValue());
         assertEquals("Payee should be found", "Mindener Stadtwerke GmbH", extractions.get("paymentRecipient").getValue());
         assertEquals("Payment reference should be found", "ReNr TST-00019, KdNr 765432", extractions.get("paymentReference").getValue());

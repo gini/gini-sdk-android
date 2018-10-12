@@ -1,15 +1,15 @@
 package net.gini.android.authorization;
 
+import static net.gini.android.Utils.checkNotNull;
+
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-
-import static net.gini.android.Utils.checkNotNull;
 
 
 public class SharedPreferencesCredentialsStore implements CredentialsStore {
 
-    protected static final String USERNAME_KEY = "GiniUsername";
-    protected static final String PASSWORD_KEY = "GiniPassword";
+    static final String USERNAME_KEY = "GiniUsername";
+    static final String PASSWORD_KEY = "GiniPassword";
 
     private final SharedPreferences mSharedPreferences;
 

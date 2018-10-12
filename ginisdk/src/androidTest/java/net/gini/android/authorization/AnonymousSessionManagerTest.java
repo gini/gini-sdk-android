@@ -25,7 +25,7 @@ import java.util.UUID;
 import bolts.Task;
 
 @MediumTest
-public class AnonymousSessionManagerTests extends InstrumentationTestCase {
+public class AnonymousSessionManagerTest extends InstrumentationTestCase {
     private AnonymousSessionManager mAnonymousSessionSessionManager;
     private UserCenterManager mUserCenterManager;
     private CredentialsStore mCredentialsStore;

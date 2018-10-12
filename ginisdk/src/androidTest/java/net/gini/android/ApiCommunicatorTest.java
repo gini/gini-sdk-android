@@ -32,7 +32,7 @@ import java.util.Date;
 import java.util.Map;
 
 @MediumTest
-public class ApiCommunicatorTests extends InstrumentationTestCase {
+public class ApiCommunicatorTest extends InstrumentationTestCase {
     private ApiCommunicator mApiCommunicator;
     private RequestQueue mRequestQueue;
     private RetryPolicyFactory retryPolicyFactory;
