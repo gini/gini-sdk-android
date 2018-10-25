@@ -74,22 +74,22 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
 
     public void testUploadDocumentThrowsWithNullArguments() {
         try {
-            mApiCommunicator.uploadDocument(null, null, null, null, null);
+            mApiCommunicator.uploadDocument(null, null, null, null, null, null);
             fail("Exception not thrown");
         } catch(NullPointerException ignored) {}
 
         try {
-            mApiCommunicator.uploadDocument(null, "image/jpeg", null, null, createSession());
+            mApiCommunicator.uploadDocument(null, "image/jpeg", null, null, createSession(), null);
             fail("Exception not thrown");
         } catch (NullPointerException ignored) {}
 
         try {
-            mApiCommunicator.uploadDocument(createUploadData(), null, null, null, createSession());
+            mApiCommunicator.uploadDocument(createUploadData(), null, null, null, createSession(), null);
             fail("Exception not thrown");
         } catch (NullPointerException ignored) {}
 
         try {
-            mApiCommunicator.uploadDocument(createUploadData(), MediaTypes.IMAGE_JPEG, null, null, null);
+            mApiCommunicator.uploadDocument(createUploadData(), MediaTypes.IMAGE_JPEG, null, null, null, null);
             fail("Exception not thrown");
         } catch (NullPointerException ignored) {}
 
@@ -98,21 +98,21 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
     public void testUploadDocumentReturnsTask() {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
-        assertNotNull(mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session));
+        assertNotNull(mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session, null));
     }
 
     public void testUploadDocumentWithNameReturnsTask() {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
 
-        assertNotNull(mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, "foobar.jpg", session));
+        assertNotNull(mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, "foobar.jpg", session, null));
     }
 
     public void testUploadDocumentHasCorrectAccessToken() throws AuthFailureError {
         final byte[] documentData = createUploadData();
         final Session session = createSession("1234-5678");
 
-        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session);
+        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session, null);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
@@ -124,7 +124,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
 
-        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session);
+        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session, null);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
@@ -135,7 +135,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
 
-        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session);
+        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session, null);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
@@ -148,7 +148,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
 
-        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session);
+        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session, null);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
@@ -160,7 +160,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
 
-        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session);
+        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session, null);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
@@ -174,7 +174,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
 
-        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, "foobar.jpg", null, session);
+        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, "foobar.jpg", null, session, null);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
@@ -187,7 +187,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
 
-        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, "invoice", session);
+        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, "invoice", session, null);
 
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(mRequestQueue).add(requestCaptor.capture());
@@ -751,5 +751,31 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         verify(mRequestQueue).add(requestCaptor.capture());
         final Request request = requestCaptor.getValue();
         assertEquals("BEARER 9999-8888-7777", request.getHeaders().get("Authorization"));
+    }
+
+    public void testDocumentMetadataIsAddedToTheRequestHeaders() throws Exception {
+        final byte[] documentData = createUploadData();
+        final Session session = createSession();
+
+        final DocumentMetadata metadata = new DocumentMetadata();
+        final String branchId = "4321";
+        metadata.setBranchId(branchId);
+        final String customMetadataName = "Test";
+        final String customMetadataValue = "Unit";
+        metadata.add(customMetadataName, customMetadataValue);
+
+        mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session, metadata);
+
+        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+        verify(mRequestQueue).add(requestCaptor.capture());
+        final Request request = requestCaptor.getValue();
+
+        assertTrue(request.getHeaders().containsKey(DocumentMetadata.BRANCH_ID_HEADER_FIELD_NAME));
+        String value = (String) request.getHeaders().get(DocumentMetadata.BRANCH_ID_HEADER_FIELD_NAME);
+        assertEquals(value, branchId);
+
+        assertTrue(request.getHeaders().containsKey(DocumentMetadata.HEADER_FIELD_NAME_PREFIX + customMetadataName));
+        value = (String) request.getHeaders().get(DocumentMetadata.HEADER_FIELD_NAME_PREFIX + customMetadataName);
+        assertEquals(value, customMetadataValue);
     }
 }
