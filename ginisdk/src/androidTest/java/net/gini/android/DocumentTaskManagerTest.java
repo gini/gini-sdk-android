@@ -177,7 +177,7 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
     public void testThatCreateDocumentResolvesToDocument() throws IOException, JSONException, InterruptedException {
         final Uri createdDocumentUri = Uri.parse("https://api.gini.net/documents/1234");
         when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class), any(String.class), any(String.class),
-                                             any(Session.class)))
+                                             any(Session.class), any(DocumentMetadata.class)))
                 .thenReturn(Task.forResult(createdDocumentUri));
         when(mApiCommunicator.getDocument(eq(createdDocumentUri), any(Session.class))).thenReturn(
                 createDocumentJSONTask("1234"));
@@ -193,7 +193,7 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
             throws IOException, JSONException, InterruptedException {
         final Uri createdDocumentUri = Uri.parse("https://api.gini.net/documents/1234");
         when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class), any(String.class), any(String.class),
-                                             any(Session.class)))
+                                             any(Session.class), any(DocumentMetadata.class)))
                 .thenReturn(Task.forResult(Uri.parse("https://api.gini.net/documents/1234")));
         when(mApiCommunicator.getDocument(eq(createdDocumentUri), any(Session.class))).thenReturn(
                 createDocumentJSONTask("1234"));
@@ -203,14 +203,14 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
 
         verify(mApiCommunicator)
                 .uploadDocument(any(byte[].class), eq(MediaTypes.IMAGE_JPEG), eq("foobar.jpg"), eq("invoice"),
-                        eq(mSession));
+                        eq(mSession), any(DocumentMetadata.class));
     }
 
     public void testThatCreatePartialDocumentSetsTheCorrectContentType() throws Exception {
         final Uri createdDocumentUri = Uri.parse("https://api.gini.net/documents/1234");
         when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class),
                 any(String.class), any(String.class),
-                any(Session.class)))
+                any(Session.class), any(DocumentMetadata.class)))
                 .thenReturn(Task.forResult(Uri.parse("https://api.gini.net/documents/1234")));
         when(mApiCommunicator.getDocument(eq(createdDocumentUri), any(Session.class))).thenReturn(
                 createDocumentJSONTask("1234"));
@@ -223,14 +223,14 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
                 .uploadDocument(eq(document),
                         eq("application/vnd.gini.v2.partial+jpeg"), eq("foobar.jpg"),
                         eq("Invoice"),
-                        eq(mSession));
+                        eq(mSession), any(DocumentMetadata.class));
     }
 
     public void testThatCreateCompositeDocumentSetsTheCorrectContentType() throws Exception {
         final Uri createdDocumentUri = Uri.parse("https://api.gini.net/documents/1234");
         when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class),
                 any(String.class), any(String.class),
-                any(Session.class)))
+                any(Session.class), any(DocumentMetadata.class)))
                 .thenReturn(Task.forResult(Uri.parse("https://api.gini.net/documents/1234")));
         when(mApiCommunicator.getDocument(eq(createdDocumentUri), any(Session.class))).thenReturn(
                 createDocumentJSONTask("1234"));
@@ -245,14 +245,14 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
                 .uploadDocument(any(byte[].class),
                         eq("application/vnd.gini.v2.composite+json"), eq((String) null),
                         eq("Invoice"),
-                        eq(mSession));
+                        eq(mSession), any(DocumentMetadata.class));
     }
 
     public void testThatCreateCompositeDocumentUploadsCorrectJson() throws Exception {
         final Uri createdDocumentUri = Uri.parse("https://api.gini.net/documents/1234");
         when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class),
                 any(String.class), any(String.class),
-                any(Session.class)))
+                any(Session.class), any(DocumentMetadata.class)))
                 .thenReturn(Task.forResult(Uri.parse("https://api.gini.net/documents/1234")));
         when(mApiCommunicator.getDocument(eq(createdDocumentUri), any(Session.class))).thenReturn(
                 createDocumentJSONTask("1234"));
@@ -274,14 +274,14 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
                 .uploadDocument(eq(jsonBytes),
                         eq("application/vnd.gini.v2.composite+json"), eq((String) null),
                         eq("Invoice"),
-                        eq(mSession));
+                        eq(mSession), any(DocumentMetadata.class));
     }
 
     public void testThatCreateCompositeDocumentUploadsJsonWithRotation() throws Exception {
         final Uri createdDocumentUri = Uri.parse("https://api.gini.net/documents/1234");
         when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class),
                 any(String.class), any(String.class),
-                any(Session.class)))
+                any(Session.class), any(DocumentMetadata.class)))
                 .thenReturn(Task.forResult(Uri.parse("https://api.gini.net/documents/1234")));
         when(mApiCommunicator.getDocument(eq(createdDocumentUri), any(Session.class))).thenReturn(
                 createDocumentJSONTask("1234"));
@@ -303,14 +303,14 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
                 .uploadDocument(eq(jsonBytes),
                         eq("application/vnd.gini.v2.composite+json"), eq((String) null),
                         eq("Invoice"),
-                        eq(mSession));
+                        eq(mSession), any(DocumentMetadata.class));
     }
 
     public void testThatCreateCompositeDocumentUploadsJsonWithNormalizedRotation() throws Exception {
         final Uri createdDocumentUri = Uri.parse("https://api.gini.net/documents/1234");
         when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class),
                 any(String.class), any(String.class),
-                any(Session.class)))
+                any(Session.class), any(DocumentMetadata.class)))
                 .thenReturn(Task.forResult(Uri.parse("https://api.gini.net/documents/1234")));
         when(mApiCommunicator.getDocument(eq(createdDocumentUri), any(Session.class))).thenReturn(
                 createDocumentJSONTask("1234"));
@@ -332,7 +332,7 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
                 .uploadDocument(eq(jsonBytes),
                         eq("application/vnd.gini.v2.composite+json"), eq((String) null),
                         eq("Invoice"),
-                        eq(mSession));
+                        eq(mSession), any(DocumentMetadata.class));
     }
 
     public void testDeleteDocument() throws Exception {
@@ -734,4 +734,5 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
 
         assertNotNull(responseData);
     }
+
 }

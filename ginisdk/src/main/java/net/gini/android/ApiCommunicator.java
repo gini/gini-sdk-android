@@ -27,6 +27,7 @@ import net.gini.android.requests.RetryPolicyFactory;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,7 +56,7 @@ public class ApiCommunicator {
 
     public Task<Uri> uploadDocument(final byte[] documentData, final String contentType,
                                     @Nullable final String documentName, @Nullable final String docTypeHint,
-                                    final Session session) {
+                                    final Session session, @Nullable final DocumentMetadata documentMetadata) {
 
         final HashMap<String, String> requestQueryData = new HashMap<String, String>();
         if (documentName != null) {
@@ -67,9 +68,16 @@ public class ApiCommunicator {
         final String url = mBaseUri.buildUpon().path("documents/").encodedQuery(mapToUrlEncodedString(requestQueryData))
                 .toString();
         final RequestTaskCompletionSource<Uri> completionSource = RequestTaskCompletionSource.newCompletionSource();
+        final Map<String, String> metadata;
+        if (documentMetadata != null) {
+            metadata = documentMetadata.getMetadata();
+        } else {
+            metadata = Collections.emptyMap();
+        }
         final BearerUploadRequest request =
                 new BearerUploadRequest(POST, url, checkNotNull(documentData), checkNotNull(contentType), session,
-                        completionSource, completionSource, mRetryPolicyFactory.newRetryPolicy());
+                        completionSource, completionSource, mRetryPolicyFactory.newRetryPolicy(),
+                        metadata);
         mRequestQueue.add(request);
 
         return completionSource.getTask();
