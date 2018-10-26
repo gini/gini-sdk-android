@@ -89,7 +89,13 @@ public class DocumentMetadata {
             throw new IllegalArgumentException(
                     "Metadata value is not encodable as ASCII: " + value);
         }
-        mMetadataMap.put(HEADER_FIELD_NAME_PREFIX + name, value);
+        final String completeName;
+        if (name.startsWith(HEADER_FIELD_NAME_PREFIX)) {
+            completeName = name;
+        } else {
+            completeName = HEADER_FIELD_NAME_PREFIX + name;
+        }
+        mMetadataMap.put(completeName, value);
     }
 
     @NonNull
