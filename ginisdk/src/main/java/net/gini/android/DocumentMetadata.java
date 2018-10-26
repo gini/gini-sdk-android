@@ -14,6 +14,12 @@ import java.util.Map;
  *
  * Copyright (c) 2018 Gini GmbH.
  */
+
+/**
+ * Use this class to pass additional information for a document when uploading it to the Gini API.
+ *
+ * <p> Besides the predefined metadata fields you may also add custom fields.
+ */
 public class DocumentMetadata {
 
     @VisibleForTesting
@@ -25,6 +31,9 @@ public class DocumentMetadata {
     private final Map<String, String> mMetadataMap = new HashMap<>();
     private CharsetEncoder mAsciiCharsetEncoder;
 
+    /**
+     * Create a new instance.
+     */
     public DocumentMetadata() {
         try {
             final Charset asciiCharset = Charset.forName("ASCII");
@@ -40,6 +49,12 @@ public class DocumentMetadata {
         mAsciiCharsetEncoder = charsetEncoder;
     }
 
+    /**
+     * Set a branch identifier to associate the document with a particular branch.
+     *
+     * @param branchId an identifier as an ASCII compatible string
+     * @throws IllegalArgumentException if the branchId string cannot be encoded as ASCII
+     */
     public void setBranchId(@NonNull final String branchId) throws IllegalArgumentException {
         if (isASCIIEncodable(branchId)) {
             mMetadataMap.put(BRANCH_ID_HEADER_FIELD_NAME, branchId);
@@ -57,6 +72,14 @@ public class DocumentMetadata {
         return true;
     }
 
+    /**
+     * Add a custom metadata field. If there is already a field with the same name,
+     * the previous value will be overwritten with this one.
+     *
+     * @param name field name as an ASCII compatible string
+     * @param value field value as an ASCII compatible string
+     * @throws IllegalArgumentException if the name or the value cannot be encoded as ASCII
+     */
     public void add(@NonNull final String name, @NonNull final String value)
             throws IllegalArgumentException {
         if (!isASCIIEncodable(name)) {
