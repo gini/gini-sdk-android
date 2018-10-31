@@ -2,6 +2,12 @@
 Changelog
 =========
 
+2.2.0 (2018-10-31)
+==================
+
+- When uploading a document you may pass in predefined and/or custom metadata fields consisting
+  of ASCII key-value pairs.
+
 2.1.0 (2018-10-12)
 ==================
 
