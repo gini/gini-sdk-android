@@ -475,7 +475,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
                         || amountToPay.equals("588.60:EUR")
                         || amountToPay.equals("700.43:EUR"));
         assertEquals("BIC should be found", "WELADED1MIN", extractions.get("bic").getValue());
-        assertEquals("Payee should be found", "Mindener Stadtwerke GmbH", extractions.get("paymentRecipient").getValue());
+        assertTrue("Payement recipient should be found", extractions.get("paymentRecipient").getValue().startsWith("Mindener Stadtwerke"));
         assertEquals("Payment reference should be found", "ReNr TST-00019, KdNr 765432", extractions.get("paymentReference").getValue());
 
         // all extractions are correct, that means we have nothing to correct and will only send positive feedback

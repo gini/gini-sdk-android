@@ -163,8 +163,6 @@ public class DocumentTaskManager {
         }, Task.BACKGROUND_EXECUTOR);
     }
 
-
-
     /**
      * Uploads raw data and creates a new Gini partial document.
      *
@@ -178,7 +176,30 @@ public class DocumentTaskManager {
      */
     public Task<Document> createPartialDocument(@NonNull final byte[] document, @NonNull final String contentType,
             @Nullable final String filename, @Nullable final DocumentType documentType) {
-        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
+        return createPartialDocumentInternal(document, contentType, filename, documentType, null);
+    }
+
+    /**
+     * Uploads raw data and creates a new Gini partial document.
+     *
+     * @param document          A byte array representing an image, a pdf or UTF-8 encoded text
+     * @param contentType       The media type of the uploaded data
+     * @param filename          Optional the filename of the given document
+     * @param documentType      Optional a document type hint. See the documentation for the document type hints for
+     *                          possible values
+     * @param documentMetadata  Additional information related to the document (e.g. the branch id
+     *                          to which the client app belongs)
+     *
+     * @return A Task which will resolve to the Document instance of the freshly created document.
+     */
+    public Task<Document> createPartialDocument(@NonNull final byte[] document, @NonNull final String contentType,
+            @Nullable final String filename, @Nullable final DocumentType documentType, @NonNull final DocumentMetadata documentMetadata) {
+        return createPartialDocumentInternal(document, contentType, filename, documentType, documentMetadata);
+    }
+
+    private Task<Document> createPartialDocumentInternal(@NonNull final byte[] document, @NonNull final String contentType,
+            @Nullable final String filename, @Nullable final DocumentType documentType, @Nullable final DocumentMetadata documentMetadata) {
+        return createDocumentInternal(new Continuation<Session, Task<Uri>>() {
             @Override
             public Task<Uri> then(Task<Session> sessionTask) throws Exception {
                 String apiDoctypeHint = null;
@@ -189,14 +210,9 @@ public class DocumentTaskManager {
                 final String partialDocumentMediaType = MediaTypes
                         .forPartialDocument(checkNotNull(contentType));
                 return mApiCommunicator
-                        .uploadDocument(document, partialDocumentMediaType, filename, apiDoctypeHint, session);
+                        .uploadDocument(document, partialDocumentMediaType, filename, apiDoctypeHint, session, documentMetadata);
             }
-        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
-            @Override
-            public Task<Document> then(Task<Uri> uploadTask) throws Exception {
-                return getDocument(uploadTask.getResult());
-            }
-        }, Task.BACKGROUND_EXECUTOR);
+        });
     }
 
     /**
@@ -219,7 +235,7 @@ public class DocumentTaskManager {
                 final Session session = sessionTask.getResult();
                 final byte[] compositeJson = createCompositeJson(documents);
                 return mApiCommunicator
-                        .uploadDocument(compositeJson, MediaTypes.GINI_DOCUMENT_JSON_V2, null, apiDoctypeHint, session);
+                        .uploadDocument(compositeJson, MediaTypes.GINI_DOCUMENT_JSON_V2, null, apiDoctypeHint, session, null);
             }
         }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
             @Override
@@ -251,7 +267,7 @@ public class DocumentTaskManager {
                 final Session session = sessionTask.getResult();
                 final byte[] compositeJson = createCompositeJson(documentRotationMap);
                 return mApiCommunicator
-                        .uploadDocument(compositeJson, MediaTypes.GINI_DOCUMENT_JSON_V2, null, apiDoctypeHint, session);
+                        .uploadDocument(compositeJson, MediaTypes.GINI_DOCUMENT_JSON_V2, null, apiDoctypeHint, session, null);
             }
         }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
             @Override
@@ -306,7 +322,35 @@ public class DocumentTaskManager {
      */
     public Task<Document> createDocument(@NonNull final byte[] document, @Nullable final String filename,
             @Nullable final DocumentType documentType) {
-        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
+        return createDocumentInternal(document, filename, documentType, null);
+    }
+
+    /**
+     * Uploads raw data and creates a new Gini document.
+     *
+     * @param document          A byte array representing an image, a pdf or UTF-8 encoded text
+     * @param filename          Optional the filename of the given document.
+     * @param documentType      Optional a document type hint. See the documentation for the document type hints for
+     *                          possible values.
+     * @param documentMetadata  Additional information related to the document (e.g. the branch id
+     *                          to which the client app belongs)
+     *
+     * @return A Task which will resolve to the Document instance of the freshly created document.
+     *
+     * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
+     * document and then call {@link #createCompositeDocument(LinkedHashMap, DocumentType)}
+     * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
+     * returned composite document can be used to poll the processing state, to retrieve extractions
+     * and to send feedback.
+     */
+    public Task<Document> createDocument(@NonNull final byte[] document, @Nullable final String filename,
+            @Nullable final DocumentType documentType, @NonNull final DocumentMetadata documentMetadata) {
+        return createDocumentInternal(document, filename, documentType, documentMetadata);
+    }
+
+    private Task<Document> createDocumentInternal(@NonNull final byte[] document, @Nullable final String filename,
+            @Nullable final DocumentType documentType, @Nullable final DocumentMetadata documentMetadata) {
+        return createDocumentInternal(new Continuation<Session, Task<Uri>>() {
             @Override
             public Task<Uri> then(Task<Session> sessionTask) throws Exception {
                 String apiDoctypeHint = null;
@@ -315,14 +359,20 @@ public class DocumentTaskManager {
                 }
                 final Session session = sessionTask.getResult();
                 return mApiCommunicator
-                        .uploadDocument(document, MediaTypes.IMAGE_JPEG, filename, apiDoctypeHint, session);
+                        .uploadDocument(document, MediaTypes.IMAGE_JPEG, filename, apiDoctypeHint, session, documentMetadata);
             }
-        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
-            @Override
-            public Task<Document> then(Task<Uri> uploadTask) throws Exception {
-                return getDocument(uploadTask.getResult());
-            }
-        }, Task.BACKGROUND_EXECUTOR);
+        });
+    }
+
+    private Task<Document> createDocumentInternal(@NonNull final Continuation<Session, Task<Uri>> successContinuation) {
+        return mSessionManager.getSession()
+                .onSuccessTask(successContinuation, Task.BACKGROUND_EXECUTOR)
+                .onSuccessTask(new Continuation<Uri, Task<Document>>() {
+                    @Override
+                    public Task<Document> then(Task<Uri> uploadTask) throws Exception {
+                        return getDocument(uploadTask.getResult());
+                    }
+                }, Task.BACKGROUND_EXECUTOR);
     }
 
     /**
@@ -346,7 +396,33 @@ public class DocumentTaskManager {
     @Deprecated
     public Task<Document> createDocument(@NonNull final Bitmap document, @Nullable final String filename,
                                          @Nullable final String documentType, final int compressionRate) {
-        return createDocumentInternal(document, filename, documentType, compressionRate);
+        return createDocumentInternal(document, filename, documentType, compressionRate, null);
+    }
+
+    /**
+     * Uploads the given photo of a document and creates a new Gini document.
+     *
+     * @param document          A Bitmap representing the image
+     * @param filename          Optional the filename of the given document.
+     * @param documentType      Optional a document type hint. See the documentation for the document type hints for
+     *                          possible values.
+     * @param compressionRate   Optional the compression rate of the created JPEG representation of the document.
+ *                              Between 0 and 90.
+     * @param documentMetadata  Additional information related to the document (e.g. the branch id
+     *                          to which the client app belongs)
+     *
+     * @return A Task which will resolve to the Document instance of the freshly created document.
+     *
+     * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
+     * document and then call {@link #createCompositeDocument(LinkedHashMap, DocumentType)}
+     * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
+     * returned composite document can be used to poll the processing state, to retrieve extractions
+     * and to send feedback.
+     */
+    @Deprecated
+    public Task<Document> createDocument(@NonNull final Bitmap document, @Nullable final String filename,
+            @Nullable final String documentType, final int compressionRate, @NonNull final DocumentMetadata documentMetadata) {
+        return createDocumentInternal(document, filename, documentType, compressionRate, documentMetadata);
     }
 
     /**
@@ -370,12 +446,40 @@ public class DocumentTaskManager {
         if (documentType != null) {
             apiDoctypeHint = documentType.getApiDoctypeHint();
         }
-        return createDocumentInternal(document, filename, apiDoctypeHint, DEFAULT_COMPRESSION);
+        return createDocumentInternal(document, filename, apiDoctypeHint, DEFAULT_COMPRESSION, null);
+    }
+
+    /**
+     * Uploads the given photo of a document and creates a new Gini document.
+     *
+     * @param document          A Bitmap representing the image
+     * @param filename          Optional the filename of the given document.
+     * @param documentType      Optional a document type hint.
+     * @param documentMetadata  Additional information related to the document (e.g. the branch id
+     *                          to which the client app belongs)
+     *
+     * @return A Task which will resolve to the Document instance of the freshly created document.
+     *
+     * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
+     * document and then call {@link #createCompositeDocument(LinkedHashMap, DocumentType)}
+     * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
+     * returned composite document can be used to poll the processing state, to retrieve extractions
+     * and to send feedback.
+     */
+    public Task<Document> createDocument(@NonNull final Bitmap document, @Nullable final String filename,
+            @Nullable final DocumentType documentType, @NonNull final DocumentMetadata documentMetadata) {
+        String apiDoctypeHint = null;
+        if (documentType != null) {
+            apiDoctypeHint = documentType.getApiDoctypeHint();
+        }
+        return createDocumentInternal(document, filename, apiDoctypeHint, DEFAULT_COMPRESSION,
+                documentMetadata);
     }
 
     private Task<Document> createDocumentInternal(@NonNull final Bitmap document, @Nullable final String filename,
-                                         @Nullable final String apiDoctypeHint, final int compressionRate) {
-        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
+                                         @Nullable final String apiDoctypeHint, final int compressionRate,
+            @Nullable final DocumentMetadata documentMetadata) {
+        return createDocumentInternal(new Continuation<Session, Task<Uri>>() {
             @Override
             public Task<Uri> then(Task<Session> sessionTask) throws Exception {
                 final Session session = sessionTask.getResult();
@@ -383,14 +487,9 @@ public class DocumentTaskManager {
                 document.compress(JPEG, compressionRate, documentOutputStream);
                 final byte[] uploadData = documentOutputStream.toByteArray();
                 return mApiCommunicator
-                        .uploadDocument(uploadData, MediaTypes.IMAGE_JPEG, filename, apiDoctypeHint, session);
+                        .uploadDocument(uploadData, MediaTypes.IMAGE_JPEG, filename, apiDoctypeHint, session, documentMetadata);
             }
-        }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
-            @Override
-            public Task<Document> then(Task<Uri> uploadTask) throws Exception {
-                return getDocument(uploadTask.getResult());
-            }
-        }, Task.BACKGROUND_EXECUTOR);
+        });
     }
 
     /**

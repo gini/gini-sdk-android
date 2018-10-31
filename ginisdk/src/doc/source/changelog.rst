@@ -2,13 +2,19 @@
 Changelog
 =========
 
+2.2.0 (2018-10-31)
+==================
+
+- When uploading a document you may pass in predefined and/or custom metadata fields consisting
+  of ASCII key-value pairs.
+
 2.1.0 (2018-10-12)
 ==================
 
 - Anonymous user credentials are encrypted by default. Existing user credentials are automatically
-encrypted on first usage. IMPORTANT: This change affects how credentials are stored only if no
-custom CredentialsStore implementation was set. If you require encryption either don't use a custom
-CredentialsStore or use the ``EncryptedCredentialsStore``.
+  encrypted on first usage. IMPORTANT: This change affects how credentials are stored only if no
+  custom CredentialsStore implementation was set. If you require encryption either don't use a custom
+  CredentialsStore or use the ``EncryptedCredentialsStore``.
 - We raised the minimum Android SDK version to 19.
 
 2.0.1 (2018-09-18)
