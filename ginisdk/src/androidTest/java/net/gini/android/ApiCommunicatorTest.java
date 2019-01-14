@@ -43,7 +43,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         System.setProperty("dexmaker.dexcache", getInstrumentation().getTargetContext().getCacheDir().getPath());
         retryPolicyFactory = new DefaultRetryPolicyFactory();
         mRequestQueue = Mockito.mock(RequestQueue.class);
-        mApiCommunicator = new ApiCommunicator("https://api.gini.net/", mRequestQueue, retryPolicyFactory);
+        mApiCommunicator = new ApiCommunicator("https://api.gini.net/", GiniApiType.DEFAULT, mRequestQueue, retryPolicyFactory);
     }
 
     public byte[] createUploadData() {
@@ -60,13 +60,13 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
 
     public void testConstructionThrowsNullPointerExceptionWithNullArguments() {
         try {
-            new ApiCommunicator(null, null, retryPolicyFactory);
+            new ApiCommunicator(null, null, null, retryPolicyFactory);
             fail("NullPointerException not thrown");
         } catch (NullPointerException ignored) {
         }
 
         try {
-            new ApiCommunicator("https://api.gini.net", null, retryPolicyFactory);
+            new ApiCommunicator("https://api.gini.net", GiniApiType.DEFAULT, null, retryPolicyFactory);
             fail("NullPointerException not thrown");
         } catch (NullPointerException ignored) {
         }

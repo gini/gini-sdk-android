@@ -5,6 +5,7 @@ import android.net.Uri;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 
+import net.gini.android.GiniApiType;
 import net.gini.android.RequestTaskCompletionSource;
 import net.gini.android.authorization.requests.BearerJsonObjectRequest;
 import net.gini.android.authorization.requests.TokenRequest;
@@ -35,12 +36,15 @@ public class UserCenterAPICommunicator {
     final private String mClientId;
     final private String mClientSecret;
     final private RetryPolicyFactory mRetryPolicyFactory;
+    private final GiniApiType mGiniApiType;
 
     public UserCenterAPICommunicator(final RequestQueue requestQueue, final String baseUrl,
+                                     final GiniApiType giniApiType,
                                      final String clientId, final String clientSecret,
                                      final RetryPolicyFactory retryPolicyFactory) {
         mRequestQueue = requestQueue;
         mBaseUrl = baseUrl;
+        mGiniApiType = giniApiType;
         mClientId = clientId;
         mClientSecret = clientSecret;
         this.mRetryPolicyFactory = retryPolicyFactory;
@@ -122,7 +126,7 @@ public class UserCenterAPICommunicator {
         final RequestTaskCompletionSource<JSONObject> completionSource =
                 RequestTaskCompletionSource.newCompletionSource();
         final BearerJsonObjectRequest request =
-                new BearerJsonObjectRequest(GET, userUri.toString(), null, userCenterApiSession, completionSource,
+                new BearerJsonObjectRequest(GET, userUri.toString(), null, userCenterApiSession, mGiniApiType, completionSource,
                         completionSource, mRetryPolicyFactory.newRetryPolicy());
 
         mRequestQueue.add(request);
@@ -194,8 +198,8 @@ public class UserCenterAPICommunicator {
             put("email", newEmail);
         }};
         final BearerJsonObjectRequest request =
-                new BearerJsonObjectRequest(PUT, url, data, userCenterApiSession, completionSource,
-                        completionSource, mRetryPolicyFactory.newRetryPolicy());
+                new BearerJsonObjectRequest(PUT, url, data, userCenterApiSession, mGiniApiType,
+                        completionSource, completionSource, mRetryPolicyFactory.newRetryPolicy());
         mRequestQueue.add(request);
 
         return completionSource.getTask();

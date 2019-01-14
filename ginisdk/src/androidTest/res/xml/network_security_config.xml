@@ -15,6 +15,12 @@
             <trustkit-config
                 disableDefaultReportUri="true"
                 enforcePinning="true" />
+            <domain includeSubdomains="false">accounting-api.gini.net</domain>
+        </domain-config>
+        <domain-config>
+            <trustkit-config
+                disableDefaultReportUri="true"
+                enforcePinning="true" />
             <domain includeSubdomains="false">user.gini.net</domain>
         </domain-config>
     </domain-config>

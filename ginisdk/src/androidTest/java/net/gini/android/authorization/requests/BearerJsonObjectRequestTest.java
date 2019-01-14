@@ -7,6 +7,7 @@ import com.android.volley.RetryPolicy;
 
 import junit.framework.TestCase;
 
+import net.gini.android.GiniApiType;
 import net.gini.android.MediaTypes;
 import net.gini.android.authorization.Session;
 
@@ -27,7 +28,8 @@ public class BearerJsonObjectRequestTest extends TestCase {
 
     public void testAcceptHeader() throws AuthFailureError {
         Session session = new Session("1234-5678-9012", new Date());
-        BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com", null, session, null, null, retryPolicy);
+        BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com",
+                null, session, GiniApiType.DEFAULT, null, null, retryPolicy);
 
         Map<String, String> headers = request.getHeaders();
         assertEquals("application/json, application/vnd.gini.v2+json", headers.get("Accept"));
@@ -37,7 +39,8 @@ public class BearerJsonObjectRequestTest extends TestCase {
         Session session = new Session("1234-5678-9012", new Date());
         JSONObject payload = new JSONObject();
         payload.put("foo", "bar");
-        BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com", payload, session, null, null, retryPolicy);
+        BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com",
+                payload, session, GiniApiType.DEFAULT, null, null, retryPolicy);
 
         assertEquals("application/json; charset=utf-8", request.getBodyContentType());
     }
@@ -46,7 +49,8 @@ public class BearerJsonObjectRequestTest extends TestCase {
         Session session = new Session("1234-5678-9012", new Date());
         JSONObject payload = new JSONObject();
         payload.put("foo", "bar");
-        BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com", payload, session, null, null, retryPolicy, MediaTypes.GINI_JSON_V2);
+        BearerJsonObjectRequest request = new BearerJsonObjectRequest(Request.Method.GET, "https://example.com", payload, session,
+                GiniApiType.DEFAULT,null, null, retryPolicy, MediaTypes.GINI_JSON_V2);
 
         assertEquals(MediaTypes.GINI_JSON_V2, request.getBodyContentType());
     }

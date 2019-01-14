@@ -57,7 +57,7 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
 
         mApiCommunicator = Mockito.mock(ApiCommunicator.class);
         mSessionManager = Mockito.mock(SessionManager.class);
-        mDocumentTaskManager = new DocumentTaskManager(mApiCommunicator, mSessionManager);
+        mDocumentTaskManager = new DocumentTaskManager(mApiCommunicator, mSessionManager, GiniApiType.DEFAULT);
 
         // Always mock the session away since it is not what is tested here.
         mSession = new Session("1234-5678-9012", new Date(new Date().getTime() + 10000));
@@ -156,13 +156,13 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
 
     public void testThatConstructorChecksForNull() {
         try {
-            new DocumentTaskManager(null, null);
+            new DocumentTaskManager(null, null, null);
             fail("Exception not thrown");
         } catch (NullPointerException ignored) {
         }
 
         try {
-            new DocumentTaskManager(mApiCommunicator, null);
+            new DocumentTaskManager(mApiCommunicator, null, null);
             fail("Exception not thrown");
         } catch (NullPointerException ignored) {
         }

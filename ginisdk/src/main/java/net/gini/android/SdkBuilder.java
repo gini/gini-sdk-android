@@ -29,7 +29,7 @@ public class SdkBuilder {
 
     private final Context mContext;
 
-    private String mApiBaseUrl = "https://api.gini.net/";
+    private String mApiBaseUrl;
     private String mUserCenterApiBaseUrl = "https://user.gini.net/";
 
     private String mEmailDomain;
@@ -50,6 +50,7 @@ public class SdkBuilder {
     private float mBackOffMultiplier = DefaultRetryPolicy.DEFAULT_BACKOFF_MULT;
     private RetryPolicyFactory mRetryPolicyFactory;
     private Cache mCache;
+    private GiniApiType mGiniApiType;
 
     /**
      * Constructor to initialize a new builder instance where anonymous Gini users are used. <b>This requires access to
@@ -66,6 +67,7 @@ public class SdkBuilder {
         mEmailDomain = emailDomain;
         mClientSecret = clientSecret;
         mClientId = clientId;
+        mGiniApiType = GiniApiType.DEFAULT;
     }
 
     /**
@@ -78,6 +80,7 @@ public class SdkBuilder {
     public SdkBuilder(@NonNull final Context context, @NonNull final SessionManager sessionManager) {
         mContext = context;
         mSessionManager = sessionManager;
+        mGiniApiType = GiniApiType.DEFAULT;
     }
 
     /**
@@ -116,6 +119,18 @@ public class SdkBuilder {
             newUrl += "/";
         }
         mUserCenterApiBaseUrl = newUrl;
+        return this;
+    }
+
+    /**
+     * Set which Gini API to use. See {@link GiniApiType} for options.
+     *
+     * @param giniApiType the {@link GiniApiType} to be used
+     *
+     * @return The builder instance to enable chaining.
+     */
+    public SdkBuilder setGiniApiType(@NonNull final GiniApiType giniApiType) {
+        mGiniApiType = giniApiType;
         return this;
     }
 
@@ -218,11 +233,15 @@ public class SdkBuilder {
         return mRequestQueue;
     }
 
+    private String getApiBaseUrl() {
+        return mApiBaseUrl != null ? mApiBaseUrl : mGiniApiType.getBaseUrl();
+    }
+
     @NonNull
     private List<String> getHostnames() {
         final List<String> hostnames = new ArrayList<>(2);
         try {
-            hostnames.add(new URL(mApiBaseUrl).getHost());
+            hostnames.add(new URL(getApiBaseUrl()).getHost());
         } catch (MalformedURLException e) {
             throw new RuntimeException("Invalid Gini API base url", e);
         }
@@ -242,7 +261,7 @@ public class SdkBuilder {
     @NonNull
     private synchronized ApiCommunicator getApiCommunicator() {
         if (mApiCommunicator == null) {
-            mApiCommunicator = new ApiCommunicator(mApiBaseUrl, getRequestQueue(),
+            mApiCommunicator = new ApiCommunicator(getApiBaseUrl(), mGiniApiType, getRequestQueue(),
                     getRetryPolicyFactory());
         }
         return mApiCommunicator;
@@ -280,7 +299,7 @@ public class SdkBuilder {
         if (mUserCenterApiCommunicator == null) {
             mUserCenterApiCommunicator =
                     new UserCenterAPICommunicator(getRequestQueue(), mUserCenterApiBaseUrl,
-                            mClientId, mClientSecret,
+                            mGiniApiType, mClientId, mClientSecret,
                             getRetryPolicyFactory());
         }
         return mUserCenterApiCommunicator;
@@ -323,7 +342,7 @@ public class SdkBuilder {
     private synchronized DocumentTaskManager getDocumentTaskManager() {
         if (mDocumentTaskManager == null) {
             mDocumentTaskManager = new DocumentTaskManager(getApiCommunicator(),
-                    getSessionManager());
+                    getSessionManager(), mGiniApiType);
         }
         return mDocumentTaskManager;
     }
