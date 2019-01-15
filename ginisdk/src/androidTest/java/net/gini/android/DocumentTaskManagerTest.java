@@ -232,11 +232,11 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
 
         final byte[] document = new byte[] {0x01, 0x02};
 
-        IllegalStateException exception = null;
+        UnsupportedOperationException exception = null;
         try {
             documentTaskManager.createPartialDocument(document, MediaTypes.IMAGE_JPEG, "foobar.jpg",
                     DocumentType.INVOICE).waitForCompletion();
-        } catch (IllegalStateException e) {
+        } catch (UnsupportedOperationException e) {
             exception = e;
         }
 
@@ -361,10 +361,10 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
         partialDocuments.put(createDocument("1111"), -90);
         partialDocuments.put(createDocument("2222"), 450);
 
-        IllegalStateException exception = null;
+        UnsupportedOperationException exception = null;
         try {
             documentTaskManager.createCompositeDocument(partialDocuments, DocumentType.INVOICE).waitForCompletion();
-        } catch (IllegalStateException e) {
+        } catch (UnsupportedOperationException e) {
             exception = e;
         }
 

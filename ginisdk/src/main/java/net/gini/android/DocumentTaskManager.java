@@ -203,7 +203,7 @@ public class DocumentTaskManager {
     private Task<Document> createPartialDocumentInternal(@NonNull final byte[] document, @NonNull final String contentType,
             @Nullable final String filename, @Nullable final DocumentType documentType, @Nullable final DocumentMetadata documentMetadata) {
         if (!mGiniApiType.getGiniJsonMediaType().equals(MediaTypes.GINI_JSON_V2)) {
-            throw new IllegalStateException("Partial documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.");
+            throw new UnsupportedOperationException("Partial documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.");
         }
         return createDocumentInternal(new Continuation<Session, Task<Uri>>() {
             @Override
@@ -232,7 +232,7 @@ public class DocumentTaskManager {
      */
     public Task<Document> createCompositeDocument(@NonNull final List<Document> documents, @Nullable final DocumentType documentType) {
         if (!mGiniApiType.getGiniJsonMediaType().equals(MediaTypes.GINI_JSON_V2)) {
-            throw new IllegalStateException("Composite documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.");
+            throw new UnsupportedOperationException("Composite documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.");
         }
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
             @Override
@@ -267,7 +267,7 @@ public class DocumentTaskManager {
      */
     public Task<Document> createCompositeDocument(@NonNull final LinkedHashMap<Document, Integer> documentRotationMap, @Nullable final DocumentType documentType) {
         if (!mGiniApiType.getGiniJsonMediaType().equals(MediaTypes.GINI_JSON_V2)) {
-            throw new IllegalStateException("Composite documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.");
+            throw new UnsupportedOperationException("Composite documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.");
         }
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
             @Override
