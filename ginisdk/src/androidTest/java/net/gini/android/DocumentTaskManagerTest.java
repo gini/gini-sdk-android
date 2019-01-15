@@ -226,6 +226,24 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
                         eq(mSession), any(DocumentMetadata.class));
     }
 
+    public void testThatCreatePartialDocumentThrowsExceptionWhenUsingAccountingApiType() throws Exception {
+        final DocumentTaskManager documentTaskManager =
+                new DocumentTaskManager(mApiCommunicator, mSessionManager, GiniApiType.ACCOUNTING);
+
+        final byte[] document = new byte[] {0x01, 0x02};
+
+        IllegalStateException exception = null;
+        try {
+            documentTaskManager.createPartialDocument(document, MediaTypes.IMAGE_JPEG, "foobar.jpg",
+                    DocumentType.INVOICE).waitForCompletion();
+        } catch (IllegalStateException e) {
+            exception = e;
+        }
+
+        assertNotNull(exception);
+        assertEquals("Partial documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.", exception.getMessage());
+    }
+
     public void testThatCreateCompositeDocumentSetsTheCorrectContentType() throws Exception {
         final Uri createdDocumentUri = Uri.parse("https://api.gini.net/documents/1234");
         when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class),
@@ -333,6 +351,25 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
                         eq("application/vnd.gini.v2.composite+json"), eq((String) null),
                         eq("Invoice"),
                         eq(mSession), any(DocumentMetadata.class));
+    }
+
+    public void testThatCreateCompositeDocumentThrowsExceptionWhenUsingAccountingApiType() throws Exception {
+        final DocumentTaskManager documentTaskManager =
+                new DocumentTaskManager(mApiCommunicator, mSessionManager, GiniApiType.ACCOUNTING);
+
+        final LinkedHashMap<Document, Integer> partialDocuments = new LinkedHashMap<>();
+        partialDocuments.put(createDocument("1111"), -90);
+        partialDocuments.put(createDocument("2222"), 450);
+
+        IllegalStateException exception = null;
+        try {
+            documentTaskManager.createCompositeDocument(partialDocuments, DocumentType.INVOICE).waitForCompletion();
+        } catch (IllegalStateException e) {
+            exception = e;
+        }
+
+        assertNotNull(exception);
+        assertEquals("Composite documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.", exception.getMessage());
     }
 
     public void testDeleteDocument() throws Exception {
