@@ -43,4 +43,4 @@ See the [Gini Android SDK documentation](http://developer.gini.net/gini-sdk-andr
 for more details how to use the `DocumentTaskManager`.
 
 
-Copyright (c) 2014-2018, [Gini GmbH](https://www.gini.net/)
+Copyright (c) 2014-2019, [Gini GmbH](https://www.gini.net/)
