@@ -12,6 +12,7 @@ import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 
+import net.gini.android.GiniApiType;
 import net.gini.android.requests.DefaultRetryPolicyFactory;
 import net.gini.android.requests.RetryPolicyFactory;
 
@@ -37,7 +38,7 @@ public class UserCenterAPICommunicatorTest extends InstrumentationTestCase {
         System.setProperty("dexmaker.dexcache", getInstrumentation().getTargetContext().getCacheDir().getPath());
         retryPolicyFactory = new DefaultRetryPolicyFactory();
         mRequestQueue = Mockito.mock(RequestQueue.class);
-        apiManager = new UserCenterAPICommunicator(mRequestQueue, "https://user.gini.net/", "foobar", "1234",
+        apiManager = new UserCenterAPICommunicator(mRequestQueue, "https://user.gini.net/", GiniApiType.DEFAULT, "foobar", "1234",
                 retryPolicyFactory);
     }
 
@@ -119,7 +120,7 @@ public class UserCenterAPICommunicatorTest extends InstrumentationTestCase {
 
     public void testGetUserIdExtractsUserIdFromResponse() throws InterruptedException {
         final String userId = "JohnDoe";
-        apiManager = new UserCenterAPICommunicator(mRequestQueue, "https://user.gini.net/", "foobar", "1234",
+        apiManager = new UserCenterAPICommunicator(mRequestQueue, "https://user.gini.net/", GiniApiType.DEFAULT, "foobar", "1234",
                 retryPolicyFactory) {
             @Override
             Task<JSONObject> getGiniApiSessionTokenInfo(Session giniApiSession) {

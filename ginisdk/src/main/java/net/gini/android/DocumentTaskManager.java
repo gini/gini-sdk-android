@@ -39,6 +39,7 @@ import bolts.Task;
  */
 public class DocumentTaskManager {
 
+    private final GiniApiType mGiniApiType;
     private Map<Document, Boolean> mDocumentPollingsInProgress = new ConcurrentHashMap<>();
 
     /**
@@ -83,9 +84,11 @@ public class DocumentTaskManager {
      */
     private final SessionManager mSessionManager;
 
-    public DocumentTaskManager(final ApiCommunicator apiCommunicator, final SessionManager sessionManager) {
+    public DocumentTaskManager(final ApiCommunicator apiCommunicator, final SessionManager sessionManager,
+            final GiniApiType giniApiType) {
         mApiCommunicator = checkNotNull(apiCommunicator);
         mSessionManager = checkNotNull(sessionManager);
+        mGiniApiType = checkNotNull(giniApiType);
     }
 
     /**
@@ -199,6 +202,9 @@ public class DocumentTaskManager {
 
     private Task<Document> createPartialDocumentInternal(@NonNull final byte[] document, @NonNull final String contentType,
             @Nullable final String filename, @Nullable final DocumentType documentType, @Nullable final DocumentMetadata documentMetadata) {
+        if (!mGiniApiType.getGiniJsonMediaType().equals(MediaTypes.GINI_JSON_V2)) {
+            throw new UnsupportedOperationException("Partial documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.");
+        }
         return createDocumentInternal(new Continuation<Session, Task<Uri>>() {
             @Override
             public Task<Uri> then(Task<Session> sessionTask) throws Exception {
@@ -208,7 +214,7 @@ public class DocumentTaskManager {
                 }
                 final Session session = sessionTask.getResult();
                 final String partialDocumentMediaType = MediaTypes
-                        .forPartialDocument(checkNotNull(contentType));
+                        .forPartialDocument(mGiniApiType.getGiniPartialMediaType(), checkNotNull(contentType));
                 return mApiCommunicator
                         .uploadDocument(document, partialDocumentMediaType, filename, apiDoctypeHint, session, documentMetadata);
             }
@@ -225,6 +231,9 @@ public class DocumentTaskManager {
      * @return A Task which will resolve to the Document instance of the freshly created document.
      */
     public Task<Document> createCompositeDocument(@NonNull final List<Document> documents, @Nullable final DocumentType documentType) {
+        if (!mGiniApiType.getGiniJsonMediaType().equals(MediaTypes.GINI_JSON_V2)) {
+            throw new UnsupportedOperationException("Composite documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.");
+        }
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
             @Override
             public Task<Uri> then(Task<Session> sessionTask) throws Exception {
@@ -235,7 +244,7 @@ public class DocumentTaskManager {
                 final Session session = sessionTask.getResult();
                 final byte[] compositeJson = createCompositeJson(documents);
                 return mApiCommunicator
-                        .uploadDocument(compositeJson, MediaTypes.GINI_DOCUMENT_JSON_V2, null, apiDoctypeHint, session, null);
+                        .uploadDocument(compositeJson, mGiniApiType.getGiniCompositeJsonMediaType(), null, apiDoctypeHint, session, null);
             }
         }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
             @Override
@@ -257,6 +266,9 @@ public class DocumentTaskManager {
      * @return A Task which will resolve to the Document instance of the freshly created document.
      */
     public Task<Document> createCompositeDocument(@NonNull final LinkedHashMap<Document, Integer> documentRotationMap, @Nullable final DocumentType documentType) {
+        if (!mGiniApiType.getGiniJsonMediaType().equals(MediaTypes.GINI_JSON_V2)) {
+            throw new UnsupportedOperationException("Composite documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.");
+        }
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
             @Override
             public Task<Uri> then(Task<Session> sessionTask) throws Exception {
@@ -267,7 +279,7 @@ public class DocumentTaskManager {
                 final Session session = sessionTask.getResult();
                 final byte[] compositeJson = createCompositeJson(documentRotationMap);
                 return mApiCommunicator
-                        .uploadDocument(compositeJson, MediaTypes.GINI_DOCUMENT_JSON_V2, null, apiDoctypeHint, session, null);
+                        .uploadDocument(compositeJson, mGiniApiType.getGiniCompositeJsonMediaType(), null, apiDoctypeHint, session, null);
             }
         }, Task.BACKGROUND_EXECUTOR).onSuccessTask(new Continuation<Uri, Task<Document>>() {
             @Override
@@ -314,7 +326,7 @@ public class DocumentTaskManager {
      *
      * @return A Task which will resolve to the Document instance of the freshly created document.
      *
-     * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
+     * <b>Important:</b> If using the default Gini API, then use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
      * document and then call {@link #createCompositeDocument(LinkedHashMap, DocumentType)}
      * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
      * returned composite document can be used to poll the processing state, to retrieve extractions
@@ -337,7 +349,7 @@ public class DocumentTaskManager {
      *
      * @return A Task which will resolve to the Document instance of the freshly created document.
      *
-     * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
+     * <b>Important:</b> If using the default Gini API, then use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
      * document and then call {@link #createCompositeDocument(LinkedHashMap, DocumentType)}
      * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
      * returned composite document can be used to poll the processing state, to retrieve extractions
@@ -387,11 +399,13 @@ public class DocumentTaskManager {
      *
      * @return A Task which will resolve to the Document instance of the freshly created document.
      *
-     * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
+     * @deprecated If using the default Gini API, then use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
      * document and then call {@link #createCompositeDocument(LinkedHashMap, DocumentType)}
      * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
      * returned composite document can be used to poll the processing state, to retrieve extractions
      * and to send feedback.
+     * <p>
+     * If using the accounting Gini API, then use {@link #createDocument(byte[], String, DocumentType)}.
      */
     @Deprecated
     public Task<Document> createDocument(@NonNull final Bitmap document, @Nullable final String filename,
@@ -407,17 +421,19 @@ public class DocumentTaskManager {
      * @param documentType      Optional a document type hint. See the documentation for the document type hints for
      *                          possible values.
      * @param compressionRate   Optional the compression rate of the created JPEG representation of the document.
- *                              Between 0 and 90.
+     *                          Between 0 and 90.
      * @param documentMetadata  Additional information related to the document (e.g. the branch id
      *                          to which the client app belongs)
      *
      * @return A Task which will resolve to the Document instance of the freshly created document.
      *
-     * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
+     * @deprecated If using the default Gini API, then use {@link #createPartialDocument(byte[], String, String, DocumentType, DocumentMetadata)} to upload the
      * document and then call {@link #createCompositeDocument(LinkedHashMap, DocumentType)}
      * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
      * returned composite document can be used to poll the processing state, to retrieve extractions
      * and to send feedback.
+     * <p>
+     * If using the accounting Gini API, then use {@link #createDocument(byte[], String, DocumentType, DocumentMetadata)}.
      */
     @Deprecated
     public Task<Document> createDocument(@NonNull final Bitmap document, @Nullable final String filename,
@@ -434,11 +450,13 @@ public class DocumentTaskManager {
      *
      * @return A Task which will resolve to the Document instance of the freshly created document.
      *
-     * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
+     * @deprecated If using the default Gini API, then use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
      * document and then call {@link #createCompositeDocument(LinkedHashMap, DocumentType)}
      * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
      * returned composite document can be used to poll the processing state, to retrieve extractions
      * and to send feedback.
+     * <p>
+     * If using the accounting Gini API, then use {@link #createDocument(byte[], String, DocumentType)}.
      */
     public Task<Document> createDocument(@NonNull final Bitmap document, @Nullable final String filename,
                                           @Nullable final DocumentType documentType) {
@@ -460,11 +478,13 @@ public class DocumentTaskManager {
      *
      * @return A Task which will resolve to the Document instance of the freshly created document.
      *
-     * @deprecated Use {@link #createPartialDocument(byte[], String, String, DocumentType)} to upload the
+     * @deprecated If using the default Gini API, then use {@link #createPartialDocument(byte[], String, String, DocumentType, DocumentMetadata)} to upload the
      * document and then call {@link #createCompositeDocument(LinkedHashMap, DocumentType)}
      * (or {@link #createCompositeDocument(List, DocumentType)}) to finish document creation. The
      * returned composite document can be used to poll the processing state, to retrieve extractions
      * and to send feedback.
+     * <p>
+     * If using the accounting Gini API, then use {@link #createDocument(byte[], String, DocumentType, DocumentMetadata)}.
      */
     public Task<Document> createDocument(@NonNull final Bitmap document, @Nullable final String filename,
             @Nullable final DocumentType documentType, @NonNull final DocumentMetadata documentMetadata) {
