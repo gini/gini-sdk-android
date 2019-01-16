@@ -2,6 +2,11 @@
 Changelog
 =========
 
+2.3.0 (2019-01-16)
+==================
+
+- Added support for the Gini Accounting API.
+
 2.2.0 (2018-10-31)
 ==================
 

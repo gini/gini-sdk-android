@@ -81,6 +81,7 @@ task createTestPropertyFile {
         setProperty('testClientId', props, localProperties)
         setProperty('testClientSecret', props, localProperties)
         setProperty('testApiUri', props, localProperties)
+        setProperty('testApiUriAccounting', props, localProperties)
         setProperty('testUserCenterUri', props, localProperties)
 
         propertyFile.withWriter("utf-8") {
