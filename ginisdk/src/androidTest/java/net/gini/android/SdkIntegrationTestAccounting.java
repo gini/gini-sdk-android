@@ -41,6 +41,9 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
     private String clientSecret;
     private String apiUriAccounting;
     private String userCenterUri;
+    private InputStream testDocumentAsStream;
+
+
 
     @Override
     protected void setUp() throws Exception {
@@ -59,6 +62,9 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
         Log.d("TEST", "testApiUriAccounting " + apiUriAccounting);
         Log.d("TEST", "testUserCenterUri " + userCenterUri);
 
+        testDocumentAsStream = assetManager.open("test.jpg");
+        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
+
         resetTrustKit();
 
         gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
@@ -76,33 +82,21 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
     }
 
     public void testDeprecatedProcessDocumentBitmap() throws IOException, InterruptedException, JSONException {
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
         final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder(testDocument).setDocumentType("RemittanceSlip");
-        processDocument(uploadBuilder);
+        analyzeDocumentAndAssertExtractions(uploadBuilder);
     }
 
     public void testProcessDocumentBitmap() throws IOException, InterruptedException, JSONException {
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
         final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        processDocument(uploadBuilder);
+        analyzeDocumentAndAssertExtractions(uploadBuilder);
     }
 
     public void testProcessDocumentByteArray() throws IOException, InterruptedException, JSONException {
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        processDocument(uploadBuilder);
+        analyzeDocumentAndAssertExtractions(uploadBuilder);
     }
 
     public void testProcessDocumentWithCustomCache() throws IOException, JSONException, InterruptedException {
@@ -114,23 +108,15 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
                 setCache(new NoCache()).
                 build();
 
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        processDocument(uploadBuilder);
+        analyzeDocumentAndAssertExtractions(uploadBuilder);
     }
 
     public void testSendFeedback() throws Exception {
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        final Map<Document, Map<String, SpecificExtraction>> documentExtractions = processDocument(
+        final Map<Document, Map<String, SpecificExtraction>> documentExtractions = analyzeDocumentAndAssertExtractions(
                 uploadBuilder);
         final Document document = documentExtractions.keySet().iterator().next();
         final Map<String, SpecificExtraction> extractions = documentExtractions.values().iterator().next();
@@ -166,13 +152,9 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
         UserCredentials invalidUserCredentials = new UserCredentials("invalid@example.com", "1234");
         credentialsStore.storeUserCredentials(invalidUserCredentials);
 
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
         final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        processDocument(uploadBuilder);
+        analyzeDocumentAndAssertExtractions(uploadBuilder);
 
         // Verify that a new user was created
         assertNotSame(invalidUserCredentials.getUsername(), credentialsStore.getUserCredentials().getUsername());
@@ -189,13 +171,9 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
                 setCredentialsStore(credentialsStore).
                 build();
 
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
         final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        processDocument(uploadBuilder);
+        analyzeDocumentAndAssertExtractions(uploadBuilder);
 
         // Create another sdk instance with a new email domain (to simulate an app update)
         // and verify that the new email domain is used
@@ -208,14 +186,13 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
                 setCredentialsStore(credentialsStore).
                 build();
 
-        processDocument(uploadBuilder);
+        analyzeDocumentAndAssertExtractions(uploadBuilder);
 
         UserCredentials newUserCredentials = credentialsStore.getUserCredentials();
         assertEquals(newEmailDomain, extractEmailDomain(newUserCredentials.getUsername()));
     }
 
     public void testPublicKeyPinningWithMatchingPublicKey() throws Exception {
-        resetTrustKit();
         gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
                 setNetworkSecurityConfigResId(net.gini.android.test.R.xml.network_security_config).
                 setApiBaseUrl(apiUriAccounting).
@@ -223,17 +200,13 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
                 setUserCenterApiBaseUrl(userCenterUri).
                 setConnectionTimeoutInMs(60000).
                 build();
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
 
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        processDocument(uploadBuilder);
+        analyzeDocumentAndAssertExtractions(uploadBuilder);
     }
 
     public void testPublicKeyPinningWithCustomCache() throws Exception {
-        resetTrustKit();
         gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
                 setNetworkSecurityConfigResId(net.gini.android.test.R.xml.network_security_config).
                 setApiBaseUrl(apiUriAccounting).
@@ -243,18 +216,13 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
                 setCache(new NoCache()).
                 build();
 
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        processDocument(uploadBuilder);
+        analyzeDocumentAndAssertExtractions(uploadBuilder);
     }
 
     @SdkSuppress(maxSdkVersion = Build.VERSION_CODES.JELLY_BEAN_MR1)
     public void testPublicKeyPinningWithWrongPublicKey() throws Exception {
-        resetTrustKit();
         gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
                 setNetworkSecurityConfigResId(net.gini.android.test.R.xml.wrong_network_security_config).
                 setApiBaseUrl(apiUriAccounting).
@@ -262,10 +230,6 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
                 setUserCenterApiBaseUrl(userCenterUri).
                 setConnectionTimeoutInMs(60000).
                 build();
-
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
 
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
@@ -297,7 +261,6 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
 
     @SdkSuppress(maxSdkVersion = Build.VERSION_CODES.JELLY_BEAN_MR1)
     public void testPublicKeyPinningWithMultiplePublicKeys() throws Exception {
-        resetTrustKit();
         gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
                 setNetworkSecurityConfigResId(net.gini.android.test.R.xml.multiple_keys_network_security_config).
                 setApiBaseUrl(apiUriAccounting).
@@ -306,13 +269,9 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
                 setConnectionTimeoutInMs(60000).
                 build();
 
-        final AssetManager assetManager = getContext().getResources().getAssets();
-        final InputStream testDocumentAsStream = assetManager.open("test.jpg");
-        assertNotNull("test image test.jpg could not be loaded", testDocumentAsStream);
-
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
-        processDocument(uploadBuilder);
+        analyzeDocumentAndAssertExtractions(uploadBuilder);
     }
 
     private String extractEmailDomain(String email) {
@@ -323,7 +282,7 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
         return "";
     }
 
-    private Map<Document, Map<String, SpecificExtraction>> processDocument(DocumentUploadBuilder uploadBuilder) throws InterruptedException, JSONException {
+    private Map<Document, Map<String, SpecificExtraction>> analyzeDocumentAndAssertExtractions(DocumentUploadBuilder uploadBuilder) throws InterruptedException, JSONException {
         final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
 
         final Task<Document> upload = uploadBuilder.upload(documentTaskManager);
