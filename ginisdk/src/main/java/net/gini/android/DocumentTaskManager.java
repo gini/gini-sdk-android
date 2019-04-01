@@ -49,6 +49,7 @@ public class DocumentTaskManager {
         BANK_STATEMENT("BankStatement"),
         CONTRACT("Contract"),
         INVOICE("Invoice"),
+        RECEIPT("Receipt"),
         REMINDER("Reminder"),
         REMITTANCE_SLIP("RemittanceSlip"),
         TRAVEL_EXPENSE_REPORT("TravelExpenseReport"),
