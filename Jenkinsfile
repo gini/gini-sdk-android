@@ -140,10 +140,10 @@ pipeline {
                 sh './gradlew ginisdk:buildReleaseZip'
                 archiveArtifacts 'ginisdk/build/distributions/*.zip'
                 sh '''
-                    ./gradlew ginisdk:uploadArchives 
-                    -PmavenSnapshotsRepoUrl=https://repo.gini.net/nexus/content/repositories/snapshots
-                     -PrepoUser=$NEXUS_MAVEN_USR 
-                     -PrepoPassword=$NEXUS_MAVEN_PSW
+                    ./gradlew ginisdk:uploadArchives \
+                    -PmavenSnapshotsRepoUrl=https://repo.gini.net/nexus/content/repositories/snapshots \
+                    -PrepoUser=$NEXUS_MAVEN_USR \
+                    -PrepoPassword=$NEXUS_MAVEN_PSW
                 '''
             }
         }
