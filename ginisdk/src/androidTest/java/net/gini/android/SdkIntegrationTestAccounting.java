@@ -14,6 +14,8 @@ import android.util.Log;
 
 import com.android.volley.toolbox.NoCache;
 
+import junit.framework.TestCase;
+
 import net.gini.android.DocumentTaskManager.DocumentUploadBuilder;
 import net.gini.android.authorization.EncryptedCredentialsStore;
 import net.gini.android.authorization.UserCredentials;
@@ -124,9 +126,7 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
         // All extractions are correct, that means we have nothing to correct and will only send positive feedback
         // we should only send feedback for extractions we have seen and accepted
         final Map<String, SpecificExtraction> feedback = new HashMap<>();
-        feedback.put("iban", extractions.get("iban"));
         feedback.put("amountToPay", extractions.get("amountToPay"));
-        feedback.put("bic", extractions.get("bic"));
         feedback.put("senderName", extractions.get("senderName"));
 
         final Task<Document> sendFeedback = gini.getDocumentTaskManager().sendFeedbackForExtractions(document, feedback);
@@ -310,9 +310,7 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
 
         final Map<String, SpecificExtraction> extractions = retrieveExtractions.getResult();
 
-        assertEquals("IBAN should be found", "DE78370501980020008850", extractions.get("iban").getValue());
         assertEquals("Amount to pay should be found", "1.00:EUR", extractions.get("amountToPay").getValue());
-        assertEquals("BIC should be found", "COLSDE33", extractions.get("bic").getValue());
         assertEquals("Payee should be found", "Uno Flüchtlingshilfe", extractions.get("senderName").getValue());
 
         return Collections.singletonMap(upload.getResult(), extractions);

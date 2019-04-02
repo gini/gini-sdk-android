@@ -20,6 +20,16 @@ uploadArchives {
                 }
             }
 
+            if (project.hasProperty('mavenSnapshotsRepoUrl')) {
+                repository(url: mavenSnapshotsRepoUrl) {
+                    authentication(
+                            userName: project.hasProperty('repoUser') ? repoUser : 'invalidUserName',
+                            password: project.hasProperty('repoPassword') ? repoPassword : 'invalidPassword'
+                    )
+                    uniqueVersion = false
+                }
+            }
+
             if (project.hasProperty('mavenLocalRepoUrl')) {
                 repository(url: mavenLocalRepoUrl) {
                     uniqueVersion = false
