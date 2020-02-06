@@ -772,4 +772,35 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
         assertNotNull(responseData);
     }
 
+    public void testGetExtractionsParsesLineItems() throws Exception {
+        when(mApiCommunicator.getExtractions(eq("1234"), any(Session.class))).thenReturn(createExtractionsJSONTask());
+        Document document = new Document("1234", Document.ProcessingState.COMPLETED, "foobar", 1, new Date(),
+                Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
+
+        Task<Map<String, SpecificExtraction>> extractionsTask = mDocumentTaskManager.getExtractions(document);
+        extractionsTask.waitForCompletion();
+        if (extractionsTask.isFaulted()) {
+            throw extractionsTask.getError();
+        }
+        final Map<String, SpecificExtraction> extractions = extractionsTask.getResult();
+        assertNotNull(extractions);
+
+        final SpecificExtraction lineItems = extractions.get("lineItems");
+        assertNotNull(lineItems);
+
+        final List<SpecificExtraction> lineItemExtractions = lineItems.getSpecificExtractions();
+        assertEquals(3, lineItemExtractions.size());
+
+        final List<SpecificExtraction> lineItemExtractionColumns = lineItemExtractions.get(0).getSpecificExtractions();
+        assertEquals(4, lineItemExtractionColumns.size());
+
+        assertEquals("artNumber", lineItemExtractionColumns.get(0).getName());
+        assertEquals("description", lineItemExtractionColumns.get(1).getName());
+        assertEquals("grossPrice", lineItemExtractionColumns.get(2).getName());
+        assertEquals("quantity", lineItemExtractionColumns.get(3).getName());
+
+        assertEquals("H0422S039-M11000L000", lineItemExtractionColumns.get(0).getValue());
+        assertEquals("idnumber", lineItemExtractionColumns.get(0).getEntity());
+    }
 }
