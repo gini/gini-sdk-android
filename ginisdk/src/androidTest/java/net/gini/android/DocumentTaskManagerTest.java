@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -795,12 +796,24 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
         final List<SpecificExtraction> lineItemExtractionColumns = lineItemExtractions.get(0).getSpecificExtractions();
         assertEquals(4, lineItemExtractionColumns.size());
 
-        assertEquals("artNumber", lineItemExtractionColumns.get(0).getName());
-        assertEquals("description", lineItemExtractionColumns.get(1).getName());
-        assertEquals("grossPrice", lineItemExtractionColumns.get(2).getName());
-        assertEquals("quantity", lineItemExtractionColumns.get(3).getName());
+        SpecificExtraction artNumberColumn = null;
 
-        assertEquals("H0422S039-M11000L000", lineItemExtractionColumns.get(0).getValue());
-        assertEquals("idnumber", lineItemExtractionColumns.get(0).getEntity());
+        final List<String> columnNames = Arrays.asList("artNumber", "description", "grossPrice", "quantity");
+        for (final String columnName : columnNames) {
+            boolean found = false;
+            for (final SpecificExtraction lineItemExtractionColumn : lineItemExtractionColumns) {
+                if (lineItemExtractionColumn.getName().equals(columnName)) {
+                    if (columnName.equals("artNumber")) {
+                        artNumberColumn = lineItemExtractionColumn;
+                    }
+                    found = true;
+                    break;
+                }
+            }
+            assertTrue(found);
+        }
+
+        assertEquals("H0422S039-M11000L000", artNumberColumn.getValue());
+        assertEquals("idnumber", artNumberColumn.getEntity());
     }
 }
