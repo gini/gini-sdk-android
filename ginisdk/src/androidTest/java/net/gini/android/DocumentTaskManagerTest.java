@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -772,4 +773,47 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
         assertNotNull(responseData);
     }
 
+    public void testGetExtractionsParsesLineItems() throws Exception {
+        when(mApiCommunicator.getExtractions(eq("1234"), any(Session.class))).thenReturn(createExtractionsJSONTask());
+        Document document = new Document("1234", Document.ProcessingState.COMPLETED, "foobar", 1, new Date(),
+                Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
+
+        Task<Map<String, SpecificExtraction>> extractionsTask = mDocumentTaskManager.getExtractions(document);
+        extractionsTask.waitForCompletion();
+        if (extractionsTask.isFaulted()) {
+            throw extractionsTask.getError();
+        }
+        final Map<String, SpecificExtraction> extractions = extractionsTask.getResult();
+        assertNotNull(extractions);
+
+        final SpecificExtraction lineItems = extractions.get("lineItems");
+        assertNotNull(lineItems);
+
+        final List<SpecificExtraction> lineItemExtractions = lineItems.getSpecificExtractions();
+        assertEquals(3, lineItemExtractions.size());
+
+        final List<SpecificExtraction> lineItemExtractionColumns = lineItemExtractions.get(0).getSpecificExtractions();
+        assertEquals(4, lineItemExtractionColumns.size());
+
+        SpecificExtraction artNumberColumn = null;
+
+        final List<String> columnNames = Arrays.asList("artNumber", "description", "grossPrice", "quantity");
+        for (final String columnName : columnNames) {
+            boolean found = false;
+            for (final SpecificExtraction lineItemExtractionColumn : lineItemExtractionColumns) {
+                if (lineItemExtractionColumn.getName().equals(columnName)) {
+                    if (columnName.equals("artNumber")) {
+                        artNumberColumn = lineItemExtractionColumn;
+                    }
+                    found = true;
+                    break;
+                }
+            }
+            assertTrue(found);
+        }
+
+        assertEquals("H0422S039-M11000L000", artNumberColumn.getValue());
+        assertEquals("idnumber", artNumberColumn.getEntity());
+    }
 }
