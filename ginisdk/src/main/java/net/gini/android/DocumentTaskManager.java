@@ -25,6 +25,7 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -607,7 +608,7 @@ public class DocumentTaskManager {
                                 parseSpecificExtractions(responseData.getJSONObject("extractions"), candidates);
 
                         final Map<String, CompoundExtraction> compoundExtractions =
-                                parseCompoundExtractions(responseData.getJSONObject("compoundExtractions"), candidates);
+                                parseCompoundExtractions(responseData.optJSONObject("compoundExtractions"), candidates);
 
                         return new ExtractionsContainer(specificExtractions, compoundExtractions);
                     }
@@ -643,9 +644,12 @@ public class DocumentTaskManager {
         return specificExtractions;
     }
 
-    private Map<String, CompoundExtraction> parseCompoundExtractions(@NonNull final JSONObject compoundExtractionsJson,
+    private Map<String, CompoundExtraction> parseCompoundExtractions(@Nullable final JSONObject compoundExtractionsJson,
             @NonNull final Map<String, List<Extraction>> candidates)
             throws JSONException {
+        if (compoundExtractionsJson == null) {
+            return Collections.emptyMap();
+        }
         final HashMap<String, CompoundExtraction> compoundExtractions = new HashMap<>();
         final Iterator<String> extractionsNameIterator = compoundExtractionsJson.keys();
         while (extractionsNameIterator.hasNext()) {
