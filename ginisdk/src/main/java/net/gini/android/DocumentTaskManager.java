@@ -13,8 +13,10 @@ import android.support.annotation.Nullable;
 import net.gini.android.authorization.Session;
 import net.gini.android.authorization.SessionManager;
 import net.gini.android.models.Box;
+import net.gini.android.models.CompoundExtraction;
 import net.gini.android.models.Document;
 import net.gini.android.models.Extraction;
+import net.gini.android.models.ExtractionsContainer;
 import net.gini.android.models.SpecificExtraction;
 
 import org.json.JSONArray;
@@ -527,6 +529,8 @@ public class DocumentTaskManager {
      * specific. See the
      * <a href="http://developer.gini.net/gini-api/html/document_extractions.html">Gini API documentation</a>
      * for a list of the names of the specific extractions.
+     *
+     * @deprecated Use {@link #getAllExtractions(Document)} instead to be able to receive compound extractions, too.
      */
     public Task<Map<String, SpecificExtraction>> getExtractions(@NonNull final Document document) {
         final String documentId = document.getId();
@@ -554,37 +558,20 @@ public class DocumentTaskManager {
                         final Iterator<String> extractionsNameIterator = extractionsData.keys();
                         while (extractionsNameIterator.hasNext()) {
                             final String extractionName = extractionsNameIterator.next();
-                            final Object anyExtractionData = extractionsData.get(extractionName);
-                            if (anyExtractionData instanceof JSONObject) {
-                                final JSONObject extractionData = (JSONObject) anyExtractionData;
-                                final SpecificExtraction specificExtraction = toSpecificExtraction(candidates, extractionName,
-                                        extractionData);
-                                extractionsByName.put(extractionName, specificExtraction);
-                            } else if (anyExtractionData instanceof JSONArray) {
-                                final List<SpecificExtraction> compositeExtractionsList = new ArrayList<>();
-                                final JSONArray compositeExtractionsJsonArray = (JSONArray) anyExtractionData;
-                                for (int i = 0; i < compositeExtractionsJsonArray.length(); i++) {
-                                    final List<SpecificExtraction> specificExtractions = new ArrayList<>();
-                                    final JSONObject compositeExtractionData = compositeExtractionsJsonArray.getJSONObject(i);
-                                    final Iterator<String> compositeExtractionDataIterator = compositeExtractionData.keys();
-                                    while (compositeExtractionDataIterator.hasNext()) {
-                                        final String specificExtractionName = compositeExtractionDataIterator.next();
-                                        final JSONObject specificExtractionData = compositeExtractionData.getJSONObject(
-                                                specificExtractionName);
-                                        final SpecificExtraction specificExtraction = toSpecificExtraction(
-                                                Collections.<String, List<Extraction>>emptyMap(),
-                                                specificExtractionName,
-                                                specificExtractionData);
-                                        specificExtractions.add(specificExtraction);
-                                    }
-                                    final SpecificExtraction compositeExtraction = new SpecificExtraction("", "", "", null,
-                                            Collections.<Extraction>emptyList(), specificExtractions);
-                                    compositeExtractionsList.add(compositeExtraction);
+                            final JSONObject extractionData = extractionsData.getJSONObject(extractionName);
+                            final Extraction extraction = extractionFromApiResponse(extractionData);
+                            List<Extraction> candidatesForExtraction = new ArrayList<Extraction>();
+                            if (extractionData.has("candidates")) {
+                                final String candidatesName = extractionData.getString("candidates");
+                                if (candidates.containsKey(candidatesName)) {
+                                    candidatesForExtraction = candidates.get(candidatesName);
                                 }
-                                final SpecificExtraction compositeExtractions = new SpecificExtraction(extractionName, "", "", null,
-                                        Collections.<Extraction>emptyList(), compositeExtractionsList);
-                                extractionsByName.put(extractionName, compositeExtractions);
                             }
+                            final SpecificExtraction specificExtraction =
+                                    new SpecificExtraction(extractionName, extraction.getValue(),
+                                            extraction.getEntity(), extraction.getBox(),
+                                            candidatesForExtraction);
+                            extractionsByName.put(extractionName, specificExtraction);
                         }
 
                         return extractionsByName;
@@ -592,22 +579,90 @@ public class DocumentTaskManager {
                 }, Task.BACKGROUND_EXECUTOR);
     }
 
+    /**
+     * Get the extractions for the given document.
+     *
+     * @param document The Document instance for whose document the extractions are returned.
+     *
+     * @return A Task which will resolve to an {@link ExtractionsContainer} object.
+     */
+    public Task<ExtractionsContainer> getAllExtractions(@NonNull final Document document) {
+        final String documentId = document.getId();
+        return mSessionManager.getSession()
+                .onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
+                    @Override
+                    public Task<JSONObject> then(Task<Session> sessionTask) {
+                        final Session session = sessionTask.getResult();
+                        return mApiCommunicator.getExtractions(documentId, session);
+                    }
+                }, Task.BACKGROUND_EXECUTOR)
+                .onSuccess(new Continuation<JSONObject, ExtractionsContainer>() {
+                    @Override
+                    public ExtractionsContainer then(Task<JSONObject> task) throws Exception {
+                        final JSONObject responseData = task.getResult();
+                        final JSONObject candidatesData = responseData.getJSONObject("candidates");
+                        Map<String, List<Extraction>> candidates =
+                                extractionCandidatesFromApiResponse(candidatesData);
+
+                        final Map<String, SpecificExtraction> specificExtractions =
+                                parseSpecificExtractions(responseData.getJSONObject("extractions"), candidates);
+
+                        final Map<String, CompoundExtraction> compoundExtractions =
+                                parseCompoundExtractions(responseData.optJSONObject("compoundExtractions"), candidates);
+
+                        return new ExtractionsContainer(specificExtractions, compoundExtractions);
+                    }
+                }, Task.BACKGROUND_EXECUTOR);
+
+    }
+
     @NonNull
-    private SpecificExtraction toSpecificExtraction(final Map<String, List<Extraction>> candidates, final String extractionName,
-            final JSONObject extractionData) throws JSONException {
-        final Extraction extraction = extractionFromApiResponse(
-                extractionData);
-        List<Extraction> candidatesForExtraction = new ArrayList<>();
-        if (extractionData.has("candidates")) {
-            final String candidatesName = extractionData.getString("candidates");
-            if (candidates.containsKey(candidatesName)) {
-                candidatesForExtraction = candidates.get(candidatesName);
+    private Map<String, SpecificExtraction> parseSpecificExtractions(@NonNull final JSONObject specificExtractionsJson,
+            @NonNull final Map<String, List<Extraction>> candidates)
+            throws JSONException {
+        final Map<String, SpecificExtraction> specificExtractions = new HashMap<>();
+        @SuppressWarnings("unchecked")
+        // Quote Android Source: "/* Return a raw type for API compatibility */"
+        final Iterator<String> extractionsNameIterator = specificExtractionsJson.keys();
+        while (extractionsNameIterator.hasNext()) {
+            final String extractionName = extractionsNameIterator.next();
+            final JSONObject extractionData = specificExtractionsJson.getJSONObject(extractionName);
+            final Extraction extraction = extractionFromApiResponse(extractionData);
+            List<Extraction> candidatesForExtraction = new ArrayList<Extraction>();
+            if (extractionData.has("candidates")) {
+                final String candidatesName = extractionData.getString("candidates");
+                if (candidates.containsKey(candidatesName)) {
+                    candidatesForExtraction = candidates.get(candidatesName);
+                }
             }
+            final SpecificExtraction specificExtraction =
+                    new SpecificExtraction(extractionName, extraction.getValue(),
+                            extraction.getEntity(), extraction.getBox(),
+                            candidatesForExtraction);
+            specificExtractions.put(extractionName, specificExtraction);
         }
-        return new SpecificExtraction(extractionName,
-                extraction.getValue(),
-                extraction.getEntity(), extraction.getBox(),
-                candidatesForExtraction);
+        return specificExtractions;
+    }
+
+    private Map<String, CompoundExtraction> parseCompoundExtractions(@Nullable final JSONObject compoundExtractionsJson,
+            @NonNull final Map<String, List<Extraction>> candidates)
+            throws JSONException {
+        if (compoundExtractionsJson == null) {
+            return Collections.emptyMap();
+        }
+        final HashMap<String, CompoundExtraction> compoundExtractions = new HashMap<>();
+        final Iterator<String> extractionsNameIterator = compoundExtractionsJson.keys();
+        while (extractionsNameIterator.hasNext()) {
+            final String extractionName = extractionsNameIterator.next();
+            final List<Map<String, SpecificExtraction>> specificExtractionMaps = new ArrayList<>();
+            final JSONArray compoundExtractionData = compoundExtractionsJson.getJSONArray(extractionName);
+            for (int i = 0; i < compoundExtractionData.length(); i++) {
+                final JSONObject specificExtractionsData = compoundExtractionData.getJSONObject(i);
+                specificExtractionMaps.add(parseSpecificExtractions(specificExtractionsData, candidates));
+            }
+            compoundExtractions.put(extractionName, new CompoundExtraction(extractionName, specificExtractionMaps));
+        }
+        return compoundExtractions;
     }
 
     /**

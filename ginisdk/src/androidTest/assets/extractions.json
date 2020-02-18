@@ -23,6 +23,34 @@
         "height": 34.0
       }
     },
+    "paymentRecipient": {
+      "box": {
+        "height": 8.159999999999968,
+        "left": 480.96,
+        "page": 1,
+        "top": 583.92,
+        "width": 29.75999999999999
+      },
+      "entity": "companyname",
+      "value": "Charge"
+    },
+    "paymentReference": {
+      "entity": "reference",
+      "value": "ReNr INV07604869"
+    },
+    "senderName": {
+      "box": {
+        "height": 8.159999999999968,
+        "left": 480.96,
+        "page": 1,
+        "top": 583.92,
+        "width": 29.75999999999999
+      },
+      "entity": "companyname",
+      "value": "Charge"
+    }
+  },
+  "compoundExtractions": {
     "lineItems": [
       {
         "artNumber": {
@@ -162,33 +190,7 @@
           "value": "1"
         }
       }
-    ],
-    "paymentRecipient": {
-      "box": {
-        "height": 8.159999999999968,
-        "left": 480.96,
-        "page": 1,
-        "top": 583.92,
-        "width": 29.75999999999999
-      },
-      "entity": "companyname",
-      "value": "Charge"
-    },
-    "paymentReference": {
-      "entity": "reference",
-      "value": "ReNr INV07604869"
-    },
-    "senderName": {
-      "box": {
-        "height": 8.159999999999968,
-        "left": 480.96,
-        "page": 1,
-        "top": 583.92,
-        "width": 29.75999999999999
-      },
-      "entity": "companyname",
-      "value": "Charge"
-    }
+    ]
   },
   "candidates": {
     "amounts": [

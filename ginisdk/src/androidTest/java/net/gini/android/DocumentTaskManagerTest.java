@@ -20,8 +20,10 @@ import net.gini.android.DocumentTaskManager.DocumentType;
 import net.gini.android.authorization.Session;
 import net.gini.android.authorization.SessionManager;
 import net.gini.android.helpers.TestUtils;
+import net.gini.android.models.CompoundExtraction;
 import net.gini.android.models.Document;
 import net.gini.android.models.Extraction;
+import net.gini.android.models.ExtractionsContainer;
 import net.gini.android.models.SpecificExtraction;
 
 import org.json.JSONException;
@@ -773,47 +775,55 @@ public class DocumentTaskManagerTest extends InstrumentationTestCase {
         assertNotNull(responseData);
     }
 
-    public void testGetExtractionsParsesLineItems() throws Exception {
+    public void testGetExtractionsParsesCompoundExtractions() throws Exception {
         when(mApiCommunicator.getExtractions(eq("1234"), any(Session.class))).thenReturn(createExtractionsJSONTask());
         Document document = new Document("1234", Document.ProcessingState.COMPLETED, "foobar", 1, new Date(),
                 Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
                 new ArrayList<Uri>());
 
-        Task<Map<String, SpecificExtraction>> extractionsTask = mDocumentTaskManager.getExtractions(document);
+        Task<ExtractionsContainer> extractionsTask = mDocumentTaskManager.getAllExtractions(document);
         extractionsTask.waitForCompletion();
         if (extractionsTask.isFaulted()) {
             throw extractionsTask.getError();
         }
-        final Map<String, SpecificExtraction> extractions = extractionsTask.getResult();
+        final ExtractionsContainer extractions = extractionsTask.getResult();
         assertNotNull(extractions);
 
-        final SpecificExtraction lineItems = extractions.get("lineItems");
+        final CompoundExtraction lineItems = extractions.getCompoundExtractions().get("lineItems");
         assertNotNull(lineItems);
 
-        final List<SpecificExtraction> lineItemExtractions = lineItems.getSpecificExtractions();
+        final List<Map<String, SpecificExtraction>> lineItemExtractions = lineItems.getSpecificExtractionMaps();
         assertEquals(3, lineItemExtractions.size());
 
-        final List<SpecificExtraction> lineItemExtractionColumns = lineItemExtractions.get(0).getSpecificExtractions();
+        final Map<String, SpecificExtraction> lineItemExtractionColumns = lineItemExtractions.get(0);
         assertEquals(4, lineItemExtractionColumns.size());
-
-        SpecificExtraction artNumberColumn = null;
 
         final List<String> columnNames = Arrays.asList("artNumber", "description", "grossPrice", "quantity");
         for (final String columnName : columnNames) {
-            boolean found = false;
-            for (final SpecificExtraction lineItemExtractionColumn : lineItemExtractionColumns) {
-                if (lineItemExtractionColumn.getName().equals(columnName)) {
-                    if (columnName.equals("artNumber")) {
-                        artNumberColumn = lineItemExtractionColumn;
-                    }
-                    found = true;
-                    break;
-                }
-            }
-            assertTrue(found);
+            assertNotNull(lineItemExtractionColumns.get(columnName));
         }
+
+        SpecificExtraction artNumberColumn = lineItemExtractionColumns.get("artNumber");
 
         assertEquals("H0422S039-M11000L000", artNumberColumn.getValue());
         assertEquals("idnumber", artNumberColumn.getEntity());
+    }
+
+    public void testGetAllExtractionsResolvesToExtractionResult() throws Exception {
+        when(mApiCommunicator.getExtractions(eq("1234"), any(Session.class))).thenReturn(createExtractionsJSONTask());
+        Document document = new Document("1234", Document.ProcessingState.COMPLETED, "foobar", 1, new Date(),
+                Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
+
+        Task<ExtractionsContainer> extractionsTask = mDocumentTaskManager.getAllExtractions(document);
+        extractionsTask.waitForCompletion();
+        if (extractionsTask.isFaulted()) {
+            throw extractionsTask.getError();
+        }
+        final ExtractionsContainer extractions = extractionsTask.getResult();
+        assertNotNull(extractions);
+        final SpecificExtraction amountToPay = extractions.getSpecificExtractions().get("amountToPay");
+        assertNotNull(amountToPay);
+        assertEquals(2, amountToPay.getCandidate().size());
     }
 }
