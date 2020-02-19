@@ -105,7 +105,7 @@ this means that you won't get any extractions before the composite document is f
 processing time may vary, usually it is in the range of a couple of seconds, but blurred or slightly
 rotated images are known to drasticly increase the processing time. 
 
-The ``DocumentTaskManager`` provides the ``pollDocument`` and ``getExtractions`` methods which can be
+The ``DocumentTaskManager`` provides the ``pollDocument`` and ``getAllExtractions`` methods which can be
 used to fetch the extractions after the processing of the document is completed. The following
 example shows how to achieve this in detail.
 
@@ -137,13 +137,17 @@ example shows how to achieve this in detail.
                 @Override
                 public Object then(Task<Document> task) throws Exception {
                     final Document document = task.getResult();
-                    return documentTaskManager.getExtractions(document);
+                    return documentTaskManager.getAllExtractions(document);
                 }
             })
-            .onSuccess(new Continuation<Map<String, SpecificExtraction>, Void>() {
+            .onSuccess(new Continuation<ExtractionsContainer>, Void>() {
                 @Override
-                public Void then(Task<Map<String, SpecificExtraction>> task) {
-                    final Map<String, SpecificExtraction> extractions = task.getResult();
+                public Void then(Task<ExtractionsContainer> task) {
+                    final ExtractionsContainer extractions = task.getResult();
+                    final SpecificExtraction amountToPay =
+                            extractions.getSpecificExtractions().get("amountToPay");
+                    final CompoundExtraction lineItems =
+                            extractions.getCompoundExtractions().get("lineItems");
                     // You may use the extractions to fulfill your use-case
                     return null;
                 }
