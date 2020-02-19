@@ -26,8 +26,7 @@ public class SpecificExtraction extends Extraction {
      *                   are of the same entity as the found extraction.
      */
     public SpecificExtraction(final String name, final String value, final String entity,
-                              @Nullable final Box box, final
-    List<Extraction> candidates) {
+                              @Nullable final Box box, final List<Extraction> candidates) {
         super(value, entity, box);
 
         mName = checkNotNull(name);

@@ -13,8 +13,10 @@ import android.support.annotation.Nullable;
 import net.gini.android.authorization.Session;
 import net.gini.android.authorization.SessionManager;
 import net.gini.android.models.Box;
+import net.gini.android.models.CompoundExtraction;
 import net.gini.android.models.Document;
 import net.gini.android.models.Extraction;
+import net.gini.android.models.ExtractionsContainer;
 import net.gini.android.models.SpecificExtraction;
 
 import org.json.JSONArray;
@@ -23,6 +25,7 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -204,7 +207,8 @@ public class DocumentTaskManager {
     private Task<Document> createPartialDocumentInternal(@NonNull final byte[] document, @NonNull final String contentType,
             @Nullable final String filename, @Nullable final DocumentType documentType, @Nullable final DocumentMetadata documentMetadata) {
         if (!mGiniApiType.getGiniJsonMediaType().equals(MediaTypes.GINI_JSON_V2)) {
-            throw new UnsupportedOperationException("Partial documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.");
+            throw new UnsupportedOperationException(
+                    "Partial documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.");
         }
         return createDocumentInternal(new Continuation<Session, Task<Uri>>() {
             @Override
@@ -233,7 +237,8 @@ public class DocumentTaskManager {
      */
     public Task<Document> createCompositeDocument(@NonNull final List<Document> documents, @Nullable final DocumentType documentType) {
         if (!mGiniApiType.getGiniJsonMediaType().equals(MediaTypes.GINI_JSON_V2)) {
-            throw new UnsupportedOperationException("Composite documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.");
+            throw new UnsupportedOperationException(
+                    "Composite documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.");
         }
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
             @Override
@@ -266,9 +271,11 @@ public class DocumentTaskManager {
      *
      * @return A Task which will resolve to the Document instance of the freshly created document.
      */
-    public Task<Document> createCompositeDocument(@NonNull final LinkedHashMap<Document, Integer> documentRotationMap, @Nullable final DocumentType documentType) {
+    public Task<Document> createCompositeDocument(@NonNull final LinkedHashMap<Document, Integer> documentRotationMap,
+            @Nullable final DocumentType documentType) {
         if (!mGiniApiType.getGiniJsonMediaType().equals(MediaTypes.GINI_JSON_V2)) {
-            throw new UnsupportedOperationException("Composite documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.");
+            throw new UnsupportedOperationException(
+                    "Composite documents may be used only with the default Gini API. Use GiniApiType.DEFAULT.");
         }
         return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<Uri>>() {
             @Override
@@ -410,7 +417,7 @@ public class DocumentTaskManager {
      */
     @Deprecated
     public Task<Document> createDocument(@NonNull final Bitmap document, @Nullable final String filename,
-                                         @Nullable final String documentType, final int compressionRate) {
+            @Nullable final String documentType, final int compressionRate) {
         return createDocumentInternal(document, filename, documentType, compressionRate, null);
     }
 
@@ -460,7 +467,7 @@ public class DocumentTaskManager {
      * If using the accounting Gini API, then use {@link #createDocument(byte[], String, DocumentType)}.
      */
     public Task<Document> createDocument(@NonNull final Bitmap document, @Nullable final String filename,
-                                          @Nullable final DocumentType documentType) {
+            @Nullable final DocumentType documentType) {
         String apiDoctypeHint = null;
         if (documentType != null) {
             apiDoctypeHint = documentType.getApiDoctypeHint();
@@ -498,7 +505,7 @@ public class DocumentTaskManager {
     }
 
     private Task<Document> createDocumentInternal(@NonNull final Bitmap document, @Nullable final String filename,
-                                         @Nullable final String apiDoctypeHint, final int compressionRate,
+            @Nullable final String apiDoctypeHint, final int compressionRate,
             @Nullable final DocumentMetadata documentMetadata) {
         return createDocumentInternal(new Continuation<Session, Task<Uri>>() {
             @Override
@@ -522,6 +529,8 @@ public class DocumentTaskManager {
      * specific. See the
      * <a href="http://developer.gini.net/gini-api/html/document_extractions.html">Gini API documentation</a>
      * for a list of the names of the specific extractions.
+     *
+     * @deprecated Use {@link #getAllExtractions(Document)} instead to be able to receive compound extractions, too.
      */
     public Task<Map<String, SpecificExtraction>> getExtractions(@NonNull final Document document) {
         final String documentId = document.getId();
@@ -568,6 +577,92 @@ public class DocumentTaskManager {
                         return extractionsByName;
                     }
                 }, Task.BACKGROUND_EXECUTOR);
+    }
+
+    /**
+     * Get the extractions for the given document.
+     *
+     * @param document The Document instance for whose document the extractions are returned.
+     *
+     * @return A Task which will resolve to an {@link ExtractionsContainer} object.
+     */
+    public Task<ExtractionsContainer> getAllExtractions(@NonNull final Document document) {
+        final String documentId = document.getId();
+        return mSessionManager.getSession()
+                .onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
+                    @Override
+                    public Task<JSONObject> then(Task<Session> sessionTask) {
+                        final Session session = sessionTask.getResult();
+                        return mApiCommunicator.getExtractions(documentId, session);
+                    }
+                }, Task.BACKGROUND_EXECUTOR)
+                .onSuccess(new Continuation<JSONObject, ExtractionsContainer>() {
+                    @Override
+                    public ExtractionsContainer then(Task<JSONObject> task) throws Exception {
+                        final JSONObject responseData = task.getResult();
+                        final JSONObject candidatesData = responseData.getJSONObject("candidates");
+                        Map<String, List<Extraction>> candidates =
+                                extractionCandidatesFromApiResponse(candidatesData);
+
+                        final Map<String, SpecificExtraction> specificExtractions =
+                                parseSpecificExtractions(responseData.getJSONObject("extractions"), candidates);
+
+                        final Map<String, CompoundExtraction> compoundExtractions =
+                                parseCompoundExtractions(responseData.optJSONObject("compoundExtractions"), candidates);
+
+                        return new ExtractionsContainer(specificExtractions, compoundExtractions);
+                    }
+                }, Task.BACKGROUND_EXECUTOR);
+
+    }
+
+    @NonNull
+    private Map<String, SpecificExtraction> parseSpecificExtractions(@NonNull final JSONObject specificExtractionsJson,
+            @NonNull final Map<String, List<Extraction>> candidates)
+            throws JSONException {
+        final Map<String, SpecificExtraction> specificExtractions = new HashMap<>();
+        @SuppressWarnings("unchecked")
+        // Quote Android Source: "/* Return a raw type for API compatibility */"
+        final Iterator<String> extractionsNameIterator = specificExtractionsJson.keys();
+        while (extractionsNameIterator.hasNext()) {
+            final String extractionName = extractionsNameIterator.next();
+            final JSONObject extractionData = specificExtractionsJson.getJSONObject(extractionName);
+            final Extraction extraction = extractionFromApiResponse(extractionData);
+            List<Extraction> candidatesForExtraction = new ArrayList<Extraction>();
+            if (extractionData.has("candidates")) {
+                final String candidatesName = extractionData.getString("candidates");
+                if (candidates.containsKey(candidatesName)) {
+                    candidatesForExtraction = candidates.get(candidatesName);
+                }
+            }
+            final SpecificExtraction specificExtraction =
+                    new SpecificExtraction(extractionName, extraction.getValue(),
+                            extraction.getEntity(), extraction.getBox(),
+                            candidatesForExtraction);
+            specificExtractions.put(extractionName, specificExtraction);
+        }
+        return specificExtractions;
+    }
+
+    private Map<String, CompoundExtraction> parseCompoundExtractions(@Nullable final JSONObject compoundExtractionsJson,
+            @NonNull final Map<String, List<Extraction>> candidates)
+            throws JSONException {
+        if (compoundExtractionsJson == null) {
+            return Collections.emptyMap();
+        }
+        final HashMap<String, CompoundExtraction> compoundExtractions = new HashMap<>();
+        final Iterator<String> extractionsNameIterator = compoundExtractionsJson.keys();
+        while (extractionsNameIterator.hasNext()) {
+            final String extractionName = extractionsNameIterator.next();
+            final List<Map<String, SpecificExtraction>> specificExtractionMaps = new ArrayList<>();
+            final JSONArray compoundExtractionData = compoundExtractionsJson.getJSONArray(extractionName);
+            for (int i = 0; i < compoundExtractionData.length(); i++) {
+                final JSONObject specificExtractionsData = compoundExtractionData.getJSONObject(i);
+                specificExtractionMaps.add(parseSpecificExtractions(specificExtractionsData, candidates));
+            }
+            compoundExtractions.put(extractionName, new CompoundExtraction(extractionName, specificExtractionMaps));
+        }
+        return compoundExtractions;
     }
 
     /**

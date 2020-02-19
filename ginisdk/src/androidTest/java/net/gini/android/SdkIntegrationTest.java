@@ -469,14 +469,16 @@ public class SdkIntegrationTest extends AndroidTestCase {
         final String amountToPay = extractions.get("amountToPay").getValue();
         assertTrue("Amount to pay should be found: "
                         + "expected one of <[145.00:EUR, 77.00:EUR, 588.60:EUR, 700.43:EUR]> but was:<["
-                        + amountToPay +"]>",
+                        + amountToPay + "]>",
                 amountToPay.equals("145.00:EUR")
                         || amountToPay.equals("77.00:EUR")
                         || amountToPay.equals("588.60:EUR")
                         || amountToPay.equals("700.43:EUR"));
         assertEquals("BIC should be found", "WELADED1MIN", extractions.get("bic").getValue());
         assertTrue("Payement recipient should be found", extractions.get("paymentRecipient").getValue().startsWith("Mindener Stadtwerke"));
-        assertEquals("Payment reference should be found", "ReNr TST-00019, KdNr 765432", extractions.get("paymentReference").getValue());
+        assertEquals("Payment reference should be found",
+                "ReNr TST-00019, KdNr 765432, Fälligkeitsdatum 29.01.14, Rechnungsdatum 14.01.14, Verbrauchsstellennummer 5959595",
+                extractions.get("paymentReference").getValue());
 
         // all extractions are correct, that means we have nothing to correct and will only send positive feedback
         // we should only send feedback for extractions we have seen and accepted
