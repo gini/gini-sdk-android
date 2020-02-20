@@ -3,6 +3,7 @@ package net.gini.android;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.support.annotation.XmlRes;
 
 import com.android.volley.Cache;
@@ -116,26 +117,19 @@ class RequestQueueBuilder {
 
     private SSLSocketFactory getSSLSocketFactory() {
         if (mSSLSocketFactory == null) {
-            TrustManager[] trustManagers = getTrustManagers();
-            if (trustManagers != null) {
-                if (TLSPreferredSocketFactory.isTLSv1xSupported()) {
-                    try {
-                        mSSLSocketFactory = new TLSPreferredSocketFactory(trustManagers);
-                    } catch (NoSuchAlgorithmException | KeyManagementException ignore) {
-                    }
+            try {
+                final SSLContext sslContext;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    // Since Android 10 (Q) TLSv1.3 is default
+                    // https://developer.android.com/reference/javax/net/ssl/SSLSocket#default-configuration-for-different-android-versions
+                    sslContext = SSLContext.getDefault();
                 } else {
-                    try {
-                        final SSLContext sslContext = SSLContext.getInstance("TLSv1");
-                        sslContext.init(null, trustManagers, null);
-                        mSSLSocketFactory = sslContext.getSocketFactory();
-                    } catch (NoSuchAlgorithmException | KeyManagementException ignore) {
-                    }
+                    // Force TLSv1.2 on older versions
+                    sslContext = SSLContext.getInstance("TLSv1.2");
                 }
-            } else if (TLSPreferredSocketFactory.isTLSv1xSupported()) {
-                try {
-                    mSSLSocketFactory = new TLSPreferredSocketFactory();
-                } catch (NoSuchAlgorithmException | KeyManagementException ignore) {
-                }
+                sslContext.init(null, getTrustManagers(), null);
+                mSSLSocketFactory = sslContext.getSocketFactory();
+            } catch (NoSuchAlgorithmException | KeyManagementException ignore) {
             }
         }
         return mSSLSocketFactory;
