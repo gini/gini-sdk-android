@@ -14,8 +14,6 @@ import android.util.Log;
 
 import com.android.volley.toolbox.NoCache;
 
-import junit.framework.TestCase;
-
 import net.gini.android.DocumentTaskManager.DocumentUploadBuilder;
 import net.gini.android.authorization.EncryptedCredentialsStore;
 import net.gini.android.authorization.UserCredentials;
@@ -54,8 +52,8 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
         assertNotNull("test.properties not found", testPropertiesInput);
         final Properties testProperties = new Properties();
         testProperties.load(testPropertiesInput);
-        clientId = getProperty(testProperties, "testClientId");
-        clientSecret = getProperty(testProperties, "testClientSecret");
+        clientId = getProperty(testProperties, "testClientIdAccounting");
+        clientSecret = getProperty(testProperties, "testClientSecretAccounting");
         apiUriAccounting = getProperty(testProperties, "testApiUriAccounting");
         userCenterUri = getProperty(testProperties, "testUserCenterUri");
 

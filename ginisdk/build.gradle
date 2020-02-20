@@ -80,6 +80,8 @@ task createTestPropertyFile {
 
         setProperty('testClientId', props, localProperties)
         setProperty('testClientSecret', props, localProperties)
+        setProperty('testClientIdAccounting', props, localProperties)
+        setProperty('testClientSecretAccounting', props, localProperties)
         setProperty('testApiUri', props, localProperties)
         setProperty('testApiUriAccounting', props, localProperties)
         setProperty('testUserCenterUri', props, localProperties)

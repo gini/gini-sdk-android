@@ -5,6 +5,7 @@ pipeline {
         NEXUS_MAVEN = credentials('external-nexus-maven-repo-credentials')
         GIT = credentials('github')
         GINI_API_CREDENTIALS = credentials('gini-vision-library-android_gini-api-client-credentials')
+        GINI_ACCOUNTING_API_CREDENTIALS = credentials('gini-vision-library-android_gini-accounting-api-client-credentials')
     }
     stages {
         stage('Import Pipeline Libraries') {
@@ -34,7 +35,7 @@ pipeline {
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
                     withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
-                        sh "ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
+                        sh "ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestClientIdAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_USR -PtestClientSecretAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
                     }
                 }
             }
@@ -57,7 +58,7 @@ pipeline {
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
                     withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
-                        sh "ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
+                        sh "ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestClientIdAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_USR -PtestClientSecretAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
                     }
                 }
             }
@@ -80,7 +81,7 @@ pipeline {
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
                     withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
-                        sh "ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
+                        sh "ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestClientIdAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_USR -PtestClientSecretAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
                     }
                 }
             }
