@@ -152,4 +152,3 @@ android.libraryVariants.all { variant ->
 }
 
 apply from: rootProject.file('gradle/javadoc_coverage.gradle')
-apply from: rootProject.file('gradle/targeted_android_tests.gradle')
