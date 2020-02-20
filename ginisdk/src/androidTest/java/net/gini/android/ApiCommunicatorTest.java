@@ -1,6 +1,8 @@
 package net.gini.android;
 
 
+import static android.support.test.InstrumentationRegistry.getTargetContext;
+
 import static com.android.volley.Request.Method.DELETE;
 import static com.android.volley.Request.Method.GET;
 import static com.android.volley.Request.Method.POST;
@@ -8,11 +10,15 @@ import static com.android.volley.Request.Method.PUT;
 
 import static net.gini.android.helpers.TestUtils.areEqualURIs;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.verify;
 
 import android.net.Uri;
 import android.support.test.filters.MediumTest;
-import android.test.InstrumentationTestCase;
+import android.support.test.runner.AndroidJUnit4;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -24,6 +30,9 @@ import net.gini.android.requests.RetryPolicyFactory;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -32,15 +41,17 @@ import java.util.Date;
 import java.util.Map;
 
 @MediumTest
-public class ApiCommunicatorTest extends InstrumentationTestCase {
+@RunWith(AndroidJUnit4.class)
+public class ApiCommunicatorTest {
+
     private ApiCommunicator mApiCommunicator;
     private RequestQueue mRequestQueue;
     private RetryPolicyFactory retryPolicyFactory;
 
-    @Override
+    @Before
     public void setUp() {
         // https://code.google.com/p/dexmaker/issues/detail?id=2
-        System.setProperty("dexmaker.dexcache", getInstrumentation().getTargetContext().getCacheDir().getPath());
+        System.setProperty("dexmaker.dexcache", getTargetContext().getCacheDir().getPath());
         retryPolicyFactory = new DefaultRetryPolicyFactory();
         mRequestQueue = Mockito.mock(RequestQueue.class);
         mApiCommunicator = new ApiCommunicator("https://api.gini.net/", GiniApiType.DEFAULT, mRequestQueue, retryPolicyFactory);
@@ -58,6 +69,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         return createSession("1234-5678-9012");
     }
 
+    @Test
     public void testConstructionThrowsNullPointerExceptionWithNullArguments() {
         try {
             new ApiCommunicator(null, null, null, retryPolicyFactory);
@@ -72,35 +84,42 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         }
     }
 
+    @Test
     public void testUploadDocumentThrowsWithNullArguments() {
         try {
             mApiCommunicator.uploadDocument(null, null, null, null, null, null);
             fail("Exception not thrown");
-        } catch(NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
 
         try {
             mApiCommunicator.uploadDocument(null, "image/jpeg", null, null, createSession(), null);
             fail("Exception not thrown");
-        } catch (NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
 
         try {
             mApiCommunicator.uploadDocument(createUploadData(), null, null, null, createSession(), null);
             fail("Exception not thrown");
-        } catch (NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
 
         try {
             mApiCommunicator.uploadDocument(createUploadData(), MediaTypes.IMAGE_JPEG, null, null, null, null);
             fail("Exception not thrown");
-        } catch (NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
 
     }
 
+    @Test
     public void testUploadDocumentReturnsTask() {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
         assertNotNull(mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, null, session, null));
     }
 
+    @Test
     public void testUploadDocumentWithNameReturnsTask() {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
@@ -108,6 +127,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertNotNull(mApiCommunicator.uploadDocument(documentData, MediaTypes.IMAGE_JPEG, null, "foobar.jpg", session, null));
     }
 
+    @Test
     public void testUploadDocumentHasCorrectAccessToken() throws AuthFailureError {
         final byte[] documentData = createUploadData();
         final Session session = createSession("1234-5678");
@@ -120,6 +140,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("BEARER 1234-5678", headers.get("Authorization"));
     }
 
+    @Test
     public void testUploadDocumentHasCorrectContentType() throws AuthFailureError {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
@@ -131,6 +152,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals(MediaTypes.IMAGE_JPEG, requestCaptor.getValue().getBodyContentType());
     }
 
+    @Test
     public void testUploadDocumentHasCorrectAcceptHeader() throws AuthFailureError {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
@@ -144,6 +166,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V2));
     }
 
+    @Test
     public void testUploadDocumentHasCorrectBody() throws AuthFailureError {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
@@ -156,6 +179,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals(documentData, request.getBody());
     }
 
+    @Test
     public void testUploadDocumentHasCorrectUrlAndMethod() {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
@@ -170,6 +194,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals(POST, request.getMethod());
     }
 
+    @Test
     public void testUploadDocumentSubmitsFilename() {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
@@ -183,6 +208,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("https://api.gini.net/documents/?filename=foobar.jpg", request.getUrl());
     }
 
+    @Test
     public void testUploadDocumentSubmitsDoctypeHint() {
         final byte[] documentData = createUploadData();
         final Session session = createSession();
@@ -196,12 +222,14 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("https://api.gini.net/documents/?doctype=invoice", request.getUrl());
     }
 
+    @Test
     public void testDeleteDocumentsReturnsTask() {
         final Session session = createSession();
 
         assertNotNull(mApiCommunicator.deleteDocument("1234", session));
     }
 
+    @Test
     public void testDeleteDocumentDeletesDocument() {
         final Session session = createSession();
 
@@ -213,6 +241,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals(DELETE, request.getMethod());
     }
 
+    @Test
     public void testDeleteDocumentDeletesTheCorrectDocument() {
         final Session session = createSession();
 
@@ -224,6 +253,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("https://api.gini.net/documents/1234", request.getUrl());
     }
 
+    @Test
     public void testDeleteDocumentUsesTheCorrectSession() throws AuthFailureError {
         final Session session = createSession("4321-1234");
 
@@ -235,6 +265,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("Bearer 4321-1234", request.getHeaders().get("Authorization"));
     }
 
+    @Test
     public void testDeleteDocumentThrowsWithWrongArguments() {
         try {
             mApiCommunicator.deleteDocument((String) null, null);
@@ -257,6 +288,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
     }
 
     @SuppressWarnings("ConstantConditions")
+    @Test
     public void testGetDocumentThrowsWithNullArguments() {
         try {
             final String documentId = null;
@@ -295,12 +327,14 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
 
     }
 
+    @Test
     public void testGetDocumentReturnsTask() {
         Session session = createSession();
 
         assertNotNull(mApiCommunicator.getDocument("1234", session));
     }
 
+    @Test
     public void testGetDocumentGetsCorrectDocument() {
         Session session = createSession();
 
@@ -313,6 +347,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals(GET, request.getMethod());
     }
 
+    @Test
     public void testGetDocumentSendsCorrectAuthorizationHeaders() throws AuthFailureError {
         Session session = createSession("4321-1234");
 
@@ -324,6 +359,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("BEARER 4321-1234", request.getHeaders().get("Authorization"));
     }
 
+    @Test
     public void testGetDocumentSendsCorrectAcceptHeader() throws AuthFailureError {
         Session session = createSession();
 
@@ -335,6 +371,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertTrue(((String) request.getHeaders().get("Accept")).contains(MediaTypes.GINI_JSON_V2));
     }
 
+    @Test
     public void testGetExtractionsThrowsWithNullArguments() {
         try {
             mApiCommunicator.getExtractions(null, null);
@@ -355,6 +392,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         }
     }
 
+    @Test
     public void testGetExtractionsGetsTheCorrectDocument() {
         Session session = createSession();
 
@@ -367,6 +405,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals(GET, request.getMethod());
     }
 
+    @Test
     public void testGetExtractionsHasCorrectAuthorizationHeader() throws AuthFailureError {
         Session session = createSession("1234-1234");
 
@@ -378,6 +417,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("BEARER 1234-1234", request.getHeaders().get("Authorization"));
     }
 
+    @Test
     public void testGetExtractionsHasCorrectAcceptHeader() throws AuthFailureError {
         Session session = createSession("1234-1234");
 
@@ -389,6 +429,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertTrue(((String) request.getHeaders().get("Accept")).contains(MediaTypes.GINI_JSON_V2));
     }
 
+    @Test
     public void testGetIncubatorExtractionsThrowsWithNullArguments() {
         try {
             mApiCommunicator.getExtractions(null, null);
@@ -409,6 +450,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         }
     }
 
+    @Test
     public void testGetIncubatorExtractionsGetsTheCorrectDocument() {
         Session session = createSession();
 
@@ -421,6 +463,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals(GET, request.getMethod());
     }
 
+    @Test
     public void testGetIncubatorExtractionsHasCorrectAuthorizationHeader() throws AuthFailureError {
         Session session = createSession("1234-1234");
 
@@ -432,6 +475,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("BEARER 1234-1234", request.getHeaders().get("Authorization"));
     }
 
+    @Test
     public void testGetIncubatorExtractionsHasCorrectAcceptHeader() throws AuthFailureError {
         Session session = createSession("1234-1234");
 
@@ -443,6 +487,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertTrue(((String) request.getHeaders().get("Accept")).contains(MediaTypes.GINI_JSON_INCUBATOR));
     }
 
+    @Test
     public void testErrorReportForDocumentsThrowsWithNullArguments() {
         try {
             mApiCommunicator.errorReportForDocument(null, null, null, null);
@@ -469,6 +514,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         }
     }
 
+    @Test
     public void testErrorReportForDocumentHasCorrectUrl() throws URISyntaxException {
         Session session = createSession();
 
@@ -481,6 +527,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
                 request.getUrl()));
     }
 
+    @Test
     public void testErrorReportForDocumentHasCorrectAuthorizationHeader() throws AuthFailureError {
         Session session = createSession("4444-2222");
 
@@ -492,7 +539,8 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("BEARER 4444-2222", request.getHeaders().get("Authorization"));
     }
 
-    public void testErrorReportHasCorrectAcceptHeader() throws  AuthFailureError {
+    @Test
+    public void testErrorReportHasCorrectAcceptHeader() throws AuthFailureError {
         Session session = createSession("4444-2222");
 
         mApiCommunicator.errorReportForDocument("1234", "short summary", "and a description", session);
@@ -503,28 +551,34 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertTrue(((String) request.getHeaders().get("Accept")).contains(MediaTypes.GINI_JSON_V2));
     }
 
+    @Test
     public void testSendFeedbackThrowsExceptionWithNullArguments() throws JSONException {
         try {
             mApiCommunicator.sendFeedback(null, null, null);
             fail("Exception not raised");
-        } catch(NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
 
         try {
             mApiCommunicator.sendFeedback("1234-1234", new JSONObject(), null);
             fail("Exception not raised");
-        } catch (NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
 
         try {
             mApiCommunicator.sendFeedback("1234-1234", null, createSession());
             fail("Exception not raised");
-        } catch (NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
 
         try {
             mApiCommunicator.sendFeedback(null, new JSONObject(), createSession());
             fail("Exception not raised");
-        } catch (NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
     }
 
+    @Test
     public void testSendFeedbackUpdatesCorrectDocument() throws JSONException {
         Session session = createSession();
 
@@ -537,6 +591,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals(PUT, request.getMethod());
     }
 
+    @Test
     public void testSendFeedbackSendsCorrectData() throws JSONException, AuthFailureError {
         Session session = createSession();
         JSONObject extractions = new JSONObject();
@@ -552,6 +607,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("{\"feedback\":{\"amountToPay\":{\"value\":\"32:EUR\"}}}", new String(request.getBody()));
     }
 
+    @Test
     public void testSendFeedbackHasCorrectAuthorizationHeader() throws AuthFailureError, JSONException {
         Session session = createSession("9999-8888-7777");
 
@@ -563,6 +619,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("BEARER 9999-8888-7777", request.getHeaders().get("Authorization"));
     }
 
+    @Test
     public void testSendFeedbackHasCorrectContentType() throws AuthFailureError, JSONException {
         Session session = createSession("9999-8888-7777");
 
@@ -575,23 +632,28 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V2));
     }
 
+    @Test
     public void testGetPreviewThrowsWithNullArguments() {
         try {
             mApiCommunicator.getPreview(null, 0, null, null);
             fail("Exception not thrown");
-        } catch (NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
 
         try {
             mApiCommunicator.getPreview("1234", 1, null, null);
             fail("Exception not thrown");
-        } catch (NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
 
         try {
             mApiCommunicator.getPreview("1234", 1, ApiCommunicator.PreviewSize.MEDIUM, null);
             fail("Exception not thrown");
-        } catch (NullPointerException ignored) {}
+        } catch (NullPointerException ignored) {
+        }
     }
 
+    @Test
     public void testGetPreviewHasCorrectUrlWithBigPreview() {
         Session session = createSession();
 
@@ -603,6 +665,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("https://api.gini.net/documents/1234/pages/1/1280x1810", request.getUrl());
     }
 
+    @Test
     public void testGetPreviewHasCorrectUrlWithMediumPreview() {
         Session session = createSession();
 
@@ -614,7 +677,8 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("https://api.gini.net/documents/1234/pages/1/750x900", request.getUrl());
     }
 
-    public void testGetPreviewHasCorrectAuthorizationHeader() throws AuthFailureError{
+    @Test
+    public void testGetPreviewHasCorrectAuthorizationHeader() throws AuthFailureError {
         Session session = createSession("9876-5432");
 
         mApiCommunicator.getPreview("1234", 1, ApiCommunicator.PreviewSize.BIG, session);
@@ -625,7 +689,8 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("BEARER 9876-5432", request.getHeaders().get("Authorization"));
     }
 
-    public void testGetPreviewHasCorrectAcceptHeader() throws AuthFailureError{
+    @Test
+    public void testGetPreviewHasCorrectAcceptHeader() throws AuthFailureError {
         Session session = createSession();
 
         mApiCommunicator.getPreview("1234", 1, ApiCommunicator.PreviewSize.MEDIUM, session);
@@ -636,6 +701,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals(MediaTypes.IMAGE_JPEG, request.getHeaders().get("Accept"));
     }
 
+    @Test
     public void testGetLayoutHasCorrectUrl() {
         final Session session = createSession();
 
@@ -648,6 +714,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals(GET, request.getMethod());
     }
 
+    @Test
     public void testGetLayoutHasCorrectAcceptHeader() throws AuthFailureError {
         final Session session = createSession();
 
@@ -660,6 +727,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V2));
     }
 
+    @Test
     public void testGetLayoutHasCorrectAuthorizationHeader() throws AuthFailureError {
         final Session session = createSession("9999-8888-7777");
 
@@ -671,6 +739,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("BEARER 9999-8888-7777", request.getHeaders().get("Authorization"));
     }
 
+    @Test
     public void testGetDocumentListHasCorrectUrl() {
         final Session session = createSession();
 
@@ -683,6 +752,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals(GET, request.getMethod());
     }
 
+    @Test
     public void testGetDocumentListHasCorrectAcceptHeader() throws AuthFailureError {
         final Session session = createSession();
 
@@ -695,6 +765,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V2));
     }
 
+    @Test
     public void testGetDocumentListHasCorrectAuthorizationHeader() throws AuthFailureError {
         final Session session = createSession("9999-8888-7777");
 
@@ -706,6 +777,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("BEARER 9999-8888-7777", request.getHeaders().get("Authorization"));
     }
 
+    @Test
     public void testSearchDocumentsHasCorrectUrl() {
         final Session session = createSession();
 
@@ -718,6 +790,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals(GET, request.getMethod());
     }
 
+    @Test
     public void testSearchDocumentsWithDoctypeHasCorrectUrl() {
         final Session session = createSession();
 
@@ -730,6 +803,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals(GET, request.getMethod());
     }
 
+    @Test
     public void testSearchDocumentsHasCorrectAcceptHeader() throws AuthFailureError {
         final Session session = createSession();
 
@@ -742,6 +816,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertTrue(acceptHeader.contains(MediaTypes.GINI_JSON_V2));
     }
 
+    @Test
     public void testSearchDocumentsHasCorrectAuthorizationHeader() throws AuthFailureError {
         final Session session = createSession("9999-8888-7777");
 
@@ -753,6 +828,7 @@ public class ApiCommunicatorTest extends InstrumentationTestCase {
         assertEquals("BEARER 9999-8888-7777", request.getHeaders().get("Authorization"));
     }
 
+    @Test
     public void testDocumentMetadataIsAddedToTheRequestHeaders() throws Exception {
         final byte[] documentData = createUploadData();
         final Session session = createSession();

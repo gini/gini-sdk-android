@@ -2,8 +2,13 @@ package net.gini.android.models;
 
 import static net.gini.android.helpers.ParcelHelper.doRoundTrip;
 
+import static org.junit.Assert.assertEquals;
+
 import android.support.test.filters.SmallTest;
-import android.test.AndroidTestCase;
+import android.support.test.runner.AndroidJUnit4;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,8 +17,10 @@ import java.util.List;
 import java.util.Map;
 
 @SmallTest
-public class ExtractionsContainerTest extends AndroidTestCase {
+@RunWith(AndroidJUnit4.class)
+public class ExtractionsContainerTest {
 
+    @Test
     public void testIsParcelable() {
         final ArrayList<Extraction> candidates = new ArrayList<Extraction>();
         candidates.add(new Extraction("0:EUR", "amount", null));
