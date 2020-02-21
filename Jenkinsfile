@@ -22,7 +22,6 @@ pipeline {
             steps {
                 script {
                     avd.deleteCorrupt()
-                    avd.create("api-19-nexus-5x", "system-images;android-19;google_apis;x86", "Nexus 5X")
                     avd.create("api-22-nexus-5x", "system-images;android-22;google_apis;x86", "Nexus 5X")
                     avd.create("api-26-nexus-5x", "system-images;android-26;google_apis;x86", "Nexus 5X")
                 }
@@ -55,29 +54,6 @@ pipeline {
             steps {
                 script {
                     def emulatorPort = emulator.start(avd.createName("api-22-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -gpu on -camera-back emulated -no-snapshot-save -no-snapshot-load")
-                    sh "echo $emulatorPort > emulator_port"
-                    adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
-                    withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
-                        sh "ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestClientIdAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_USR -PtestClientSecretAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
-                    }
-                }
-            }
-            post {
-                always {
-                    junit allowEmptyResults: true, testResults: 'ginisdk/build/outputs/androidTest-results/targeted/*.xml'
-                    script {
-                        def emulatorPort = sh returnStdout:true, script: 'cat emulator_port'
-                        emulatorPort = emulatorPort.trim().replaceAll("\r", "").replaceAll("\n", "")
-                        emulator.stop(emulatorPort)
-                        sh 'rm emulator_port || true'
-                    }
-                }
-            }
-        }
-        stage('Instrumentation Tests - API Level 19') {
-            steps {
-                script {
-                    def emulatorPort = emulator.start(avd.createName("api-19-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -gpu on -camera-back emulated -no-snapshot-save -no-snapshot-load")
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
                     withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
