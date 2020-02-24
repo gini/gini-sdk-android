@@ -18,7 +18,7 @@ import java.util.Map;
 
 /**
  * Contains specific extractions (e.g. "amountToPay") and compound extractions (e.g. "lineItems").
- * <p/>
+ * <p>
  * See the
  * <a href="http://developer.gini.net/gini-api/html/document_extractions.html">Gini API documentation</a>
  * for a list of the names of the specific extractions and compound specific extractions.
