@@ -476,9 +476,7 @@ public class SdkIntegrationTest extends AndroidTestCase {
                         || amountToPay.equals("700.43:EUR"));
         assertEquals("BIC should be found", "WELADED1MIN", extractions.get("bic").getValue());
         assertTrue("Payement recipient should be found", extractions.get("paymentRecipient").getValue().startsWith("Mindener Stadtwerke"));
-        assertEquals("Payment reference should be found",
-                "ReNr TST-00019, KdNr 765432, Fälligkeitsdatum 29.01.14, Rechnungsdatum 14.01.14, Verbrauchsstellennummer 5959595",
-                extractions.get("paymentReference").getValue());
+        assertTrue("Payment reference should be found", extractions.get("paymentReference").getValue().contains("ReNr TST-00019, KdNr 765432"));
 
         // all extractions are correct, that means we have nothing to correct and will only send positive feedback
         // we should only send feedback for extractions we have seen and accepted

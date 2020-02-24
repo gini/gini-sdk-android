@@ -80,6 +80,8 @@ task createTestPropertyFile {
 
         setProperty('testClientId', props, localProperties)
         setProperty('testClientSecret', props, localProperties)
+        setProperty('testClientIdAccounting', props, localProperties)
+        setProperty('testClientSecretAccounting', props, localProperties)
         setProperty('testApiUri', props, localProperties)
         setProperty('testApiUriAccounting', props, localProperties)
         setProperty('testUserCenterUri', props, localProperties)
@@ -152,4 +154,3 @@ android.libraryVariants.all { variant ->
 }
 
 apply from: rootProject.file('gradle/javadoc_coverage.gradle')
-apply from: rootProject.file('gradle/targeted_android_tests.gradle')
