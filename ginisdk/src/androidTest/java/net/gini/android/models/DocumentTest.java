@@ -1,13 +1,19 @@
 package net.gini.android.models;
 
+import static android.support.test.InstrumentationRegistry.getTargetContext;
+
 import static net.gini.android.helpers.ParcelHelper.doRoundTrip;
+
+import static org.junit.Assert.assertEquals;
 
 import android.net.Uri;
 import android.support.test.filters.SmallTest;
-import android.test.AndroidTestCase;
+import android.support.test.runner.AndroidJUnit4;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,14 +21,15 @@ import java.util.ArrayList;
 import java.util.Date;
 
 @SmallTest
-public class DocumentTest extends AndroidTestCase {
+@RunWith(AndroidJUnit4.class)
+public class DocumentTest {
 
     private JSONObject createDocumentJSON() throws IOException, JSONException {
         return createDocumentJSON("document.json");
     }
 
     private JSONObject createDocumentJSON(final String fileName) throws IOException, JSONException {
-        InputStream is = getContext().getResources().getAssets().open(fileName);
+        InputStream is = getTargetContext().getResources().getAssets().open(fileName);
 
         int size = is.available();
         byte[] buffer = new byte[size];
@@ -33,24 +40,27 @@ public class DocumentTest extends AndroidTestCase {
         return new JSONObject(new String(buffer));
     }
 
+    @Test
     public void testDocumentIdGetter() {
         Document document = new Document("1234-5678-9012-3456", Document.ProcessingState.COMPLETED,
-                                         "foobar.jpg", 1, new Date(),
-                                         Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                "foobar.jpg", 1, new Date(),
+                Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
                 new ArrayList<Uri>());
 
         assertEquals("1234-5678-9012-3456", document.getId());
     }
 
+    @Test
     public void testDocumentState() {
         Document document = new Document("1234-5678-9012-3456", Document.ProcessingState.COMPLETED,
-                                         "foobar.jpg", 1, new Date(),
-                                         Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                "foobar.jpg", 1, new Date(),
+                Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
                 new ArrayList<Uri>());
 
         assertEquals(Document.ProcessingState.COMPLETED, document.getState());
     }
 
+    @Test
     public void testDocumentFactory() throws IOException, JSONException {
         JSONObject responseData = createDocumentJSON();
 
@@ -65,6 +75,7 @@ public class DocumentTest extends AndroidTestCase {
         assertEquals(1360623867402L, document.getCreationDate().getTime());
     }
 
+    @Test
     public void testDocumentFactory_withUnknown_sourceClassification() throws IOException, JSONException {
         JSONObject responseData = createDocumentJSON("unknown-source-classification-document.json");
 
@@ -79,6 +90,7 @@ public class DocumentTest extends AndroidTestCase {
         assertEquals(1360623867402L, document.getCreationDate().getTime());
     }
 
+    @Test
     public void testDocumentFactory_withUnknown_processingState() throws IOException, JSONException {
         JSONObject responseData = createDocumentJSON("unknown-processing-state-document.json");
 
@@ -93,12 +105,13 @@ public class DocumentTest extends AndroidTestCase {
         assertEquals(1360623867402L, document.getCreationDate().getTime());
     }
 
+    @Test
     public void testShouldBeParcelable() {
         final Date date = new Date();
         final Document originalDocument =
                 new Document("1234-5678-9012-3456", Document.ProcessingState.COMPLETED,
-                             "foobar.jpg", 1, date,
-                             Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                        "foobar.jpg", 1, date,
+                        Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
                         new ArrayList<Uri>());
 
         final Document restoredDocument = doRoundTrip(originalDocument, Document.CREATOR);
@@ -109,6 +122,6 @@ public class DocumentTest extends AndroidTestCase {
         assertEquals(1, restoredDocument.getPageCount());
         assertEquals(date, restoredDocument.getCreationDate());
         assertEquals(Document.SourceClassification.NATIVE,
-                     restoredDocument.getSourceClassification());
+                restoredDocument.getSourceClassification());
     }
 }

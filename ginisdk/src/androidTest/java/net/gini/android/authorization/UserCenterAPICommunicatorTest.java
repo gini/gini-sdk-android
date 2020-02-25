@@ -1,12 +1,17 @@
 package net.gini.android.authorization;
 
+import static android.support.test.InstrumentationRegistry.getTargetContext;
+
 import static net.gini.android.helpers.TestUtils.areEqualURIQueries;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 
 import android.os.SystemClock;
 import android.support.test.filters.MediumTest;
-import android.test.InstrumentationTestCase;
+import android.support.test.runner.AndroidJUnit4;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -18,6 +23,9 @@ import net.gini.android.requests.RetryPolicyFactory;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -27,15 +35,17 @@ import java.util.Date;
 import bolts.Task;
 
 @MediumTest
-public class UserCenterAPICommunicatorTest extends InstrumentationTestCase {
+@RunWith(AndroidJUnit4.class)
+public class UserCenterAPICommunicatorTest {
+
     private UserCenterAPICommunicator apiManager;
     private RequestQueue mRequestQueue;
     private RetryPolicyFactory retryPolicyFactory;
 
-    @Override
+    @Before
     public void setUp() {
         // https://code.google.com/p/dexmaker/issues/detail?id=2
-        System.setProperty("dexmaker.dexcache", getInstrumentation().getTargetContext().getCacheDir().getPath());
+        System.setProperty("dexmaker.dexcache", getTargetContext().getCacheDir().getPath());
         retryPolicyFactory = new DefaultRetryPolicyFactory();
         mRequestQueue = Mockito.mock(RequestQueue.class);
         apiManager = new UserCenterAPICommunicator(mRequestQueue, "https://user.gini.net/", GiniApiType.DEFAULT, "foobar", "1234",
@@ -51,10 +61,12 @@ public class UserCenterAPICommunicatorTest extends InstrumentationTestCase {
         SystemClock.sleep(2);
     }
 
+    @Test
     public void testLoginClientShouldReturnTask() {
         assertNotNull(apiManager.loginClient());
     }
 
+    @Test
     public void testLoginClientRequestHasCorrectUrl() {
         apiManager.loginClient();
 
@@ -65,6 +77,7 @@ public class UserCenterAPICommunicatorTest extends InstrumentationTestCase {
                 request.getUrl());
     }
 
+    @Test
     public void testLoginClientHasCorrectData() throws AuthFailureError {
         apiManager.loginClient();
 
@@ -74,10 +87,12 @@ public class UserCenterAPICommunicatorTest extends InstrumentationTestCase {
         assertEquals("Basic Zm9vYmFyOjEyMzQ=", request.getHeaders().get("Authorization"));
     }
 
+    @Test
     public void testLoginUserShouldReturnTask() {
         assertNotNull(apiManager.loginClient());
     }
 
+    @Test
     public void testLoginUserRequestHasCorrectUrl() {
         UserCredentials userCredentials = new UserCredentials("foobar", "1234");
         apiManager.loginUser(userCredentials);
@@ -89,6 +104,7 @@ public class UserCenterAPICommunicatorTest extends InstrumentationTestCase {
     }
 
 
+    @Test
     public void testLoginUserRequestHasCorrectData() throws AuthFailureError {
         UserCredentials userCredentials = new UserCredentials("foobar", "1234");
         apiManager.loginUser(userCredentials);
@@ -100,10 +116,12 @@ public class UserCenterAPICommunicatorTest extends InstrumentationTestCase {
         assertTrue(areEqualURIQueries("username=foobar&password=1234", new String(request.getBody())));
     }
 
+    @Test
     public void testGetGiniApiSessionUserInfoShouldReturnTask() {
         assertNotNull(apiManager.getGiniApiSessionTokenInfo(new Session("", new Date())));
     }
 
+    @Test
     public void testGetGiniApiSessionUserInfoHasCorrectUrl() {
         Session giniApiSession = new Session("example_token", new Date());
         apiManager.getGiniApiSessionTokenInfo(giniApiSession);
@@ -114,10 +132,12 @@ public class UserCenterAPICommunicatorTest extends InstrumentationTestCase {
         assertEquals("https://user.gini.net/oauth/check_token?token=example_token", request.getUrl());
     }
 
+    @Test
     public void testGetUserIdShouldReturnTask() {
         assertNotNull(apiManager.getUserId(new Session("", new Date())));
     }
 
+    @Test
     public void testGetUserIdExtractsUserIdFromResponse() throws InterruptedException {
         final String userId = "JohnDoe";
         apiManager = new UserCenterAPICommunicator(mRequestQueue, "https://user.gini.net/", GiniApiType.DEFAULT, "foobar", "1234",
@@ -136,10 +156,12 @@ public class UserCenterAPICommunicatorTest extends InstrumentationTestCase {
         assertEquals(userId, userIdTask.getResult());
     }
 
+    @Test
     public void testUpdateEmailShouldReturnTask() throws JSONException {
         assertNotNull(apiManager.updateEmail("exampleUserId", "beispiel.com", "example.com", new Session("example_token", new Date())));
     }
 
+    @Test
     public void testUpdateEmailHasCorrectUrl() throws JSONException {
         String userId = "exampleUserId";
         apiManager.updateEmail(userId, "1234@beispiel.com", "5678@example.com", new Session("example_token", new Date()));
@@ -150,6 +172,7 @@ public class UserCenterAPICommunicatorTest extends InstrumentationTestCase {
         assertEquals("https://user.gini.net/api/users/" + userId, request.getUrl());
     }
 
+    @Test
     public void testUpdateEmailHasCorrectData() throws JSONException, AuthFailureError, InterruptedException {
         String newEmail = "1234@beispiel.com";
         String oldEmail = "5678@example.com";

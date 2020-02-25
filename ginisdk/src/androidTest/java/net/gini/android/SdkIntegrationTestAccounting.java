@@ -1,6 +1,14 @@
 package net.gini.android;
 
+import static android.support.test.InstrumentationRegistry.getTargetContext;
+
 import static net.gini.android.helpers.TrustKitHelper.resetTrustKit;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -9,7 +17,7 @@ import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.support.test.filters.LargeTest;
 import android.support.test.filters.SdkSuppress;
-import android.test.AndroidTestCase;
+import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
 
 import com.android.volley.toolbox.NoCache;
@@ -22,6 +30,9 @@ import net.gini.android.models.Document;
 import net.gini.android.models.SpecificExtraction;
 
 import org.json.JSONException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +45,8 @@ import bolts.Continuation;
 import bolts.Task;
 
 @LargeTest
-public class SdkIntegrationTestAccounting extends AndroidTestCase {
+@RunWith(AndroidJUnit4.class)
+public class SdkIntegrationTestAccounting {
 
     private Gini gini;
     private String clientId;
@@ -43,11 +55,9 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
     private String userCenterUri;
     private InputStream testDocumentAsStream;
 
-
-
-    @Override
-    protected void setUp() throws Exception {
-        final AssetManager assetManager = getContext().getResources().getAssets();
+    @Before
+    public void setUp() throws Exception {
+        final AssetManager assetManager = getTargetContext().getResources().getAssets();
         final InputStream testPropertiesInput = assetManager.open("test.properties");
         assertNotNull("test.properties not found", testPropertiesInput);
         final Properties testProperties = new Properties();
@@ -67,7 +77,7 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
 
         resetTrustKit();
 
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
+        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
                 setUserCenterApiBaseUrl(userCenterUri).
@@ -81,26 +91,32 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
         return value.toString();
     }
 
-    public void testDeprecatedProcessDocumentBitmap() throws IOException, InterruptedException, JSONException {
+    @Test
+    public void deprecatedProcessDocumentBitmap() throws IOException, InterruptedException, JSONException {
         final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
         final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder(testDocument).setDocumentType("RemittanceSlip");
         analyzeDocumentAndAssertExtractions(uploadBuilder);
     }
 
-    public void testProcessDocumentBitmap() throws IOException, InterruptedException, JSONException {
+    @Test
+    public void processDocumentBitmap() throws IOException, InterruptedException, JSONException {
         final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType(
+                DocumentTaskManager.DocumentType.INVOICE);
         analyzeDocumentAndAssertExtractions(uploadBuilder);
     }
 
-    public void testProcessDocumentByteArray() throws IOException, InterruptedException, JSONException {
+    @Test
+    public void processDocumentByteArray() throws IOException, InterruptedException, JSONException {
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(
+                DocumentTaskManager.DocumentType.INVOICE);
         analyzeDocumentAndAssertExtractions(uploadBuilder);
     }
 
-    public void testProcessDocumentWithCustomCache() throws IOException, JSONException, InterruptedException {
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
+    @Test
+    public void processDocumentWithCustomCache() throws IOException, JSONException, InterruptedException {
+        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
                 setUserCenterApiBaseUrl(userCenterUri).
@@ -109,13 +125,16 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
                 build();
 
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(
+                DocumentTaskManager.DocumentType.INVOICE);
         analyzeDocumentAndAssertExtractions(uploadBuilder);
     }
 
-    public void testSendFeedback() throws Exception {
+    @Test
+    public void sendFeedback() throws Exception {
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(
+                DocumentTaskManager.DocumentType.INVOICE);
         final Map<Document, Map<String, SpecificExtraction>> documentExtractions = analyzeDocumentAndAssertExtractions(
                 uploadBuilder);
         final Document document = documentExtractions.keySet().iterator().next();
@@ -136,9 +155,11 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
         assertFalse("Sending feedback should be successful", sendFeedback.isFaulted());
     }
 
-    public void testDocumentUploadWorksAfterNewUserWasCreatedIfUserWasInvalid() throws IOException, JSONException, InterruptedException {
-        EncryptedCredentialsStore credentialsStore = new EncryptedCredentialsStore(getContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE), getContext());
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
+    @Test
+    public void documentUploadWorksAfterNewUserWasCreatedIfUserWasInvalid() throws IOException, JSONException, InterruptedException {
+        EncryptedCredentialsStore credentialsStore = new EncryptedCredentialsStore(
+                getTargetContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE), getTargetContext());
+        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
                 setUserCenterApiBaseUrl(userCenterUri).
@@ -151,17 +172,20 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
         credentialsStore.storeUserCredentials(invalidUserCredentials);
 
         final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType(
+                DocumentTaskManager.DocumentType.INVOICE);
         analyzeDocumentAndAssertExtractions(uploadBuilder);
 
         // Verify that a new user was created
         assertNotSame(invalidUserCredentials.getUsername(), credentialsStore.getUserCredentials().getUsername());
     }
 
-    public void testEmailDomainIsUpdatedForExistingUserIfEmailDomainWasChanged() throws IOException, JSONException, InterruptedException {
+    @Test
+    public void emailDomainIsUpdatedForExistingUserIfEmailDomainWasChanged() throws IOException, JSONException, InterruptedException {
         // Upload a document to make sure we have a valid user
-        EncryptedCredentialsStore credentialsStore = new EncryptedCredentialsStore(getContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE), getContext());
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
+        EncryptedCredentialsStore credentialsStore = new EncryptedCredentialsStore(
+                getTargetContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE), getTargetContext());
+        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
                 setUserCenterApiBaseUrl(userCenterUri).
@@ -170,13 +194,14 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
                 build();
 
         final Bitmap testDocument = BitmapFactory.decodeStream(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBitmap(testDocument).setDocumentType(
+                DocumentTaskManager.DocumentType.INVOICE);
         analyzeDocumentAndAssertExtractions(uploadBuilder);
 
         // Create another sdk instance with a new email domain (to simulate an app update)
         // and verify that the new email domain is used
         String newEmailDomain = "beispiel.com";
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, newEmailDomain).
+        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, newEmailDomain).
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
                 setUserCenterApiBaseUrl(userCenterUri).
@@ -190,8 +215,9 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
         assertEquals(newEmailDomain, extractEmailDomain(newUserCredentials.getUsername()));
     }
 
-    public void testPublicKeyPinningWithMatchingPublicKey() throws Exception {
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
+    @Test
+    public void publicKeyPinningWithMatchingPublicKey() throws Exception {
+        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, "example.com").
                 setNetworkSecurityConfigResId(net.gini.android.test.R.xml.network_security_config).
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
@@ -200,12 +226,14 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
                 build();
 
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(
+                DocumentTaskManager.DocumentType.INVOICE);
         analyzeDocumentAndAssertExtractions(uploadBuilder);
     }
 
-    public void testPublicKeyPinningWithCustomCache() throws Exception {
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
+    @Test
+    public void publicKeyPinningWithCustomCache() throws Exception {
+        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, "example.com").
                 setNetworkSecurityConfigResId(net.gini.android.test.R.xml.network_security_config).
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
@@ -215,13 +243,15 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
                 build();
 
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(
+                DocumentTaskManager.DocumentType.INVOICE);
         analyzeDocumentAndAssertExtractions(uploadBuilder);
     }
 
+    @Test
     @SdkSuppress(maxSdkVersion = Build.VERSION_CODES.JELLY_BEAN_MR1)
-    public void testPublicKeyPinningWithWrongPublicKey() throws Exception {
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
+    public void publicKeyPinningWithWrongPublicKey() throws Exception {
+        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, "example.com").
                 setNetworkSecurityConfigResId(net.gini.android.test.R.xml.wrong_network_security_config).
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
@@ -230,7 +260,8 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
                 build();
 
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(
+                DocumentTaskManager.DocumentType.INVOICE);
         final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
 
         final Task<Document> upload = uploadBuilder.upload(documentTaskManager);
@@ -242,12 +273,13 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
             }
         });
 
-        final Task<Map<String, SpecificExtraction>> retrieveExtractions = processDocument.onSuccessTask(new Continuation<Document, Task<Map<String, SpecificExtraction>>>() {
-            @Override
-            public Task<Map<String, SpecificExtraction>> then(Task<Document> task) throws Exception {
-                return documentTaskManager.getExtractions(task.getResult());
-            }
-        });
+        final Task<Map<String, SpecificExtraction>> retrieveExtractions = processDocument.onSuccessTask(
+                new Continuation<Document, Task<Map<String, SpecificExtraction>>>() {
+                    @Override
+                    public Task<Map<String, SpecificExtraction>> then(Task<Document> task) throws Exception {
+                        return documentTaskManager.getExtractions(task.getResult());
+                    }
+                });
 
         retrieveExtractions.waitForCompletion();
         if (retrieveExtractions.isFaulted()) {
@@ -257,9 +289,10 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
         assertTrue("extractions shouldn't have succeeded", retrieveExtractions.isFaulted());
     }
 
+    @Test
     @SdkSuppress(maxSdkVersion = Build.VERSION_CODES.JELLY_BEAN_MR1)
-    public void testPublicKeyPinningWithMultiplePublicKeys() throws Exception {
-        gini = new SdkBuilder(getContext(), clientId, clientSecret, "example.com").
+    public void publicKeyPinningWithMultiplePublicKeys() throws Exception {
+        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, "example.com").
                 setNetworkSecurityConfigResId(net.gini.android.test.R.xml.multiple_keys_network_security_config).
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
@@ -268,7 +301,8 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
                 build();
 
         final byte[] testDocument = TestUtils.createByteArray(testDocumentAsStream);
-        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(DocumentTaskManager.DocumentType.INVOICE);
+        final DocumentUploadBuilder uploadBuilder = new DocumentUploadBuilder().setDocumentBytes(testDocument).setDocumentType(
+                DocumentTaskManager.DocumentType.INVOICE);
         analyzeDocumentAndAssertExtractions(uploadBuilder);
     }
 
@@ -280,7 +314,8 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
         return "";
     }
 
-    private Map<Document, Map<String, SpecificExtraction>> analyzeDocumentAndAssertExtractions(DocumentUploadBuilder uploadBuilder) throws InterruptedException, JSONException {
+    private Map<Document, Map<String, SpecificExtraction>> analyzeDocumentAndAssertExtractions(DocumentUploadBuilder uploadBuilder)
+            throws InterruptedException, JSONException {
         final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
 
         final Task<Document> upload = uploadBuilder.upload(documentTaskManager);
@@ -292,12 +327,13 @@ public class SdkIntegrationTestAccounting extends AndroidTestCase {
             }
         });
 
-        final Task<Map<String, SpecificExtraction>> retrieveExtractions = processDocument.onSuccessTask(new Continuation<Document, Task<Map<String, SpecificExtraction>>>() {
-            @Override
-            public Task<Map<String, SpecificExtraction>> then(Task<Document> task) throws Exception {
-                return documentTaskManager.getExtractions(task.getResult());
-            }
-        });
+        final Task<Map<String, SpecificExtraction>> retrieveExtractions = processDocument.onSuccessTask(
+                new Continuation<Document, Task<Map<String, SpecificExtraction>>>() {
+                    @Override
+                    public Task<Map<String, SpecificExtraction>> then(Task<Document> task) throws Exception {
+                        return documentTaskManager.getExtractions(task.getResult());
+                    }
+                });
 
         retrieveExtractions.waitForCompletion();
         if (retrieveExtractions.isFaulted()) {

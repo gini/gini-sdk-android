@@ -1,6 +1,10 @@
 package net.gini.android.authorization;
 
 
+import static android.support.test.InstrumentationRegistry.getTargetContext;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -8,10 +12,13 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 import android.support.test.filters.SmallTest;
-import android.test.InstrumentationTestCase;
+import android.support.test.runner.AndroidJUnit4;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import java.util.Date;
@@ -19,13 +26,16 @@ import java.util.Date;
 import bolts.Task;
 
 @SmallTest
-public class UserCenterManagerTest extends InstrumentationTestCase {
+@RunWith(AndroidJUnit4.class)
+public class UserCenterManagerTest {
+
     private UserCenterManager mUserCenterManager;
     private UserCenterAPICommunicator mMockUserCenterAPICommunicator;
 
+    @Before
     public void setUp() {
         // https://code.google.com/p/dexmaker/issues/detail?id=2
-        System.setProperty("dexmaker.dexcache", getInstrumentation().getTargetContext().getCacheDir().getPath());
+        System.setProperty("dexmaker.dexcache", getTargetContext().getCacheDir().getPath());
 
         mMockUserCenterAPICommunicator = Mockito.mock(UserCenterAPICommunicator.class);
         mUserCenterManager = new UserCenterManager(mMockUserCenterAPICommunicator);
@@ -35,7 +45,7 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
      * Many tests require a valid response from the Gini API. This method returns a task which will resolve to a
      * JSONObject which is a valid Gini API response.
      */
-    public Task<JSONObject> createTestTokenResponse(final String accessToken) throws JSONException{
+    public Task<JSONObject> createTestTokenResponse(final String accessToken) throws JSONException {
         final JSONObject responseData = new JSONObject() {{
             put("token_type", "bearer");
             put("access_token", accessToken);
@@ -56,12 +66,14 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
         return Task.forResult(responseData);
     }
 
+    @Test
     public void testLoginClientReturnsFuture() {
         when(mMockUserCenterAPICommunicator.loginClient()).thenReturn(Task.forResult(new JSONObject()));
 
         assertNotNull(mUserCenterManager.loginClient());
     }
 
+    @Test
     public void testLoginClientResolvesToCorrectSession() throws JSONException, InterruptedException {
         when(mMockUserCenterAPICommunicator.loginClient())
                 .thenReturn(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6"));
@@ -73,6 +85,7 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
         assertEquals("74c1e7fe-e464-451f-a6eb-8f0998c46ff6", session.getAccessToken());
     }
 
+    @Test
     public void testGetSessionReusesSession() throws JSONException, InterruptedException {
         // First try which sets the first session.
         when(mMockUserCenterAPICommunicator.loginClient())
@@ -95,6 +108,7 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
         assertEquals(firstSession, secondSession);
     }
 
+    @Test
     public void testLoginUserShouldReturnTask() throws JSONException {
         UserCredentials userCredentials = new UserCredentials("foobar", "1234");
         when(mMockUserCenterAPICommunicator.loginUser(userCredentials))
@@ -103,6 +117,7 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
         assertNotNull(mUserCenterManager.loginUser(userCredentials));
     }
 
+    @Test
     public void testLoginUserShouldReturnCorrectSession() throws JSONException, InterruptedException {
         UserCredentials userCredentials = new UserCredentials("foobar", "1234");
         when(mMockUserCenterAPICommunicator.loginUser(userCredentials))
@@ -115,6 +130,7 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
         assertEquals("74c1e7fe-e464-451f-a6eb-8f0998c46ff6", session.getAccessToken());
     }
 
+    @Test
     public void testCreateUserShouldReturnTask() throws JSONException {
         when(mMockUserCenterAPICommunicator.loginClient())
                 .thenReturn(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6"));
@@ -122,6 +138,7 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
         assertNotNull(mUserCenterManager.createUser(new UserCredentials("foo", "bar")));
     }
 
+    @Test
     public void testCreateUserShouldResolveToUser() throws JSONException, InterruptedException {
         final Uri createdUserUri = Uri.parse("https://user.gini.net/api/users/88a28076-18e8-4275-b39c-eaacc240d406");
         when(mMockUserCenterAPICommunicator.loginClient())
@@ -143,12 +160,13 @@ public class UserCenterManagerTest extends InstrumentationTestCase {
         assertEquals("88a28076-18e8-4275-b39c-eaacc240d406", user.getUserId());
     }
 
+    @Test
     public void testUpdateEmailShouldReturnTask() throws JSONException {
         when(mMockUserCenterAPICommunicator.loginClient())
                 .thenReturn(createTestTokenResponse("74c1e7fe-e464-451f-a6eb-8f0998c46ff6"));
         when(mMockUserCenterAPICommunicator.getUserId(any(Session.class)))
                 .thenReturn(Task.forResult("exampleUserId"));
-        when(mMockUserCenterAPICommunicator.updateEmail(anyString(),anyString(),anyString(), any(Session.class)))
+        when(mMockUserCenterAPICommunicator.updateEmail(anyString(), anyString(), anyString(), any(Session.class)))
                 .thenReturn(Task.forResult(new JSONObject()));
 
         assertNotNull(mUserCenterManager.updateEmail("1234@beispiel.com", "5678@example.com", new Session("example_token", new Date())));

@@ -1,7 +1,14 @@
 package net.gini.android;
 
+import static android.support.test.InstrumentationRegistry.getTargetContext;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
+
 import android.support.test.filters.SmallTest;
-import android.test.AndroidTestCase;
+import android.support.test.runner.AndroidJUnit4;
 
 import com.android.volley.Cache;
 import com.android.volley.RetryPolicy;
@@ -9,61 +16,75 @@ import com.android.volley.RetryPolicy;
 import net.gini.android.authorization.Session;
 import net.gini.android.authorization.SessionManager;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import bolts.Task;
 
 @SmallTest
-public class SdkBuilderTest extends AndroidTestCase {
+@RunWith(AndroidJUnit4.class)
+public class SdkBuilderTest {
 
+    @Test
     public void testBuilderReturnsSdkInstance() {
-        SdkBuilder builder = new SdkBuilder(getContext(), "clientId", "clientSecret", "@example.com");
+        SdkBuilder builder = new SdkBuilder(getTargetContext(), "clientId", "clientSecret", "@example.com");
         assertNotNull(builder.build());
     }
 
+    @Test
     public void testBuilderReturnsCorrectConfiguredSdkInstance() {
-        SdkBuilder builder = new SdkBuilder(getContext(), "clientId", "clientSecret", "@example.com");
+        SdkBuilder builder = new SdkBuilder(getTargetContext(), "clientId", "clientSecret", "@example.com");
         Gini sdkInstance = builder.build();
 
         assertNotNull(sdkInstance.getDocumentTaskManager());
         assertNotNull(sdkInstance.getCredentialsStore());
     }
 
+    @Test
     public void testBuilderWorksWithAlternativeSessionManager() {
         final SessionManager sessionManager = new NullSessionManager();
 
-        final SdkBuilder builder = new SdkBuilder(getContext(), sessionManager);
+        final SdkBuilder builder = new SdkBuilder(getTargetContext(), sessionManager);
         final Gini sdkInstance = builder.build();
 
         assertNotNull(sdkInstance);
         assertNotNull(sdkInstance.getDocumentTaskManager());
         assertNotNull(sdkInstance.getCredentialsStore());
-     }
+    }
 
-    public void testSetWrongConnectionTimeout(){
-        SdkBuilder builder = new SdkBuilder(getContext(), "clientId", "clientSecret", "@example.com");
+    @Test
+    public void testSetWrongConnectionTimeout() {
+        SdkBuilder builder = new SdkBuilder(getTargetContext(), "clientId", "clientSecret", "@example.com");
         try {
             builder.setConnectionTimeoutInMs(-1);
             fail("IllegalArgumentException should be thrown");
-        } catch (IllegalArgumentException exc){}
+        } catch (IllegalArgumentException exc) {
+        }
     }
 
-    public void testSetWrongConnectionMaxNumberOfRetries(){
-        SdkBuilder builder = new SdkBuilder(getContext(), "clientId", "clientSecret", "@example.com");
+    @Test
+    public void testSetWrongConnectionMaxNumberOfRetries() {
+        SdkBuilder builder = new SdkBuilder(getTargetContext(), "clientId", "clientSecret", "@example.com");
         try {
             builder.setMaxNumberOfRetries(-1);
             fail("IllegalArgumentException should be thrown");
-        } catch (IllegalArgumentException exc){}
+        } catch (IllegalArgumentException exc) {
+        }
     }
 
-    public void testSetWrongConnectionBackOffMultiplier(){
-        SdkBuilder builder = new SdkBuilder(getContext(), "clientId", "clientSecret", "@example.com");
+    @Test
+    public void testSetWrongConnectionBackOffMultiplier() {
+        SdkBuilder builder = new SdkBuilder(getTargetContext(), "clientId", "clientSecret", "@example.com");
         try {
             builder.setConnectionBackOffMultiplier(-1);
             fail("IllegalArgumentException should be thrown");
-        } catch (IllegalArgumentException exc){}
+        } catch (IllegalArgumentException exc) {
+        }
     }
 
-    public void testRetryPolicyWiring(){
-        SdkBuilder builder = new SdkBuilder(getContext(), "clientId", "clientSecret", "@example.com");
+    @Test
+    public void testRetryPolicyWiring() {
+        SdkBuilder builder = new SdkBuilder(getTargetContext(), "clientId", "clientSecret", "@example.com");
         builder.setConnectionTimeoutInMs(3333);
         builder.setMaxNumberOfRetries(66);
         builder.setConnectionBackOffMultiplier(1.3636f);
@@ -75,8 +96,9 @@ public class SdkBuilderTest extends AndroidTestCase {
         assertEquals(0, retryPolicy.getCurrentRetryCount());
     }
 
+    @Test
     public void testVolleyCacheConfiguration() {
-        SdkBuilder builder = new SdkBuilder(getContext(), "clientId", "clientSecret", "@example.com");
+        SdkBuilder builder = new SdkBuilder(getTargetContext(), "clientId", "clientSecret", "@example.com");
         NullCache nullCache = new NullCache();
         builder.setCache(nullCache);
         Gini sdkInstance = builder.build();

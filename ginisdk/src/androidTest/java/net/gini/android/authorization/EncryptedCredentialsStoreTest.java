@@ -1,37 +1,47 @@
 package net.gini.android.authorization;
 
 import static android.content.Context.MODE_PRIVATE;
+import static android.support.test.InstrumentationRegistry.getTargetContext;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import android.content.SharedPreferences;
-import android.test.AndroidTestCase;
+import android.support.test.runner.AndroidJUnit4;
 
 import net.gini.android.authorization.crypto.GiniCryptoHelper;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * Created by Alpar Szotyori on 08.10.2018.
  *
  * Copyright (c) 2018 Gini GmbH.
  */
-public class EncryptedCredentialsStoreTest extends AndroidTestCase {
+@RunWith(AndroidJUnit4.class)
+public class EncryptedCredentialsStoreTest {
 
     private SharedPreferences mSharedPreferences;
     private EncryptedCredentialsStore mCredentialsStore;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        mSharedPreferences = getContext().getSharedPreferences("GiniTests", MODE_PRIVATE);
+    @Before
+    public void setUp() throws Exception {
+        mSharedPreferences = getTargetContext().getSharedPreferences("GiniTests", MODE_PRIVATE);
         mSharedPreferences.edit().clear().commit();
 
-        mCredentialsStore = new EncryptedCredentialsStore(mSharedPreferences, getContext());
+        mCredentialsStore = new EncryptedCredentialsStore(mSharedPreferences, getTargetContext());
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @After
+    public void tearDown() throws Exception {
         mSharedPreferences.edit().clear().commit();
     }
 
+    @Test
     public void testEncryptsExistingPlaintextCredentials() {
         // Given
         final UserCredentials userCredentials = new UserCredentials("testuser@gini.net",
@@ -46,6 +56,7 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
         assertTrue(!userCredentials.getPassword().equals(encryptedUserCredentials.getPassword()));
     }
 
+    @Test
     public void testDecryptsEncryptedExistingPlaintextCredentials() {
         // Given
         final UserCredentials userCredentials = new UserCredentials("testuser@gini.net",
@@ -59,6 +70,7 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
         assertEquals(userCredentials.getPassword(), decryptedUserCredentials.getPassword());
     }
 
+    @Test
     public void testDoesNotEncryptAlreadyEncryptedCredentials() {
         // Given
         final UserCredentials userCredentials = new UserCredentials("testuser@gini.net",
@@ -77,6 +89,7 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
                 encryptedUserCredentialsAfter.getPassword());
     }
 
+    @Test
     public void testEncryptsCredentials() {
         // Given
         final UserCredentials userCredentials = new UserCredentials("testuser@gini.net",
@@ -89,6 +102,7 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
         assertTrue(!userCredentials.getPassword().equals(encryptedUserCredentials.getPassword()));
     }
 
+    @Test
     public void testDecryptsCredentials() {
         // Given
         final UserCredentials userCredentials = new UserCredentials("testuser@gini.net",
@@ -101,6 +115,7 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
         assertEquals(userCredentials.getPassword(), decryptedUserCredentials.getPassword());
     }
 
+    @Test
     public void testDeleteCredentials() {
         // Given
         final UserCredentials userCredentials = new UserCredentials("testuser@gini.net",
@@ -112,6 +127,7 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
         assertNull(mCredentialsStore.getUserCredentials());
     }
 
+    @Test
     public void testSetsEncryptionVersion() {
         // Given
         final UserCredentials userCredentials = new UserCredentials("testuser@gini.net",
@@ -122,6 +138,7 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
         assertEquals(encryptionVersion, EncryptedCredentialsStore.ENCRYPTION_VERSION);
     }
 
+    @Test
     public void testEncryptionIsDifferentForSameCredentials() {
         // Given
         final UserCredentials userCredentials = new UserCredentials("testuser@gini.net",
@@ -136,6 +153,7 @@ public class EncryptedCredentialsStoreTest extends AndroidTestCase {
         assertTrue(!encryptedCredentials1.getPassword().equals(encryptedCredentials2.getPassword()));
     }
 
+    @Test
     public void testReturnsNullCredentialsIfTheEncryptionKeyChanged() throws Exception {
         // Given
         final UserCredentials userCredentials = new UserCredentials("testuser@gini.net",
