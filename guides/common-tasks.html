@@ -110,6 +110,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../changelog.html#important">Important</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../changelog.html#id1">2.3.1 (2019-04-01)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../changelog.html#id2">2.3.0 (2019-01-16)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../changelog.html#id3">2.2.0 (2018-10-31)</a></li>
@@ -287,7 +288,7 @@ same order as the pages of the scanned document.</p>
 this means that you won&#8217;t get any extractions before the composite document is fully processed. The
 processing time may vary, usually it is in the range of a couple of seconds, but blurred or slightly
 rotated images are known to drasticly increase the processing time.</p>
-<p>The <tt class="docutils literal"><span class="pre">DocumentTaskManager</span></tt> provides the <tt class="docutils literal"><span class="pre">pollDocument</span></tt> and <tt class="docutils literal"><span class="pre">getExtractions</span></tt> methods which can be
+<p>The <tt class="docutils literal"><span class="pre">DocumentTaskManager</span></tt> provides the <tt class="docutils literal"><span class="pre">pollDocument</span></tt> and <tt class="docutils literal"><span class="pre">getAllExtractions</span></tt> methods which can be
 used to fetch the extractions after the processing of the document is completed. The following
 example shows how to achieve this in detail.</p>
 <div class="highlight-java"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">net.gini.android.Gini</span><span class="o">;</span>
@@ -316,13 +317,17 @@ example shows how to achieve this in detail.</p>
         <span class="nd">@Override</span>
         <span class="kd">public</span> <span class="n">Object</span> <span class="nf">then</span><span class="o">(</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;</span> <span class="n">task</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
             <span class="kd">final</span> <span class="n">Document</span> <span class="n">document</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="na">getResult</span><span class="o">();</span>
-            <span class="k">return</span> <span class="n">documentTaskManager</span><span class="o">.</span><span class="na">getExtractions</span><span class="o">(</span><span class="n">document</span><span class="o">);</span>
+            <span class="k">return</span> <span class="n">documentTaskManager</span><span class="o">.</span><span class="na">getAllExtractions</span><span class="o">(</span><span class="n">document</span><span class="o">);</span>
         <span class="o">}</span>
     <span class="o">})</span>
-    <span class="o">.</span><span class="na">onSuccess</span><span class="o">(</span><span class="k">new</span> <span class="n">Continuation</span><span class="o">&lt;</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;,</span> <span class="n">Void</span><span class="o">&gt;()</span> <span class="o">{</span>
+    <span class="o">.</span><span class="na">onSuccess</span><span class="o">(</span><span class="k">new</span> <span class="n">Continuation</span><span class="o">&lt;</span><span class="n">ExtractionsContainer</span><span class="o">&gt;,</span> <span class="n">Void</span><span class="o">&gt;()</span> <span class="o">{</span>
         <span class="nd">@Override</span>
-        <span class="kd">public</span> <span class="n">Void</span> <span class="nf">then</span><span class="o">(</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;&gt;</span> <span class="n">task</span><span class="o">)</span> <span class="o">{</span>
-            <span class="kd">final</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;</span> <span class="n">extractions</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="na">getResult</span><span class="o">();</span>
+        <span class="kd">public</span> <span class="n">Void</span> <span class="nf">then</span><span class="o">(</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">ExtractionsContainer</span><span class="o">&gt;</span> <span class="n">task</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kd">final</span> <span class="n">ExtractionsContainer</span> <span class="n">extractions</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="na">getResult</span><span class="o">();</span>
+            <span class="kd">final</span> <span class="n">SpecificExtraction</span> <span class="n">amountToPay</span> <span class="o">=</span>
+                    <span class="n">extractions</span><span class="o">.</span><span class="na">getSpecificExtractions</span><span class="o">().</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;amountToPay&quot;</span><span class="o">);</span>
+            <span class="kd">final</span> <span class="n">CompoundExtraction</span> <span class="n">lineItems</span> <span class="o">=</span>
+                    <span class="n">extractions</span><span class="o">.</span><span class="na">getCompoundExtractions</span><span class="o">().</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;lineItems&quot;</span><span class="o">);</span>
             <span class="c1">// You may use the extractions to fulfill your use-case</span>
             <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
         <span class="o">}</span>

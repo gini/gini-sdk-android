@@ -2,6 +2,13 @@
 Changelog
 =========
 
+Important
+=========
+
+This page isn’t updated anymore. Please refer to our
+`Releases on Github <https://github.com/gini/gini-vision-lib-android/releases>`_ for an up to date
+changelog.
+
 2.3.1 (2019-04-01)
 ==================
 
