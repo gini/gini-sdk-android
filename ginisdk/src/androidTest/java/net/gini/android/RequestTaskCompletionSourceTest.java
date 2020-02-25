@@ -1,27 +1,40 @@
 package net.gini.android;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import android.support.test.filters.SmallTest;
-import android.test.AndroidTestCase;
+import android.support.test.runner.AndroidJUnit4;
 
 import com.android.volley.VolleyError;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import bolts.Task;
 
 @SmallTest
-public class RequestTaskCompletionSourceTest extends AndroidTestCase {
+@RunWith(AndroidJUnit4.class)
+public class RequestTaskCompletionSourceTest {
 
+    @Test
     public void testNewRequestTaskCompletionSource() {
         assertNotNull(RequestTaskCompletionSource.newCompletionSource());
     }
 
+    @Test
     public void testGetTaskShouldReturnTask() {
         RequestTaskCompletionSource<String> requestTaskCompletionSource = RequestTaskCompletionSource.newCompletionSource();
         assertNotNull(requestTaskCompletionSource.getTask());
     }
 
+    @Test
     public void testCompletesTask() {
         RequestTaskCompletionSource<String> requestTaskCompletionSource = RequestTaskCompletionSource.newCompletionSource();
-        Task<String> task= requestTaskCompletionSource.getTask();
+        Task<String> task = requestTaskCompletionSource.getTask();
 
         requestTaskCompletionSource.onResponse("foobar");
 
@@ -30,6 +43,7 @@ public class RequestTaskCompletionSourceTest extends AndroidTestCase {
         assertNull(task.getError());
     }
 
+    @Test
     public void testResolvesError() {
         RequestTaskCompletionSource<String> requestTaskCompletionSource = RequestTaskCompletionSource.newCompletionSource();
         Task<String> task = requestTaskCompletionSource.getTask();

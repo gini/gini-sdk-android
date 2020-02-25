@@ -1,19 +1,31 @@
 package net.gini.android.authorization;
 
+import static android.support.test.InstrumentationRegistry.getTargetContext;
+
 import static net.gini.android.Utils.CHARSET_UTF8;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.support.test.filters.MediumTest;
-import android.test.InstrumentationTestCase;
+import android.support.test.runner.AndroidJUnit4;
 
 import com.android.volley.NetworkResponse;
 import com.android.volley.VolleyError;
 
 import org.json.JSONObject;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.stubbing.OngoingStubbing;
@@ -25,16 +37,18 @@ import java.util.UUID;
 import bolts.Task;
 
 @MediumTest
-public class AnonymousSessionManagerTest extends InstrumentationTestCase {
+@RunWith(AndroidJUnit4.class)
+public class AnonymousSessionManagerTest {
+
     private AnonymousSessionManager mAnonymousSessionSessionManager;
     private UserCenterManager mUserCenterManager;
     private CredentialsStore mCredentialsStore;
     private String mEmailDomain;
 
-    @Override
+    @Before
     public void setUp() {
         // https://code.google.com/p/dexmaker/issues/detail?id=2
-        System.setProperty("dexmaker.dexcache", getInstrumentation().getTargetContext().getCacheDir().getPath());
+        System.setProperty("dexmaker.dexcache", getTargetContext().getCacheDir().getPath());
 
         mUserCenterManager = Mockito.mock(UserCenterManager.class);
         mCredentialsStore = Mockito.mock(CredentialsStore.class);
@@ -42,6 +56,7 @@ public class AnonymousSessionManagerTest extends InstrumentationTestCase {
         mAnonymousSessionSessionManager = new AnonymousSessionManager(mEmailDomain, mUserCenterManager, mCredentialsStore);
     }
 
+    @Test
     public void testConstructionWithNullReferencesThrowsNullPointerException() {
         try {
             new AnonymousSessionManager(null, null, null);
@@ -62,6 +77,7 @@ public class AnonymousSessionManagerTest extends InstrumentationTestCase {
         }
     }
 
+    @Test
     public void testGetSessionShouldReturnTask() {
         // Task that will never complete. Sufficient for this test.
         Task<User>.TaskCompletionSource completionSource = Task.create();
@@ -70,6 +86,7 @@ public class AnonymousSessionManagerTest extends InstrumentationTestCase {
         assertNotNull(mAnonymousSessionSessionManager.getSession());
     }
 
+    @Test
     public void testGetSessionShouldResolveToSession() throws InterruptedException {
         UserCredentials userCredentials = new UserCredentials(email("foobar"), "1234");
         when(mCredentialsStore.getUserCredentials()).thenReturn(userCredentials);
@@ -83,9 +100,10 @@ public class AnonymousSessionManagerTest extends InstrumentationTestCase {
     }
 
     private String email(String name) {
-        return name +"@" + mEmailDomain;
+        return name + "@" + mEmailDomain;
     }
 
+    @Test
     public void testLoginUserShouldReturnTask() {
         // Task that will never complete. Sufficient for this test.
         Task<User>.TaskCompletionSource completionSource = Task.create();
@@ -94,6 +112,7 @@ public class AnonymousSessionManagerTest extends InstrumentationTestCase {
         assertNotNull(mAnonymousSessionSessionManager.loginUser());
     }
 
+    @Test
     public void testLoginUserShouldResolveToSession() throws InterruptedException {
         UserCredentials userCredentials = new UserCredentials(email("foobar"), "1234");
         when(mCredentialsStore.getUserCredentials()).thenReturn(userCredentials);
@@ -107,6 +126,7 @@ public class AnonymousSessionManagerTest extends InstrumentationTestCase {
     }
 
 
+    @Test
     public void testThatNewUserCredentialsAreStored() throws InterruptedException {
         // TODO: The returned "created" user has another email address than the UserCredentials instance which is given
         //       to the mock.
@@ -119,6 +139,7 @@ public class AnonymousSessionManagerTest extends InstrumentationTestCase {
         verify(mCredentialsStore).storeUserCredentials(any(UserCredentials.class));
     }
 
+    @Test
     public void testThatStoredUserCredentialsAreUsed() throws InterruptedException {
         UserCredentials userCredentials = new UserCredentials(email("foobar"), "1234");
         when(mCredentialsStore.getUserCredentials()).thenReturn(userCredentials);
@@ -132,6 +153,7 @@ public class AnonymousSessionManagerTest extends InstrumentationTestCase {
     }
 
     @SuppressWarnings("unchecked")
+    @Test
     public void testThatUserSessionsAreReused() throws InterruptedException {
         when(mCredentialsStore.getUserCredentials()).thenReturn(new UserCredentials(email("foo"), "1234"));
         when(mUserCenterManager.loginUser(any(UserCredentials.class))).thenReturn(
@@ -149,6 +171,7 @@ public class AnonymousSessionManagerTest extends InstrumentationTestCase {
     }
 
     @SuppressWarnings("unchecked")
+    @Test
     public void testThatUserSessionsAreNotReusedWhenTimedOut() throws InterruptedException {
         when(mCredentialsStore.getUserCredentials()).thenReturn(new UserCredentials(email("foo"), "1234"));
         when(mUserCenterManager.loginUser(any(UserCredentials.class))).thenReturn(
@@ -168,6 +191,7 @@ public class AnonymousSessionManagerTest extends InstrumentationTestCase {
         assertNotSame(firstSessionTask.getResult(), secondSessionTask.getResult());
     }
 
+    @Test
     public void testThatCreatedUserNamesAreEmailAddresses() throws InterruptedException {
         // TODO: The returned "created" user has another email address than the UserCredentials instance which is given
         //       to the mock.
@@ -184,6 +208,7 @@ public class AnonymousSessionManagerTest extends InstrumentationTestCase {
     }
 
     @SuppressWarnings("unchecked")
+    @Test
     public void testThatExistingUserIsDeletedAndNewUserIsCreatedIfExistingIsInvalid() throws InterruptedException {
         makeLoginRequestFailOnce()
                 .thenReturn(Task.forResult(new Session(UUID.randomUUID().toString(), new Date())));
@@ -200,14 +225,17 @@ public class AnonymousSessionManagerTest extends InstrumentationTestCase {
         String invalidGrantErrorJson = "{\"error\": \"invalid_grant\"}";
         return when(mUserCenterManager.loginUser(any(UserCredentials.class)))
                 .thenReturn(Task.<Session>forError(new VolleyError(
-                        new NetworkResponse(400, invalidGrantErrorJson.getBytes(CHARSET_UTF8), Collections.<String, String>emptyMap(), true))));
+                        new NetworkResponse(400, invalidGrantErrorJson.getBytes(CHARSET_UTF8), Collections.<String, String>emptyMap(),
+                                true))));
     }
 
     @SuppressWarnings({"unchecked", "ThrowableResultOfMethodCallIgnored"})
+    @Test
     public void testThatCreateUserErrorIsReturnedWhenNewUserIsCreatedIfExistingIsInvalid() throws InterruptedException {
         makeLoginRequestFailOnce();
         when(mUserCenterManager.createUser(any(UserCredentials.class)))
-                .thenReturn(Task.<User>forError(new VolleyError(new NetworkResponse(503, null, Collections.singletonMap("Some-Header", "10"), true))));
+                .thenReturn(Task.<User>forError(
+                        new VolleyError(new NetworkResponse(503, null, Collections.singletonMap("Some-Header", "10"), true))));
 
         Task<Session> sessionTask = mAnonymousSessionSessionManager.getSession();
         sessionTask.waitForCompletion();
@@ -219,21 +247,25 @@ public class AnonymousSessionManagerTest extends InstrumentationTestCase {
         assertEquals("10", headerValue);
     }
 
+    @Test
     public void testHasUserCredentialsEmailDomainReturnsTrueIfUsernameEmailDomainIsSameAsEmailDomain() {
         UserCredentials userCredentials = new UserCredentials("1234@example.com", "1234");
         assertTrue(mAnonymousSessionSessionManager.hasUserCredentialsEmailDomain("example.com", userCredentials));
     }
 
+    @Test
     public void testHasUserCredentialsEmailDomainReturnsFalseIfUsernameEmailDomainIsNotSameAsEmailDomain() {
         UserCredentials userCredentials = new UserCredentials("1234@example.com", "1234");
         assertFalse(mAnonymousSessionSessionManager.hasUserCredentialsEmailDomain("beispiel.com", userCredentials));
     }
 
+    @Test
     public void testHasUserCredentialsEmailDomainReturnsFalseIfUsernameEmailDomainContainsEmailDomain() {
         UserCredentials userCredentials = new UserCredentials("1234@exampledomain.com", "1234");
         assertFalse(mAnonymousSessionSessionManager.hasUserCredentialsEmailDomain("domain.com", userCredentials));
     }
 
+    @Test
     public void testThatLoginUserUpdatesEmailDomainIfChanged() throws InterruptedException {
         String newEmailDomain = "beispiel.com";
         String oldEmailDomain = "example.com";

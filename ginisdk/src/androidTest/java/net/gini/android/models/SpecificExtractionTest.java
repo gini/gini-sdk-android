@@ -2,14 +2,21 @@ package net.gini.android.models;
 
 import static net.gini.android.helpers.ParcelHelper.doRoundTrip;
 
+import static org.junit.Assert.assertEquals;
+
 import android.support.test.filters.SmallTest;
-import android.test.AndroidTestCase;
+import android.support.test.runner.AndroidJUnit4;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 
 @SmallTest
-public class SpecificExtractionTest extends AndroidTestCase {
+@RunWith(AndroidJUnit4.class)
+public class SpecificExtractionTest {
 
+    @Test
     public void testGetName() {
         SpecificExtraction extraction =
                 new SpecificExtraction("foo", "bar", "amount", null, new ArrayList<Extraction>());
@@ -17,6 +24,7 @@ public class SpecificExtractionTest extends AndroidTestCase {
         assertEquals("foo", extraction.getName());
     }
 
+    @Test
     public void testGetCandidates() {
         ArrayList<Extraction> candidates = new ArrayList<Extraction>();
         candidates.add(new Extraction("0:EUR", "amount", null));
@@ -28,6 +36,7 @@ public class SpecificExtractionTest extends AndroidTestCase {
         assertEquals(candidates, specificExtraction.getCandidate());
     }
 
+    @Test
     public void testIsParcelable() {
         final ArrayList<Extraction> candidates = new ArrayList<Extraction>();
         candidates.add(new Extraction("0:EUR", "amount", null));
@@ -46,9 +55,9 @@ public class SpecificExtractionTest extends AndroidTestCase {
         final Box restoredBox = restoredExtraction.getBox();
         // TODO: custom equals on the box model.
         assertEquals(1, restoredBox.getPageNumber());
-        assertEquals(2., restoredBox.getLeft());
-        assertEquals(3., restoredBox.getTop());
-        assertEquals(4., restoredBox.getWidth());
-        assertEquals(5., restoredBox.getHeight());
+        assertEquals(2., restoredBox.getLeft(), 0);
+        assertEquals(3., restoredBox.getTop(), 0);
+        assertEquals(4., restoredBox.getWidth(), 0);
+        assertEquals(5., restoredBox.getHeight(), 0);
     }
 }
