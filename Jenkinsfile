@@ -27,48 +27,52 @@ pipeline {
                 }
             }
         }
-        stage('Instrumentation Tests - API Level 26') {
-            steps {
-                script {
-                    def emulatorPort = emulator.start(avd.createName("api-26-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -gpu on -camera-back emulated -no-snapshot-save -no-snapshot-load")
-                    sh "echo $emulatorPort > emulator_port"
-                    adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
-                    withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
-                        sh "ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestClientIdAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_USR -PtestClientSecretAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
+        stage('Run Tests') {
+            parallel {
+                stage('Instrumentation Tests - API Level 26') {
+                    steps {
+                        script {
+                            def emulatorPort = emulator.start(avd.createName("api-26-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -gpu host -camera-back emulated -no-snapshot", 5562)
+                            sh "echo $emulatorPort > emulator_port_1_$BUILD_NUMBER"
+                            adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
+                            withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
+                                sh "ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestClientIdAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_USR -PtestClientSecretAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
+                            }
+                        }
+                    }
+                    post {
+                        always {
+                            junit allowEmptyResults: true, testResults: 'ginisdk/build/outputs/androidTest-results/targeted/*.xml'
+                            script {
+                                def emulatorPort = sh returnStdout: true, script: "cat emulator_port_1_$BUILD_NUMBER"
+                                emulatorPort = emulatorPort.trim().replaceAll("\r", "").replaceAll("\n", "")
+                                emulator.stop(emulatorPort)
+                                sh "rm emulator_port_1_$BUILD_NUMBER || true"
+                            }
+                        }
                     }
                 }
-            }
-            post {
-                always {
-                    junit allowEmptyResults: true, testResults: 'ginisdk/build/outputs/androidTest-results/targeted/*.xml'
-                    script {
-                        def emulatorPort = sh returnStdout:true, script: 'cat emulator_port'
-                        emulatorPort = emulatorPort.trim().replaceAll("\r", "").replaceAll("\n", "")
-                        emulator.stop(emulatorPort)
-                        sh 'rm emulator_port || true'
+                stage('Instrumentation Tests - API Level 22') {
+                    steps {
+                        script {
+                            def emulatorPort = emulator.start(avd.createName("api-22-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -gpu host -camera-back emulated -no-snapshot", 5570)
+                            sh "echo $emulatorPort > emulator_port_2_$BUILD_NUMBER"
+                            adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
+                            withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
+                                sh "ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestClientIdAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_USR -PtestClientSecretAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
+                            }
+                        }
                     }
-                }
-            }
-        }
-        stage('Instrumentation Tests - API Level 22') {
-            steps {
-                script {
-                    def emulatorPort = emulator.start(avd.createName("api-22-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -gpu on -camera-back emulated -no-snapshot-save -no-snapshot-load")
-                    sh "echo $emulatorPort > emulator_port"
-                    adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
-                    withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
-                        sh "ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestClientIdAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_USR -PtestClientSecretAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
-                    }
-                }
-            }
-            post {
-                always {
-                    junit allowEmptyResults: true, testResults: 'ginisdk/build/outputs/androidTest-results/targeted/*.xml'
-                    script {
-                        def emulatorPort = sh returnStdout:true, script: 'cat emulator_port'
-                        emulatorPort = emulatorPort.trim().replaceAll("\r", "").replaceAll("\n", "")
-                        emulator.stop(emulatorPort)
-                        sh 'rm emulator_port || true'
+                    post {
+                        always {
+                            junit allowEmptyResults: true, testResults: 'ginisdk/build/outputs/androidTest-results/targeted/*.xml'
+                            script {
+                                def emulatorPort = sh returnStdout: true, script: "cat emulator_port_2_$BUILD_NUMBER"
+                                emulatorPort = emulatorPort.trim().replaceAll("\r", "").replaceAll("\n", "")
+                                emulator.stop(emulatorPort)
+                                sh "rm emulator_port_2_$BUILD_NUMBER || true"
+                            }
+                        }
                     }
                 }
             }
