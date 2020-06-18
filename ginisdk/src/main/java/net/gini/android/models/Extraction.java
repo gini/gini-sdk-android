@@ -4,7 +4,7 @@ import static net.gini.android.Utils.checkNotNull;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 public class Extraction implements Parcelable {
     private String mValue;

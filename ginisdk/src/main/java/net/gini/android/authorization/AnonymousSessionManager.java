@@ -4,7 +4,7 @@ package net.gini.android.authorization;
 import static net.gini.android.Utils.CHARSET_UTF8;
 import static net.gini.android.Utils.checkNotNull;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.android.volley.VolleyError;
 
