@@ -2,8 +2,6 @@ package net.gini.android.authorization;
 
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.annotation.XmlRes;
 
 import com.datatheorem.android.trustkit.TrustKit;
 import com.datatheorem.android.trustkit.config.DomainPinningPolicy;
@@ -21,6 +19,9 @@ import java.util.Set;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.XmlRes;
 
 
 public final class PubKeyManager implements X509TrustManager {

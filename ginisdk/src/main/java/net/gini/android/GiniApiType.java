@@ -2,7 +2,7 @@ package net.gini.android;
 
 import static net.gini.android.MediaTypes.*;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Created by Alpar Szotyori on 14.01.2019.

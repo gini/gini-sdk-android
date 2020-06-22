@@ -3,8 +3,8 @@ package net.gini.android.authorization.crypto;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
-import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;

@@ -6,7 +6,7 @@ import static net.gini.android.Utils.checkNotNull;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.text.TextUtils;
 
 import org.json.JSONArray;

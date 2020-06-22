@@ -1,11 +1,11 @@
 package net.gini.android.authorization.crypto;
 
-import android.support.annotation.NonNull;
-
 import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+
+import androidx.annotation.NonNull;
 
 /**
  * Created by Alpar Szotyori on 09.10.2018.

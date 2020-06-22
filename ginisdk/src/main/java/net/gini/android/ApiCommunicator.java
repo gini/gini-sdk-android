@@ -12,7 +12,7 @@ import static net.gini.android.Utils.mapToUrlEncodedString;
 
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.RequestQueue;
