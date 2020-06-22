@@ -2,8 +2,8 @@ package net.gini.android.authorization;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.annotation.NonNull;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import net.gini.android.authorization.crypto.GiniCrypto;
 import net.gini.android.authorization.crypto.GiniCryptoException;

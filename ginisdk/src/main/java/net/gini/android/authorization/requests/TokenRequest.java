@@ -3,7 +3,7 @@ package net.gini.android.authorization.requests;
 
 import static net.gini.android.Utils.mapToUrlEncodedString;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.Base64;
 
 import com.android.volley.AuthFailureError;

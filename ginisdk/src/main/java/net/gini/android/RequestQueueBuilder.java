@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.support.annotation.XmlRes;
 
 import com.android.volley.Cache;
 import com.android.volley.Network;
@@ -24,6 +23,8 @@ import java.util.List;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
+
+import androidx.annotation.XmlRes;
 
 /**
  * <p>
