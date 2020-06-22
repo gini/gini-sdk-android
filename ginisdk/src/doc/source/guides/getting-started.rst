@@ -22,7 +22,7 @@ repository to your build script.
     }
 
     dependencies {
-        compile ('net.gini:gini-android-sdk:2.4.1@aar'){
+        compile ('net.gini:gini-android-sdk:2.5.0@aar'){
             transitive = true
         }
         ...
