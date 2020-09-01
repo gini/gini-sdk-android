@@ -12,7 +12,6 @@ import static net.gini.android.Utils.mapToUrlEncodedString;
 
 import android.graphics.Bitmap;
 import android.net.Uri;
-import androidx.annotation.Nullable;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.RequestQueue;
@@ -31,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import androidx.annotation.Nullable;
 import bolts.Task;
 
 
@@ -191,6 +191,25 @@ public class ApiCommunicator {
                 RequestTaskCompletionSource.newCompletionSource();
         final JSONObject requestData = new JSONObject();
         requestData.put("feedback", checkNotNull(extractions));
+        final BearerJsonObjectRequest request =
+                new BearerJsonObjectRequest(PUT, url, requestData, checkNotNull(session),
+                        mGiniApiType, completionSource, completionSource,
+                        mRetryPolicyFactory.newRetryPolicy(), mGiniApiType.getGiniJsonMediaType());
+        mRequestQueue.add(request);
+
+        return completionSource.getTask();
+    }
+
+    public Task<JSONObject> sendFeedback(final String documentId, final JSONObject extractions,
+            final JSONObject compoundExtractions, final Session session)
+            throws JSONException {
+        final String url = mBaseUri.buildUpon().path(String.format("documents/%s/extractions/feedback",
+                checkNotNull(documentId))).toString();
+        final RequestTaskCompletionSource<JSONObject> completionSource =
+                RequestTaskCompletionSource.newCompletionSource();
+        final JSONObject requestData = new JSONObject();
+        requestData.put("extractions", checkNotNull(extractions));
+        requestData.put("compoundExtractions", checkNotNull(compoundExtractions));
         final BearerJsonObjectRequest request =
                 new BearerJsonObjectRequest(PUT, url, requestData, checkNotNull(session),
                         mGiniApiType, completionSource, completionSource,
