@@ -7,8 +7,6 @@ import static net.gini.android.Utils.checkNotNull;
 
 import android.graphics.Bitmap;
 import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import net.gini.android.authorization.Session;
 import net.gini.android.authorization.SessionManager;
@@ -33,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import bolts.Continuation;
 import bolts.Task;
 
@@ -793,6 +793,56 @@ public class DocumentTaskManager {
             public Task<JSONObject> then(Task<Session> task) throws Exception {
                 final Session session = task.getResult();
                 return mApiCommunicator.sendFeedback(documentId, feedbackForExtractions, session);
+            }
+        }, Task.BACKGROUND_EXECUTOR).onSuccess(new Continuation<JSONObject, Document>() {
+            @Override
+            public Document then(Task<JSONObject> task) throws Exception {
+                for (Map.Entry<String, SpecificExtraction> entry : extractions.entrySet()) {
+                    entry.getValue().setIsDirty(false);
+                }
+                return document;
+            }
+        }, Task.BACKGROUND_EXECUTOR);
+    }
+
+    public Task<Document> sendFeedbackForExtractions(@NonNull final Document document,
+            @NonNull final Map<String, SpecificExtraction> extractions,
+            @NonNull final Map<String, CompoundExtraction> compoundExtractions)
+            throws JSONException {
+        final String documentId = document.getId();
+
+        final JSONObject feedbackForExtractions = new JSONObject();
+        for (Map.Entry<String, SpecificExtraction> entry : extractions.entrySet()) {
+            final Extraction extraction = entry.getValue();
+            final JSONObject extractionData = new JSONObject();
+            extractionData.put("value", extraction.getValue());
+            extractionData.put("entity", extraction.getEntity());
+            feedbackForExtractions.put(entry.getKey(), extractionData);
+        }
+
+        final JSONObject feedbackForCompoundExtractions = new JSONObject();
+        for (Map.Entry<String, CompoundExtraction> compoundExtractionEntry : compoundExtractions.entrySet()) {
+            final CompoundExtraction compoundExtraction = compoundExtractionEntry.getValue();
+            final JSONArray specificExtractionsFeedbackObjects = new JSONArray();
+            for (final Map<String, SpecificExtraction> specificExtractionMap : compoundExtraction.getSpecificExtractionMaps()) {
+                final JSONObject specificExtractionsFeedback = new JSONObject();
+                for (Map.Entry<String, SpecificExtraction> specificExtractionEntry : specificExtractionMap.entrySet()) {
+                    final Extraction extraction = specificExtractionEntry.getValue();
+                    final JSONObject extractionData = new JSONObject();
+                    extractionData.put("value", extraction.getValue());
+                    extractionData.put("entity", extraction.getEntity());
+                    specificExtractionsFeedback.put(specificExtractionEntry.getKey(), extractionData);
+                }
+                specificExtractionsFeedbackObjects.put(specificExtractionsFeedback);
+            }
+            feedbackForCompoundExtractions.put(compoundExtractionEntry.getKey(), specificExtractionsFeedbackObjects);
+        }
+
+        return mSessionManager.getSession().onSuccessTask(new Continuation<Session, Task<JSONObject>>() {
+            @Override
+            public Task<JSONObject> then(Task<Session> task) throws Exception {
+                final Session session = task.getResult();
+                return mApiCommunicator.sendFeedback(documentId, feedbackForExtractions, feedbackForCompoundExtractions, session);
             }
         }, Task.BACKGROUND_EXECUTOR).onSuccess(new Continuation<JSONObject, Document>() {
             @Override
