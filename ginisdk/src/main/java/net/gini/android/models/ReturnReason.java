@@ -17,7 +17,7 @@ import androidx.annotation.NonNull;
  */
 
 /**
- * The ReturnReason class is used to allow users to pick a reason for returning a line item.
+ * The ReturnReason class is used to allow users to pick a reason for returning a line item in the Return Assistant.
  */
 public class ReturnReason implements Parcelable {
     private final String mId;

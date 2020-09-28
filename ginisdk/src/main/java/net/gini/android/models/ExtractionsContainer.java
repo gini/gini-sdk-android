@@ -20,7 +20,8 @@ import androidx.annotation.NonNull;
  */
 
 /**
- * The ExtractionsContainer contains specific extractions (e.g. "amountToPay"), compound extractions (e.g. "lineItems").
+ * The ExtractionsContainer contains specific extractions (e.g. "amountToPay"), compound extractions (e.g. "lineItems")
+ * and return reasons (used to allow users to specify in the Return Assistant why they return an item).
  * <p>
  * See the
  * <a href="http://developer.gini.net/gini-api/html/document_extractions.html">Gini API documentation</a>
@@ -57,6 +58,7 @@ public class ExtractionsContainer implements Parcelable {
         return mCompoundExtractions;
     }
 
+    @NonNull
     public List<ReturnReason> getReturnReasons() {
         return mReturnReasons;
     }
