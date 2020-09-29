@@ -31,6 +31,7 @@ import net.gini.android.models.CompoundExtraction;
 import net.gini.android.models.Document;
 import net.gini.android.models.Extraction;
 import net.gini.android.models.ExtractionsContainer;
+import net.gini.android.models.ReturnReason;
 import net.gini.android.models.SpecificExtraction;
 
 import org.json.JSONException;
@@ -887,5 +888,28 @@ public class DocumentTaskManagerTest {
         final SpecificExtraction amountToPay = extractions.getSpecificExtractions().get("amountToPay");
         assertNotNull(amountToPay);
         assertEquals(2, amountToPay.getCandidate().size());
+    }
+
+    @Test
+    public void testGetExtractionsParsesReturnReasons() throws Exception {
+        when(mApiCommunicator.getExtractions(eq("1234"), any(Session.class))).thenReturn(createExtractionsJSONTask());
+        Document document = new Document("1234", Document.ProcessingState.COMPLETED, "foobar", 1, new Date(),
+                Document.SourceClassification.NATIVE, Uri.parse(""), new ArrayList<Uri>(),
+                new ArrayList<Uri>());
+
+        Task<ExtractionsContainer> extractionsTask = mDocumentTaskManager.getAllExtractions(document);
+        extractionsTask.waitForCompletion();
+        if (extractionsTask.isFaulted()) {
+            throw extractionsTask.getError();
+        }
+        final ExtractionsContainer extractions = extractionsTask.getResult();
+        assertNotNull(extractions);
+
+        assertEquals(4, extractions.getReturnReasons().size());
+
+        final ReturnReason returnReason = extractions.getReturnReasons().get(0);
+
+        assertEquals("r1", returnReason.getId());
+        assertEquals("Anderes Aussehen als angeboten", returnReason.getLocalizedLabels().get("de"));
     }
 }
