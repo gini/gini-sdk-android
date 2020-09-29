@@ -15,6 +15,7 @@ import net.gini.android.models.CompoundExtraction;
 import net.gini.android.models.Document;
 import net.gini.android.models.Extraction;
 import net.gini.android.models.ExtractionsContainer;
+import net.gini.android.models.ReturnReason;
 import net.gini.android.models.SpecificExtraction;
 
 import org.json.JSONArray;
@@ -610,7 +611,9 @@ public class DocumentTaskManager {
                         final Map<String, CompoundExtraction> compoundExtractions =
                                 parseCompoundExtractions(responseData.optJSONObject("compoundExtractions"), candidates);
 
-                        return new ExtractionsContainer(specificExtractions, compoundExtractions);
+                        final List<ReturnReason> returnReasons = parseReturnReason(responseData.optJSONArray("returnReasons"));
+
+                        return new ExtractionsContainer(specificExtractions, compoundExtractions, returnReasons);
                     }
                 }, Task.BACKGROUND_EXECUTOR);
 
@@ -663,6 +666,29 @@ public class DocumentTaskManager {
             compoundExtractions.put(extractionName, new CompoundExtraction(extractionName, specificExtractionMaps));
         }
         return compoundExtractions;
+    }
+
+    private List<ReturnReason> parseReturnReason(@Nullable final JSONArray returnReasonsJson) throws JSONException {
+        if (returnReasonsJson == null) {
+            return Collections.emptyList();
+        }
+        final List<ReturnReason> returnReasons = new ArrayList<>();
+        for (int i = 0; i < returnReasonsJson.length(); i++) {
+            final JSONObject returnReasonJson = returnReasonsJson.getJSONObject(i);
+
+            Map<String, String> localizedLabels = new HashMap<>();
+
+            final Iterator<String> keys = returnReasonJson.keys();
+            while (keys.hasNext()) {
+                final String key = keys.next();
+                if (key.equals("id")) {
+                    continue;
+                }
+                localizedLabels.put(key, returnReasonJson.getString(key));
+            }
+            returnReasons.add(new ReturnReason(returnReasonJson.getString("id"), localizedLabels));
+        }
+        return returnReasons;
     }
 
     /**
