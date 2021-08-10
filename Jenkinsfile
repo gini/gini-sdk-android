@@ -34,9 +34,9 @@ pipeline {
                     def emulatorPort = emulator.start(avd.createName("api-26-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -gpu on -camera-back emulated -no-snapshot-save -no-snapshot-load")
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
-                    withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
+                    withEnv(["EMULATOR_PORT=$emulatorPort", "PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
                         sh '''
-                            ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest \
+                            ANDROID_SERIAL=emulator-$EMULATOR_PORT ./gradlew ginisdk:connectedAndroidTest \
                             -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW \
                             -PtestClientIdAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_USR -PtestClientSecretAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_PSW \
                             -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' \
@@ -64,9 +64,9 @@ pipeline {
                     def emulatorPort = emulator.start(avd.createName("api-22-nexus-5x"), "nexus_5x", "-prop persist.sys.language=en -prop persist.sys.country=US -gpu on -camera-back emulated -no-snapshot-save -no-snapshot-load")
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
-                    withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
+                    withEnv(["EMULATOR_PORT=$emulatorPort", "PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
                         sh '''
-                            ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest \
+                            ANDROID_SERIAL=emulator-$EMULATOR_PORT ./gradlew ginisdk:connectedAndroidTest \
                             -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW \
                             -PtestClientIdAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_USR -PtestClientSecretAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_PSW \
                             -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' \
