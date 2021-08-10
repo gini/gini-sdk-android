@@ -19,6 +19,7 @@ import androidx.test.filters.LargeTest;
 import androidx.test.filters.SdkSuppress;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import android.util.Log;
+import android.util.Pair;
 
 import com.android.volley.toolbox.NoCache;
 
@@ -579,40 +580,43 @@ public class SdkIntegrationTest {
     }
 
     private Map<Document, Map<String, SpecificExtraction>> processDocument(DocumentUploadBuilder uploadBuilder)
-            throws InterruptedException, JSONException {
-        final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
+            throws InterruptedException {
+        final Pair<Document, Map<String, SpecificExtraction>> retrieveExtractions =
+                analyzeDocument(uploadBuilder, 3, 0);
 
-        final Task<Document> upload = uploadBuilder.upload(documentTaskManager);
-        final Task<Document> processDocument = upload.onSuccessTask(new Continuation<Document, Task<Document>>() {
-            @Override
-            public Task<Document> then(Task<Document> task) throws Exception {
-                Document document = task.getResult();
-                return documentTaskManager.pollDocument(document);
-            }
-        });
-
-        final Task<Map<String, SpecificExtraction>> retrieveExtractions = processDocument.onSuccessTask(
-                new Continuation<Document, Task<Map<String, SpecificExtraction>>>() {
-                    @Override
-                    public Task<Map<String, SpecificExtraction>> then(Task<Document> task) throws Exception {
-                        return documentTaskManager.getExtractions(task.getResult());
-                    }
-                });
-
-        retrieveExtractions.waitForCompletion();
-        if (retrieveExtractions.isFaulted()) {
-            Log.e("TEST", Log.getStackTraceString(retrieveExtractions.getError()));
-        }
-
-        assertFalse("extractions should have succeeded", retrieveExtractions.isFaulted());
-
-        final Map<String, SpecificExtraction> extractions = retrieveExtractions.getResult();
+        final Map<String, SpecificExtraction> extractions = retrieveExtractions.second;
 
         assertEquals("IBAN should be found", "DE78370501980020008850", extractions.get("iban").getValue());
         assertEquals("Amount to pay should be found", "1.00:EUR", extractions.get("amountToPay").getValue());
         assertEquals("BIC should be found", "COLSDE33", extractions.get("bic").getValue());
         assertEquals("Payee should be found", "Uno Flüchtlingshilfe", extractions.get("senderName").getValue());
 
-        return Collections.singletonMap(upload.getResult(), extractions);
+        return Collections.singletonMap(retrieveExtractions.first, extractions);
+    }
+
+    private Pair<Document, Map<String, SpecificExtraction>> analyzeDocument(DocumentUploadBuilder uploadBuilder, int maxRetries, int retries)
+            throws InterruptedException {
+        final DocumentTaskManager documentTaskManager = gini.getDocumentTaskManager();
+
+        final Task<Document> upload = uploadBuilder.upload(documentTaskManager);
+        final Task<Document> processDocument = upload.onSuccessTask(task -> {
+            Document document = task.getResult();
+            return documentTaskManager.pollDocument(document);
+        });
+
+        final Task<Map<String, SpecificExtraction>> retrieveExtractions = processDocument
+                .onSuccessTask(task -> documentTaskManager.getExtractions(task.getResult()));
+
+        retrieveExtractions.waitForCompletion();
+
+        if (retrieveExtractions.isFaulted() && retries < maxRetries) {
+            Log.e("TEST", Log.getStackTraceString(retrieveExtractions.getError()));
+
+            return analyzeDocument(uploadBuilder, maxRetries, retries + 1);
+        }
+
+        assertFalse("extractions should have succeeded", retrieveExtractions.isFaulted());
+
+        return new Pair<>(upload.getResult(), retrieveExtractions.getResult());
     }
 }
