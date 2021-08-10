@@ -1,6 +1,6 @@
 package net.gini.android;
 
-import static android.support.test.InstrumentationRegistry.getTargetContext;
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 
 import static net.gini.android.helpers.TrustKitHelper.resetTrustKit;
 
@@ -15,9 +15,9 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
-import android.support.test.filters.LargeTest;
-import android.support.test.filters.SdkSuppress;
-import android.support.test.runner.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.filters.SdkSuppress;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import android.util.Log;
 
 import com.android.volley.toolbox.NoCache;
@@ -57,7 +57,7 @@ public class SdkIntegrationTestAccounting {
 
     @Before
     public void setUp() throws Exception {
-        final AssetManager assetManager = getTargetContext().getResources().getAssets();
+        final AssetManager assetManager = getApplicationContext().getResources().getAssets();
         final InputStream testPropertiesInput = assetManager.open("test.properties");
         assertNotNull("test.properties not found", testPropertiesInput);
         final Properties testProperties = new Properties();
@@ -77,7 +77,7 @@ public class SdkIntegrationTestAccounting {
 
         resetTrustKit();
 
-        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, "example.com").
+        gini = new SdkBuilder(getApplicationContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
                 setUserCenterApiBaseUrl(userCenterUri).
@@ -116,7 +116,7 @@ public class SdkIntegrationTestAccounting {
 
     @Test
     public void processDocumentWithCustomCache() throws IOException, JSONException, InterruptedException {
-        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, "example.com").
+        gini = new SdkBuilder(getApplicationContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
                 setUserCenterApiBaseUrl(userCenterUri).
@@ -158,8 +158,8 @@ public class SdkIntegrationTestAccounting {
     @Test
     public void documentUploadWorksAfterNewUserWasCreatedIfUserWasInvalid() throws IOException, JSONException, InterruptedException {
         EncryptedCredentialsStore credentialsStore = new EncryptedCredentialsStore(
-                getTargetContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE), getTargetContext());
-        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, "example.com").
+                getApplicationContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE), getApplicationContext());
+        gini = new SdkBuilder(getApplicationContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
                 setUserCenterApiBaseUrl(userCenterUri).
@@ -184,8 +184,8 @@ public class SdkIntegrationTestAccounting {
     public void emailDomainIsUpdatedForExistingUserIfEmailDomainWasChanged() throws IOException, JSONException, InterruptedException {
         // Upload a document to make sure we have a valid user
         EncryptedCredentialsStore credentialsStore = new EncryptedCredentialsStore(
-                getTargetContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE), getTargetContext());
-        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, "example.com").
+                getApplicationContext().getSharedPreferences("GiniTests", Context.MODE_PRIVATE), getApplicationContext());
+        gini = new SdkBuilder(getApplicationContext(), clientId, clientSecret, "example.com").
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
                 setUserCenterApiBaseUrl(userCenterUri).
@@ -201,7 +201,7 @@ public class SdkIntegrationTestAccounting {
         // Create another sdk instance with a new email domain (to simulate an app update)
         // and verify that the new email domain is used
         String newEmailDomain = "beispiel.com";
-        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, newEmailDomain).
+        gini = new SdkBuilder(getApplicationContext(), clientId, clientSecret, newEmailDomain).
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
                 setUserCenterApiBaseUrl(userCenterUri).
@@ -217,7 +217,7 @@ public class SdkIntegrationTestAccounting {
 
     @Test
     public void publicKeyPinningWithMatchingPublicKey() throws Exception {
-        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, "example.com").
+        gini = new SdkBuilder(getApplicationContext(), clientId, clientSecret, "example.com").
                 setNetworkSecurityConfigResId(net.gini.android.test.R.xml.network_security_config).
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
@@ -233,7 +233,7 @@ public class SdkIntegrationTestAccounting {
 
     @Test
     public void publicKeyPinningWithCustomCache() throws Exception {
-        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, "example.com").
+        gini = new SdkBuilder(getApplicationContext(), clientId, clientSecret, "example.com").
                 setNetworkSecurityConfigResId(net.gini.android.test.R.xml.network_security_config).
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
@@ -251,7 +251,7 @@ public class SdkIntegrationTestAccounting {
     @Test
     @SdkSuppress(maxSdkVersion = Build.VERSION_CODES.JELLY_BEAN_MR1)
     public void publicKeyPinningWithWrongPublicKey() throws Exception {
-        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, "example.com").
+        gini = new SdkBuilder(getApplicationContext(), clientId, clientSecret, "example.com").
                 setNetworkSecurityConfigResId(net.gini.android.test.R.xml.wrong_network_security_config).
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
@@ -292,7 +292,7 @@ public class SdkIntegrationTestAccounting {
     @Test
     @SdkSuppress(maxSdkVersion = Build.VERSION_CODES.JELLY_BEAN_MR1)
     public void publicKeyPinningWithMultiplePublicKeys() throws Exception {
-        gini = new SdkBuilder(getTargetContext(), clientId, clientSecret, "example.com").
+        gini = new SdkBuilder(getApplicationContext(), clientId, clientSecret, "example.com").
                 setNetworkSecurityConfigResId(net.gini.android.test.R.xml.multiple_keys_network_security_config).
                 setApiBaseUrl(apiUriAccounting).
                 setGiniApiType(GiniApiType.ACCOUNTING).
