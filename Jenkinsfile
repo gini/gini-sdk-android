@@ -6,7 +6,7 @@ pipeline {
         GIT = credentials('github')
         GINI_API_CREDENTIALS = credentials('gini-vision-library-android_gini-api-client-credentials')
         GINI_ACCOUNTING_API_CREDENTIALS = credentials('gini-vision-library-android_gini-accounting-api-client-credentials')
-        JAVA_HOME = '/Library/Java/JavaVirtualMachines/temurin-11.jdk/Contents/Home'
+        JAVA11 = '/Library/Java/JavaVirtualMachines/temurin-11.jdk/Contents/Home'
     }
     stages {
         stage('Import Pipeline Libraries') {
@@ -16,7 +16,7 @@ pipeline {
         }
         stage('Build') {
             steps {
-                sh './gradlew ginisdk:clean ginisdk:assembleDebug ginisdk:assembleRelease'
+                sh './gradlew ginisdk:clean ginisdk:assembleDebug ginisdk:assembleRelease -Dorg.gradle.java.home=$JAVA11'
             }
         }
         stage('Create AVDs') {
@@ -35,7 +35,14 @@ pipeline {
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
                     withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
-                        sh "ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestClientIdAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_USR -PtestClientSecretAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
+                        sh '''
+                            ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest \
+                            -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW \
+                            -PtestClientIdAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_USR -PtestClientSecretAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_PSW \
+                            -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' \
+                            -PtestUserCenterUri='https://user.gini.net' \
+                            -Dorg.gradle.java.home=$JAVA11
+                        '''
                     }
                 }
             }
@@ -58,7 +65,14 @@ pipeline {
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
                     withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
-                        sh "ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW -PtestClientIdAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_USR -PtestClientSecretAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_PSW -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' -PtestUserCenterUri='https://user.gini.net'"
+                        sh '''
+                            ANDROID_SERIAL=emulator-$emulatorPort ./gradlew ginisdk:connectedAndroidTest \
+                            -PtestClientId=$GINI_API_CREDENTIALS_USR -PtestClientSecret=$GINI_API_CREDENTIALS_PSW \
+                            -PtestClientIdAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_USR -PtestClientSecretAccounting=$GINI_ACCOUNTING_API_CREDENTIALS_PSW \
+                            -PtestApiUri='https://api.gini.net' -PtestApiUriAccounting='https://accounting-api.gini.net' \
+                            -PtestUserCenterUri='https://user.gini.net' \
+                            -Dorg.gradle.java.home=$JAVA11
+                        '''
                     }
                 }
             }
@@ -83,7 +97,7 @@ pipeline {
             }
             steps {
                 withEnv(["PATH+=/usr/local/bin"]) {
-                    sh './gradlew ginisdk:generateReleaseJavadoc'
+                    sh './gradlew ginisdk:generateReleaseJavadoc -Dorg.gradle.java.home=$JAVA11'
                     sh 'scripts/generate-sphinx-doc.sh'
                 }
             }
@@ -129,7 +143,12 @@ pipeline {
                 }
             }
             steps {
-                sh './gradlew ginisdk:publishReleasePublicationToOpenRepository -PmavenOpenRepoUrl=https://repo.gini.net/nexus/content/repositories/open -PrepoUser=$NEXUS_MAVEN_USR -PrepoPassword=$NEXUS_MAVEN_PSW'
+                sh '''
+                    ./gradlew ginisdk:publishReleasePublicationToOpenRepository \
+                    -PmavenOpenRepoUrl=https://repo.gini.net/nexus/content/repositories/open \
+                    -PrepoUser=$NEXUS_MAVEN_USR -PrepoPassword=$NEXUS_MAVEN_PSW \
+                    -Dorg.gradle.java.home=$JAVA11
+                '''
             }
         }
     }
