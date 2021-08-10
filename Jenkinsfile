@@ -6,6 +6,7 @@ pipeline {
         GIT = credentials('github')
         GINI_API_CREDENTIALS = credentials('gini-vision-library-android_gini-api-client-credentials')
         GINI_ACCOUNTING_API_CREDENTIALS = credentials('gini-vision-library-android_gini-accounting-api-client-credentials')
+        JAVA_HOME = '/Library/Java/JavaVirtualMachines/temurin-11.jdk/Contents/Home'
     }
     stages {
         stage('Import Pipeline Libraries') {
