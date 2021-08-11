@@ -31,6 +31,7 @@
       <script type="text/javascript" src="../_static/jquery.js"></script>
       <script type="text/javascript" src="../_static/underscore.js"></script>
       <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="../_static/language_data.js"></script>
 
     
 
@@ -52,6 +53,7 @@
   
 
   
+        <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="Gini SDK for Android v1 documentation" href="../index.html"/>
         <link rel="next" title="Changelog" href="../changelog.html"/>
         <link rel="prev" title="Getting started" href="getting-started.html"/> 
@@ -98,7 +100,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Working with Tasks</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Working with Tasks</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#upload-a-document">Upload a document</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#setting-the-document-type-hint">Setting the document type hint</a></li>
 </ul>
@@ -206,8 +208,8 @@
 <h1>Working with Tasks<a class="headerlink" href="#working-with-tasks" title="Permalink to this headline">¶</a></h1>
 <p>The Gini Android SDK makes heavy use of the concept of tasks. Tasks are convenient when you want to
 do execute work in succession, each one waiting for the previous to finish (comparable to
-Promises in JavaScript). This is a common pattern when working with Gini&#8217;s remote API. The Gini
-Android SDK uses <a class="reference external" href="https://github.com/BoltsFramework/Bolts-Android">facebook&#8217;s task implementation, which is called bolts</a>. Before you continue reading this guide, we
+Promises in JavaScript). This is a common pattern when working with Gini’s remote API. The Gini
+Android SDK uses <a class="reference external" href="https://github.com/BoltsFramework/Bolts-Android">facebook’s task implementation, which is called bolts</a>. Before you continue reading this guide, we
 strongly encourage you to read the <a class="reference external" href="https://github.com/BoltsFramework/Bolts-Android/blob/master/Readme.md#tasks">short guide for the Bolts framework</a>.</p>
 <div class="section" id="upload-a-document">
 <h2>Upload a document<a class="headerlink" href="#upload-a-document" title="Permalink to this headline">¶</a></h2>
@@ -215,27 +217,27 @@ strongly encourage you to read the <a class="reference external" href="https://g
 API is mainly built around the concept of documents. A document can be any written representation of
 information such as invoices, reminders, contracts and so on.</p>
 <p>The Gini Android SDK supports creating documents from images, PDFs or UTF-8 encoded text. Images are
-usually a picture of a paper document which was taken with the device&#8217;s camera.</p>
+usually a picture of a paper document which was taken with the device’s camera.</p>
 <p>The following example shows how to create a new document from a byte array containing a JPEG image.</p>
-<div class="highlight-java"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">net.gini.android.Gini</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">net.gini.android.DocumentTaskManager</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">net.gini.android.models.Document</span><span class="o">;</span>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">net.gini.android.Gini</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">net.gini.android.DocumentTaskManager</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">net.gini.android.models.Document</span><span class="p">;</span>
 
-<span class="o">...</span>
+<span class="p">...</span>
 
 <span class="c1">// Assuming that `gini` is an instance of the `Gini` facade class and `imageBytes`</span>
 <span class="c1">// is an instance of a byte array containing a JPEG image,</span>
 <span class="c1">// e.g. from a picture taken by the camera</span>
 
-<span class="n">DocumentTaskManager</span> <span class="n">documentTaskManager</span> <span class="o">=</span> <span class="n">gini</span><span class="o">.</span><span class="na">getDocumentTaskManager</span><span class="o">();</span>
-<span class="n">documentTaskManager</span><span class="o">.</span><span class="na">createPartialDocument</span><span class="o">(</span><span class="n">imageBytes</span><span class="o">,</span> <span class="s">&quot;image/jpeg&quot;</span><span class="o">,</span> <span class="s">&quot;myFirstDocument.jpg&quot;</span><span class="o">,</span> <span class="kc">null</span><span class="o">)</span>
-    <span class="o">.</span><span class="na">onSuccess</span><span class="o">(</span><span class="k">new</span> <span class="n">Continuation</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">,</span> <span class="n">Void</span><span class="o">&gt;()</span> <span class="o">{</span>
+<span class="n">DocumentTaskManager</span> <span class="n">documentTaskManager</span> <span class="o">=</span> <span class="n">gini</span><span class="p">.</span><span class="na">getDocumentTaskManager</span><span class="p">();</span>
+<span class="n">documentTaskManager</span><span class="p">.</span><span class="na">createPartialDocument</span><span class="p">(</span><span class="n">imageBytes</span><span class="p">,</span> <span class="s">&quot;image/jpeg&quot;</span><span class="p">,</span> <span class="s">&quot;myFirstDocument.jpg&quot;</span><span class="p">,</span> <span class="kc">null</span><span class="p">)</span>
+    <span class="p">.</span><span class="na">onSuccess</span><span class="p">(</span><span class="k">new</span> <span class="n">Continuation</span><span class="o">&lt;</span><span class="n">Document</span><span class="p">,</span> <span class="n">Void</span><span class="o">&gt;</span><span class="p">()</span> <span class="p">{</span>
         <span class="nd">@Override</span>
-        <span class="kd">public</span> <span class="n">Void</span> <span class="nf">then</span><span class="o">(</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;</span> <span class="n">task</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
-            <span class="n">Document</span> <span class="n">document</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="na">getResult</span><span class="o">();</span>
-            <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
-        <span class="o">}</span>
-    <span class="o">});</span>
+        <span class="kd">public</span> <span class="n">Void</span> <span class="nf">then</span><span class="p">(</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;</span> <span class="n">task</span><span class="p">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="p">{</span>
+            <span class="n">Document</span> <span class="n">document</span> <span class="o">=</span> <span class="n">task</span><span class="p">.</span><span class="na">getResult</span><span class="p">();</span>
+            <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
 </pre></div>
 </div>
 <p>In version 2.0.0 we introduced <em>partial documents</em> to allow scanning documents with multiple pages.
@@ -249,20 +251,20 @@ one page also should be uploaded as a partial document.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">PDFs and UTF-8 encoded text should also be uploaded as partial documents. Even though PDFs might
-contain multiple pages and text is &#8220;pageless&#8221;, creating partial documents for these keeps your
+contain multiple pages and text is “pageless”, creating partial documents for these keeps your
 interaction with Gini consistent for all the supported document types.</p>
 </div>
 <p>Extractions are not available for partial documents. Creating a partial document is analogous to an
-upload. For retrieving extractions see <a class="reference internal" href="#getting-extractions"><em>Getting extractions</em></a>.</p>
+upload. For retrieving extractions see <a class="reference internal" href="#getting-extractions"><span class="std std-ref">Getting extractions</span></a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The filename (<tt class="docutils literal"><span class="pre">myFirstDocument.jpg</span></tt> in the example) is not required, it could be <tt class="docutils literal"><span class="pre">null</span></tt>, but
+<p class="last">The filename (<code class="docutils literal notranslate"><span class="pre">myFirstDocument.jpg</span></code> in the example) is not required, it could be <code class="docutils literal notranslate"><span class="pre">null</span></code>, but
 setting a filename is a good praxis for human readable document identification.</p>
 </div>
 <div class="section" id="setting-the-document-type-hint">
 <h3>Setting the document type hint<a class="headerlink" href="#setting-the-document-type-hint" title="Permalink to this headline">¶</a></h3>
-<p>To easily set the document type hint we introduced the <tt class="docutils literal"><span class="pre">DocumentType</span></tt> enum. It is safer and easier
-to use than a <tt class="docutils literal"><span class="pre">String</span></tt>. For more details about the document type hints see the <a class="reference external" href="http://developer.gini.net/gini-api/html/documents.html#document-type-hints">Document Type
+<p>To easily set the document type hint we introduced the <code class="docutils literal notranslate"><span class="pre">DocumentType</span></code> enum. It is safer and easier
+to use than a <code class="docutils literal notranslate"><span class="pre">String</span></code>. For more details about the document type hints see the <a class="reference external" href="http://developer.gini.net/gini-api/html/documents.html#document-type-hints">Document Type
 Hints in the Gini API documentation</a>.</p>
 </div>
 </div>
@@ -280,58 +282,58 @@ use <cite>DocumentTaskManager#pollDocument()</cite> and then <cite>DocumentTaskM
 creating a composite document.</p>
 </div>
 <p>Before retrieving extractions you need to create a composite document from your partial documents.
-The <tt class="docutils literal"><span class="pre">createCompositeDocument()</span></tt> method accepts either a <tt class="docutils literal"><span class="pre">List</span></tt> of partial <tt class="docutils literal"><span class="pre">Documents</span></tt> or a
-<tt class="docutils literal"><span class="pre">LinkedHashMap</span></tt>. The <tt class="docutils literal"><span class="pre">LinkedHashMap</span></tt> contains partial <tt class="docutils literal"><span class="pre">Documents</span></tt> as keys and the user applied
+The <code class="docutils literal notranslate"><span class="pre">createCompositeDocument()</span></code> method accepts either a <code class="docutils literal notranslate"><span class="pre">List</span></code> of partial <code class="docutils literal notranslate"><span class="pre">Documents</span></code> or a
+<code class="docutils literal notranslate"><span class="pre">LinkedHashMap</span></code>. The <code class="docutils literal notranslate"><span class="pre">LinkedHashMap</span></code> contains partial <code class="docutils literal notranslate"><span class="pre">Documents</span></code> as keys and the user applied
 rotation as values. In both cases the order is important and the partial documents should be in the
 same order as the pages of the scanned document.</p>
 <p>Gini needs to process the composite document first before you can fetch the extractions. Effectively
-this means that you won&#8217;t get any extractions before the composite document is fully processed. The
+this means that you won’t get any extractions before the composite document is fully processed. The
 processing time may vary, usually it is in the range of a couple of seconds, but blurred or slightly
 rotated images are known to drasticly increase the processing time.</p>
-<p>The <tt class="docutils literal"><span class="pre">DocumentTaskManager</span></tt> provides the <tt class="docutils literal"><span class="pre">pollDocument</span></tt> and <tt class="docutils literal"><span class="pre">getAllExtractions</span></tt> methods which can be
+<p>The <code class="docutils literal notranslate"><span class="pre">DocumentTaskManager</span></code> provides the <code class="docutils literal notranslate"><span class="pre">pollDocument</span></code> and <code class="docutils literal notranslate"><span class="pre">getAllExtractions</span></code> methods which can be
 used to fetch the extractions after the processing of the document is completed. The following
 example shows how to achieve this in detail.</p>
-<div class="highlight-java"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">net.gini.android.Gini</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">net.gini.android.DocumentTaskManager</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">net.gini.android.models.Document</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">net.gini.android.models.SpecificExtraction</span><span class="o">;</span>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">net.gini.android.Gini</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">net.gini.android.DocumentTaskManager</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">net.gini.android.models.Document</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">net.gini.android.models.SpecificExtraction</span><span class="p">;</span>
 
-<span class="o">...</span>
+<span class="p">...</span>
 
 <span class="c1">// Assuming that `gini` is an instance of the `Gini` facade class and `partialDocuments` is</span>
 <span class="c1">// a list of `Documents` which were returned by `createPartialDocument(...)` calls</span>
 
-<span class="kd">final</span> <span class="n">DocumentTaskManager</span> <span class="n">documentTaskManager</span> <span class="o">=</span> <span class="n">gini</span><span class="o">.</span><span class="na">getDocumentTaskManager</span><span class="o">();</span>
-<span class="n">documentTaskManager</span><span class="o">.</span><span class="na">createCompositeDocument</span><span class="o">(</span><span class="n">partialDocuments</span><span class="o">,</span> <span class="kc">null</span><span class="o">)</span>
-    <span class="o">.</span><span class="na">onSuccessTask</span><span class="o">(</span>
-        <span class="k">new</span> <span class="n">Continuation</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">,</span> <span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;&gt;()</span> <span class="o">{</span>
+<span class="kd">final</span> <span class="n">DocumentTaskManager</span> <span class="n">documentTaskManager</span> <span class="o">=</span> <span class="n">gini</span><span class="p">.</span><span class="na">getDocumentTaskManager</span><span class="p">();</span>
+<span class="n">documentTaskManager</span><span class="p">.</span><span class="na">createCompositeDocument</span><span class="p">(</span><span class="n">partialDocuments</span><span class="p">,</span> <span class="kc">null</span><span class="p">)</span>
+    <span class="p">.</span><span class="na">onSuccessTask</span><span class="p">(</span>
+        <span class="k">new</span> <span class="n">Continuation</span><span class="o">&lt;</span><span class="n">Document</span><span class="p">,</span> <span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;&gt;</span><span class="p">()</span> <span class="p">{</span>
             <span class="nd">@Override</span>
-            <span class="kd">public</span> <span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;</span> <span class="nf">then</span><span class="o">(</span>
-                    <span class="kd">final</span> <span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;</span> <span class="n">task</span><span class="o">)</span>
-                    <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
-                <span class="kd">final</span> <span class="n">Document</span> <span class="n">document</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="na">getResult</span><span class="o">();</span>
-                <span class="k">return</span> <span class="n">documentTaskManager</span><span class="o">.</span><span class="na">pollDocument</span><span class="o">(</span><span class="n">document</span><span class="o">);</span>
-            <span class="o">}</span>
-    <span class="o">})</span>
-    <span class="o">.</span><span class="na">onSuccessTask</span><span class="o">(</span><span class="k">new</span> <span class="n">Continuation</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">,</span> <span class="n">Task</span><span class="o">&lt;</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;&gt;&gt;()</span> <span class="o">{</span>
+            <span class="kd">public</span> <span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;</span> <span class="nf">then</span><span class="p">(</span>
+                    <span class="kd">final</span> <span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;</span> <span class="n">task</span><span class="p">)</span>
+                    <span class="kd">throws</span> <span class="n">Exception</span> <span class="p">{</span>
+                <span class="kd">final</span> <span class="n">Document</span> <span class="n">document</span> <span class="o">=</span> <span class="n">task</span><span class="p">.</span><span class="na">getResult</span><span class="p">();</span>
+                <span class="k">return</span> <span class="n">documentTaskManager</span><span class="p">.</span><span class="na">pollDocument</span><span class="p">(</span><span class="n">document</span><span class="p">);</span>
+            <span class="p">}</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="na">onSuccessTask</span><span class="p">(</span><span class="k">new</span> <span class="n">Continuation</span><span class="o">&lt;</span><span class="n">Document</span><span class="p">,</span> <span class="n">Task</span><span class="o">&lt;</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;&gt;&gt;</span><span class="p">()</span> <span class="p">{</span>
         <span class="nd">@Override</span>
-        <span class="kd">public</span> <span class="n">Object</span> <span class="nf">then</span><span class="o">(</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;</span> <span class="n">task</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
-            <span class="kd">final</span> <span class="n">Document</span> <span class="n">document</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="na">getResult</span><span class="o">();</span>
-            <span class="k">return</span> <span class="n">documentTaskManager</span><span class="o">.</span><span class="na">getAllExtractions</span><span class="o">(</span><span class="n">document</span><span class="o">);</span>
-        <span class="o">}</span>
-    <span class="o">})</span>
-    <span class="o">.</span><span class="na">onSuccess</span><span class="o">(</span><span class="k">new</span> <span class="n">Continuation</span><span class="o">&lt;</span><span class="n">ExtractionsContainer</span><span class="o">&gt;,</span> <span class="n">Void</span><span class="o">&gt;()</span> <span class="o">{</span>
+        <span class="kd">public</span> <span class="n">Object</span> <span class="nf">then</span><span class="p">(</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;</span> <span class="n">task</span><span class="p">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="p">{</span>
+            <span class="kd">final</span> <span class="n">Document</span> <span class="n">document</span> <span class="o">=</span> <span class="n">task</span><span class="p">.</span><span class="na">getResult</span><span class="p">();</span>
+            <span class="k">return</span> <span class="n">documentTaskManager</span><span class="p">.</span><span class="na">getAllExtractions</span><span class="p">(</span><span class="n">document</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="na">onSuccess</span><span class="p">(</span><span class="k">new</span> <span class="n">Continuation</span><span class="o">&lt;</span><span class="n">ExtractionsContainer</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">Void</span><span class="o">&gt;</span><span class="p">()</span> <span class="p">{</span>
         <span class="nd">@Override</span>
-        <span class="kd">public</span> <span class="n">Void</span> <span class="nf">then</span><span class="o">(</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">ExtractionsContainer</span><span class="o">&gt;</span> <span class="n">task</span><span class="o">)</span> <span class="o">{</span>
-            <span class="kd">final</span> <span class="n">ExtractionsContainer</span> <span class="n">extractions</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="na">getResult</span><span class="o">();</span>
+        <span class="kd">public</span> <span class="n">Void</span> <span class="nf">then</span><span class="p">(</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">ExtractionsContainer</span><span class="o">&gt;</span> <span class="n">task</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">final</span> <span class="n">ExtractionsContainer</span> <span class="n">extractions</span> <span class="o">=</span> <span class="n">task</span><span class="p">.</span><span class="na">getResult</span><span class="p">();</span>
             <span class="kd">final</span> <span class="n">SpecificExtraction</span> <span class="n">amountToPay</span> <span class="o">=</span>
-                    <span class="n">extractions</span><span class="o">.</span><span class="na">getSpecificExtractions</span><span class="o">().</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;amountToPay&quot;</span><span class="o">);</span>
+                    <span class="n">extractions</span><span class="p">.</span><span class="na">getSpecificExtractions</span><span class="p">().</span><span class="na">get</span><span class="p">(</span><span class="s">&quot;amountToPay&quot;</span><span class="p">);</span>
             <span class="kd">final</span> <span class="n">CompoundExtraction</span> <span class="n">lineItems</span> <span class="o">=</span>
-                    <span class="n">extractions</span><span class="o">.</span><span class="na">getCompoundExtractions</span><span class="o">().</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;lineItems&quot;</span><span class="o">);</span>
+                    <span class="n">extractions</span><span class="p">.</span><span class="na">getCompoundExtractions</span><span class="p">().</span><span class="na">get</span><span class="p">(</span><span class="s">&quot;lineItems&quot;</span><span class="p">);</span>
             <span class="c1">// You may use the extractions to fulfill your use-case</span>
-            <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
-        <span class="o">}</span>
-    <span class="o">});</span>
+            <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
 </pre></div>
 </div>
 </div>
@@ -343,24 +345,24 @@ your app sends feedback for the extractions Gini delivered. Your app should send
 the extractions the <em>user has seen and accepted</em>. Feedback should be sent for corrected extractions
 <strong>and</strong> for <em>correct extractions</em>. The code example below shows how to correct extractions and send
 feedback.</p>
-<div class="highlight-java"><div class="highlight"><pre><span class="kd">final</span> <span class="n">Task</span><span class="o">&lt;</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;&gt;</span> <span class="n">retrievedExtractions</span> <span class="c1">// provided</span>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kd">final</span> <span class="n">Task</span><span class="o">&lt;</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;&gt;</span> <span class="n">retrievedExtractions</span> <span class="c1">// provided</span>
 <span class="kd">final</span> <span class="n">Document</span> <span class="n">document</span> <span class="c1">// provided</span>
 
-<span class="kd">final</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;</span> <span class="n">extractions</span> <span class="o">=</span> <span class="n">retrieveExtractions</span><span class="o">.</span><span class="na">getResult</span><span class="o">();</span>
+<span class="kd">final</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;</span> <span class="n">extractions</span> <span class="o">=</span> <span class="n">retrieveExtractions</span><span class="p">.</span><span class="na">getResult</span><span class="p">();</span>
 <span class="c1">// amounTo pay was wrong, we&#39;ll correct it</span>
-<span class="n">SpecificExtraction</span> <span class="n">amountToPay</span> <span class="o">=</span> <span class="n">extractions</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;amountToPay&quot;</span><span class="o">);</span>
-<span class="n">amountToPay</span><span class="o">.</span><span class="na">setValue</span><span class="o">(</span><span class="s">&quot;31:00&quot;</span><span class="o">);</span>
+<span class="n">SpecificExtraction</span> <span class="n">amountToPay</span> <span class="o">=</span> <span class="n">extractions</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="s">&quot;amountToPay&quot;</span><span class="p">);</span>
+<span class="n">amountToPay</span><span class="p">.</span><span class="na">setValue</span><span class="p">(</span><span class="s">&quot;31:00&quot;</span><span class="p">);</span>
 
 <span class="c1">// we should send only feedback for extractions we have seen and accepted</span>
 <span class="c1">// all extractions we&#39;ve seen were correct except amountToPay</span>
-<span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;</span> <span class="n">feedback</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;();</span>
-<span class="n">feedback</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;iban&quot;</span><span class="o">,</span> <span class="n">extractions</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;iban&quot;</span><span class="o">));</span>
-<span class="n">feedback</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;amountToPay&quot;</span><span class="o">,</span> <span class="n">amountToPay</span><span class="o">);</span>
-<span class="n">feedback</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;bic&quot;</span><span class="o">,</span> <span class="n">extractions</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;bic&quot;</span><span class="o">));</span>
-<span class="n">feedback</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;senderName&quot;</span><span class="o">,</span> <span class="n">extractions</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;senderName&quot;</span><span class="o">));</span>
+<span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;</span> <span class="n">feedback</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">SpecificExtraction</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="n">feedback</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;iban&quot;</span><span class="p">,</span> <span class="n">extractions</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="s">&quot;iban&quot;</span><span class="p">));</span>
+<span class="n">feedback</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;amountToPay&quot;</span><span class="p">,</span> <span class="n">amountToPay</span><span class="p">);</span>
+<span class="n">feedback</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;bic&quot;</span><span class="p">,</span> <span class="n">extractions</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="s">&quot;bic&quot;</span><span class="p">));</span>
+<span class="n">feedback</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;senderName&quot;</span><span class="p">,</span> <span class="n">extractions</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="s">&quot;senderName&quot;</span><span class="p">));</span>
 
-<span class="kd">final</span> <span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;</span> <span class="n">sendFeedback</span> <span class="o">=</span> <span class="n">documentTaskManager</span><span class="o">.</span><span class="na">sendFeedbackForExtractions</span><span class="o">(</span><span class="n">document</span><span class="o">,</span> <span class="n">feedback</span><span class="o">);</span>
-<span class="n">sendFeedback</span><span class="o">.</span><span class="na">waitForCompletion</span><span class="o">();</span>
+<span class="kd">final</span> <span class="n">Task</span><span class="o">&lt;</span><span class="n">Document</span><span class="o">&gt;</span> <span class="n">sendFeedback</span> <span class="o">=</span> <span class="n">documentTaskManager</span><span class="p">.</span><span class="na">sendFeedbackForExtractions</span><span class="p">(</span><span class="n">document</span><span class="p">,</span> <span class="n">feedback</span><span class="p">);</span>
+<span class="n">sendFeedback</span><span class="p">.</span><span class="na">waitForCompletion</span><span class="p">();</span>
 </pre></div>
 </div>
 </div>
@@ -371,16 +373,16 @@ user the opportunity to report an error directly to Gini. Gini will return an er
 can be used to refer to it towards the Gini support. The user must agree that Gini can use this
 document for debugging and error analysis. The code example below shows how to send the error report
 to Gini.</p>
-<div class="highlight-java"><div class="highlight"><pre><span class="kd">final</span> <span class="n">Document</span> <span class="n">document</span> <span class="c1">// provided</span>
-<span class="n">documentTaskManager</span><span class="o">.</span><span class="na">reportDocument</span><span class="o">(</span><span class="n">document</span><span class="o">,</span> <span class="s">&quot;short summary&quot;</span><span class="o">,</span> <span class="s">&quot;detailed description&quot;</span><span class="o">);</span>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kd">final</span> <span class="n">Document</span> <span class="n">document</span> <span class="c1">// provided</span>
+<span class="n">documentTaskManager</span><span class="p">.</span><span class="na">reportDocument</span><span class="p">(</span><span class="n">document</span><span class="p">,</span> <span class="s">&quot;short summary&quot;</span><span class="p">,</span> <span class="s">&quot;detailed description&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="handling-sdk-errors">
 <h2>Handling SDK errors<a class="headerlink" href="#handling-sdk-errors" title="Permalink to this headline">¶</a></h2>
-<p>Currently, the Gini Android SDK doesn&#8217;t have intelligent error-handling mechanisms. All errors that
+<p>Currently, the Gini Android SDK doesn’t have intelligent error-handling mechanisms. All errors that
 occure during executing a task are handed over transparently. You can react on those errors in the
-<tt class="docutils literal"><span class="pre">onError(...)</span></tt> method of the task. We may add better error-handling mechanisms in the future. At
+<code class="docutils literal notranslate"><span class="pre">onError(...)</span></code> method of the task. We may add better error-handling mechanisms in the future. At
 the moment we recommend checking the network status when a task failed and retrying the task.</p>
 </div>
 </div>

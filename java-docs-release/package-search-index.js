@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"net.gini.android"},{"l":"net.gini.android.authorization"},{"l":"net.gini.android.authorization.crypto"},{"l":"net.gini.android.authorization.requests"},{"l":"net.gini.android.internal"},{"l":"net.gini.android.models"},{"l":"net.gini.android.requests"}]

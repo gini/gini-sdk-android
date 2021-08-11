@@ -31,6 +31,7 @@
       <script type="text/javascript" src="../_static/jquery.js"></script>
       <script type="text/javascript" src="../_static/underscore.js"></script>
       <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="../_static/language_data.js"></script>
 
     
 
@@ -52,6 +53,7 @@
   
 
   
+        <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="Gini SDK for Android v1 documentation" href="../index.html"/>
         <link rel="next" title="Working with Tasks" href="common-tasks.html"/>
         <link rel="prev" title="Gini Android SDK Documentation" href="../index.html"/> 
@@ -81,7 +83,7 @@
         
         
             <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="">Getting started</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#first-of-all-add-the-library-to-your-build">First of all: Add the Library to your Build</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#integrating-the-gini-sdk">Integrating the Gini SDK</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#creating-the-gini-sdk-instance">Creating the Gini SDK instance</a></li>
@@ -209,7 +211,7 @@
 <p>The gini sdk is provided as a aar archive. You can integrate it in your gradle based project by
 adding it as dependency. In order to gain access to the aar file, you have to add the Gini Maven
 repository to your build script.</p>
-<div class="highlight-groovy"><div class="highlight"><pre><span class="n">repositories</span> <span class="o">{</span>
+<div class="highlight-groovy notranslate"><div class="highlight"><pre><span></span><span class="n">repositories</span> <span class="o">{</span>
     <span class="n">maven</span> <span class="o">{</span>
         <span class="n">url</span> <span class="s2">&quot;https://repo.gini.net/nexus/content/repositories/public&quot;</span>
     <span class="o">}</span>
@@ -217,7 +219,7 @@ repository to your build script.</p>
 <span class="o">}</span>
 
 <span class="n">dependencies</span> <span class="o">{</span>
-    <span class="n">compile</span> <span class="o">(</span><span class="s1">&#39;net.gini:gini-android-sdk:2.8.0@aar&#39;</span><span class="o">){</span>
+    <span class="n">compile</span> <span class="o">(</span><span class="s1">&#39;net.gini:gini-android-sdk:2.9.0@aar&#39;</span><span class="o">){</span>
         <span class="n">transitive</span> <span class="o">=</span> <span class="kc">true</span>
     <span class="o">}</span>
     <span class="o">...</span>
@@ -227,7 +229,7 @@ repository to your build script.</p>
 </div>
 <div class="section" id="integrating-the-gini-sdk">
 <h2>Integrating the Gini SDK<a class="headerlink" href="#integrating-the-gini-sdk" title="Permalink to this headline">¶</a></h2>
-<p>The Gini SDK provides the <tt class="docutils literal"><span class="pre">Gini</span></tt> class which is a façade to all functionality of the Gini SDK. We
+<p>The Gini SDK provides the <code class="docutils literal notranslate"><span class="pre">Gini</span></code> class which is a façade to all functionality of the Gini SDK. We
 recommend using an instance of this class singleton-like. By saying singleton-like we mean that you
 somehow manage to create and keep one instance at application start. Instead of creating a new
 instance every time when you need to interact with the Gini API, you reuse this instance. This has
@@ -235,30 +237,30 @@ the benefits that the SDK can reuse sessions between requests to the Gini API wh
 noteworthy number of HTTP requests.</p>
 <div class="section" id="creating-the-gini-sdk-instance">
 <h3>Creating the Gini SDK instance<a class="headerlink" href="#creating-the-gini-sdk-instance" title="Permalink to this headline">¶</a></h3>
-<p>In order to create an instance of the <tt class="docutils literal"><span class="pre">Gini</span></tt> class, you need both your client id and your client
-secret. If you don&#8217;t have a client id and client secret yet, you need to register your application
+<p>In order to create an instance of the <code class="docutils literal notranslate"><span class="pre">Gini</span></code> class, you need both your client id and your client
+secret. If you don’t have a client id and client secret yet, you need to register your application
 with Gini. <a class="reference external" href="http://developer.gini.net/gini-api/html/guides/oauth2.html#first-of-all-register-your-application-with-gini">See the Gini API documentation to find out how to register your Application with Gini</a>.</p>
 <p>All requests to the Gini API are made on behalf of a user. This means particularly that all created
 documents are bound to a specific user account. But since you are most likely only interested in the
 results of the semantic document analysis and not in a cloud document storage system, the Gini API
-has the feature of &#8220;anonymous users&#8221;. This means that user accounts are created on the fly and the
-user account is unknown to your application&#8217;s user.</p>
+has the feature of “anonymous users”. This means that user accounts are created on the fly and the
+user account is unknown to your application’s user.</p>
 <p>The following example describes how to use the Gini API in your application with such anonymous user
-accounts. To use the Gini API, you must create an instance of the <tt class="docutils literal"><span class="pre">Gini</span></tt> class. The <tt class="docutils literal"><span class="pre">Gini</span></tt>
-instance is configured and created with the help of the <tt class="docutils literal"><span class="pre">SdkBuilder</span></tt> class. In this example, the
-anonymous users are created with the email domain &#8220;example.com&#8221;. An example of a username created
-with this configuration would be <tt class="docutils literal"><span class="pre">550e8400-e29b-11d4-a716-446655440000&#64;example.com</span></tt></p>
-<div class="highlight-java"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">net.gini.android.SdkBuilder</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">net.gini.android.DocumentTaskManager</span><span class="o">;</span>
+accounts. To use the Gini API, you must create an instance of the <code class="docutils literal notranslate"><span class="pre">Gini</span></code> class. The <code class="docutils literal notranslate"><span class="pre">Gini</span></code>
+instance is configured and created with the help of the <code class="docutils literal notranslate"><span class="pre">SdkBuilder</span></code> class. In this example, the
+anonymous users are created with the email domain “example.com”. An example of a username created
+with this configuration would be <code class="docutils literal notranslate"><span class="pre">550e8400-e29b-11d4-a716-446655440000&#64;example.com</span></code></p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">net.gini.android.SdkBuilder</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">net.gini.android.DocumentTaskManager</span><span class="p">;</span>
 
-<span class="o">...</span>
+<span class="p">...</span>
 
 <span class="c1">// The Gini instance is a facade to all available managers of the Gini SDK. Configure and</span>
 <span class="c1">// create the SDK with the SdkBuilder.</span>
-<span class="n">Gini</span> <span class="n">gini</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SdkBuilder</span><span class="o">(</span><span class="n">getContext</span><span class="o">(),</span> <span class="s">&quot;gini-client-id&quot;</span><span class="o">,</span> <span class="s">&quot;GiniClientSecret&quot;</span><span class="o">,</span> <span class="s">&quot;example.com&quot;</span><span class="o">)</span>
-        <span class="o">.</span><span class="na">build</span><span class="o">();</span>
+<span class="n">Gini</span> <span class="n">gini</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SdkBuilder</span><span class="p">(</span><span class="n">getContext</span><span class="p">(),</span> <span class="s">&quot;gini-client-id&quot;</span><span class="p">,</span> <span class="s">&quot;GiniClientSecret&quot;</span><span class="p">,</span> <span class="s">&quot;example.com&quot;</span><span class="p">)</span>
+        <span class="p">.</span><span class="na">build</span><span class="p">();</span>
 <span class="c1">// The DocumentTaskManager provides the high-level API to work with documents.</span>
-<span class="n">DocumentTaskManager</span> <span class="n">documentManager</span> <span class="o">=</span> <span class="n">gini</span><span class="o">.</span><span class="na">getDocumentTaskManager</span><span class="o">();</span>
+<span class="n">DocumentTaskManager</span> <span class="n">documentManager</span> <span class="o">=</span> <span class="n">gini</span><span class="p">.</span><span class="na">getDocumentTaskManager</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Congratulations, you successfully integrated the Gini SDK.</p>
@@ -268,9 +270,9 @@ with this configuration would be <tt class="docutils literal"><span class="pre">
 <h2>Using the Gini Accounting API<a class="headerlink" href="#using-the-gini-accounting-api" title="Permalink to this headline">¶</a></h2>
 <p>In version 2.3.0 we added support for the Gini Accounting API. To use it simply set the Gini API type
 to <cite>GiniApiType.ACCOUNTING</cite> when using the <cite>SdkBuilder</cite>:</p>
-<div class="highlight-java"><div class="highlight"><pre><span class="n">Gini</span> <span class="n">gini</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SdkBuilder</span><span class="o">(</span><span class="n">getContext</span><span class="o">(),</span> <span class="s">&quot;gini-client-id&quot;</span><span class="o">,</span> <span class="s">&quot;GiniClientSecret&quot;</span><span class="o">,</span> <span class="s">&quot;example.com&quot;</span><span class="o">)</span>
-        <span class="o">.</span><span class="na">setGiniApiType</span><span class="o">(</span><span class="n">GiniApiType</span><span class="o">.</span><span class="na">ACCOUNTING</span><span class="o">)</span>
-        <span class="o">.</span><span class="na">build</span><span class="o">();</span>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="n">Gini</span> <span class="n">gini</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SdkBuilder</span><span class="p">(</span><span class="n">getContext</span><span class="p">(),</span> <span class="s">&quot;gini-client-id&quot;</span><span class="p">,</span> <span class="s">&quot;GiniClientSecret&quot;</span><span class="p">,</span> <span class="s">&quot;example.com&quot;</span><span class="p">)</span>
+        <span class="p">.</span><span class="na">setGiniApiType</span><span class="p">(</span><span class="n">GiniApiType</span><span class="p">.</span><span class="na">ACCOUNTING</span><span class="p">)</span>
+        <span class="p">.</span><span class="na">build</span><span class="p">();</span>
 </pre></div>
 </div>
 <div class="admonition warning">
@@ -292,9 +294,9 @@ limitations for API Levels 17 to 23</a>.</p>
 <div class="section" id="configure-pinning">
 <h3>Configure Pinning<a class="headerlink" href="#configure-pinning" title="Permalink to this headline">¶</a></h3>
 <p>The following sample configuration shows how to set the public key pin for the two domains the Gini
-SDK uses by default (<tt class="docutils literal"><span class="pre">api.gini.net</span></tt> and <tt class="docutils literal"><span class="pre">user.gini.net</span></tt>). It should be saved under
-<tt class="docutils literal"><span class="pre">res/xml/network_security_config.xml</span></tt>:</p>
-<div class="highlight-xml"><div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+SDK uses by default (<code class="docutils literal notranslate"><span class="pre">api.gini.net</span></code> and <code class="docutils literal notranslate"><span class="pre">user.gini.net</span></code>). It should be saved under
+<code class="docutils literal notranslate"><span class="pre">res/xml/network_security_config.xml</span></code>:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
 <span class="nt">&lt;network-security-config&gt;</span>
     <span class="nt">&lt;domain-config&gt;</span>
         <span class="nt">&lt;trustkit-config</span>
@@ -319,13 +321,13 @@ SDK uses by default (<tt class="docutils literal"><span class="pre">api.gini.net
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">If you set different base urls when instantiating the Gini SDK with the <tt class="docutils literal"><span class="pre">SdkBuilder</span></tt> make sure
+<p class="last">If you set different base urls when instantiating the Gini SDK with the <code class="docutils literal notranslate"><span class="pre">SdkBuilder</span></code> make sure
 you set matching domains in the network security configuration xml.</p>
 </div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">The above digests serve as an example only. You should <strong>always</strong> create the digest yourself
-from the Gini API&#8217;s public key and use that one (see <a class="reference internal" href="#extract-hash-from-gini-net">Extract Hash From gini.net</a>). If you
+from the Gini API’s public key and use that one (see <a class="reference internal" href="#extract-hash-from-gini-net">Extract Hash From gini.net</a>). If you
 received a digest from us then <strong>always</strong> validate it by comparing it to the digest you created
 from the public key (see <a class="reference internal" href="#extract-hash-from-public-key">Extract Hash From Public Key</a>). Failing to validate a digest may lead
 to security vulnerabilities.</p>
@@ -334,15 +336,15 @@ to security vulnerabilities.</p>
 <div class="section" id="id4">
 <h3>TrustKit<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference external" href="https://github.com/datatheorem/TrustKit-Android">TrustKit</a> configuration tag
-<tt class="docutils literal"><span class="pre">&lt;trustkit-config&gt;</span></tt> is required in order to disable TrustKit reporting and to enforce public key
-pinning. This is important because without it TrustKit won&#8217;t throw <tt class="docutils literal"><span class="pre">CertificateExceptions</span></tt> if the
-local public keys didn&#8217;t match any of the remote ones, effectively disabling pinning. The only
+<code class="docutils literal notranslate"><span class="pre">&lt;trustkit-config&gt;</span></code> is required in order to disable TrustKit reporting and to enforce public key
+pinning. This is important because without it TrustKit won’t throw <code class="docutils literal notranslate"><span class="pre">CertificateExceptions</span></code> if the
+local public keys didn’t match any of the remote ones, effectively disabling pinning. The only
 downside of enforcing pinning is that two public key hashes are required. In the example above we
-create and used a &#8220;zero&#8221; key hash as a placeholder. Setting the same key hash twice won&#8217;t help since
+create and used a “zero” key hash as a placeholder. Setting the same key hash twice won’t help since
 key hashes are stored in a set. Ideally you should use a backup public key hash as the second one.</p>
-<p>In your <tt class="docutils literal"><span class="pre">AndroidManifest.xml</span></tt> you need to set the <tt class="docutils literal"><span class="pre">android:networkSecurityConfig</span></tt> attribute on
-the <tt class="docutils literal"><span class="pre">&lt;application&gt;</span></tt> tag to point to the xml:</p>
-<div class="highlight-xml"><div class="highlight"><pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+<p>In your <code class="docutils literal notranslate"><span class="pre">AndroidManifest.xml</span></code> you need to set the <code class="docutils literal notranslate"><span class="pre">android:networkSecurityConfig</span></code> attribute on
+the <code class="docutils literal notranslate"><span class="pre">&lt;application&gt;</span></code> tag to point to the xml:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
 &lt;manifest ...&gt;
     ...
     &lt;application android:networkSecurityConfig=&quot;@xml/network_security_config&quot;&gt;
@@ -354,10 +356,10 @@ the <tt class="docutils literal"><span class="pre">&lt;application&gt;</span></t
 <div class="section" id="enable-pinning">
 <h3>Enable Pinning<a class="headerlink" href="#enable-pinning" title="Permalink to this headline">¶</a></h3>
 <p>For the Gini SDK to know about the xml you need to set the xml resource id using the
-<tt class="docutils literal"><span class="pre">SdkBuilder#setNetworkSecurityConfigResId()</span></tt> method:</p>
-<div class="highlight-java"><div class="highlight"><pre><span class="n">Gini</span> <span class="n">gini</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SdkBuilder</span><span class="o">(</span><span class="n">getContext</span><span class="o">(),</span> <span class="s">&quot;gini-client-id&quot;</span><span class="o">,</span> <span class="s">&quot;GiniClientSecret&quot;</span><span class="o">,</span> <span class="s">&quot;example.com&quot;</span><span class="o">)</span>
-        <span class="o">.</span><span class="na">setNetworkSecurityConfigResId</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">xml</span><span class="o">.</span><span class="na">network_security_config</span><span class="o">)</span>
-        <span class="o">.</span><span class="na">build</span><span class="o">();</span>
+<code class="docutils literal notranslate"><span class="pre">SdkBuilder#setNetworkSecurityConfigResId()</span></code> method:</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="n">Gini</span> <span class="n">gini</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SdkBuilder</span><span class="p">(</span><span class="n">getContext</span><span class="p">(),</span> <span class="s">&quot;gini-client-id&quot;</span><span class="p">,</span> <span class="s">&quot;GiniClientSecret&quot;</span><span class="p">,</span> <span class="s">&quot;example.com&quot;</span><span class="p">)</span>
+        <span class="p">.</span><span class="na">setNetworkSecurityConfigResId</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">xml</span><span class="p">.</span><span class="na">network_security_config</span><span class="p">)</span>
+        <span class="p">.</span><span class="na">build</span><span class="p">();</span>
 </pre></div>
 </div>
 </div>
@@ -365,15 +367,15 @@ the <tt class="docutils literal"><span class="pre">&lt;application&gt;</span></t
 <h3>Extract Hash From gini.net<a class="headerlink" href="#extract-hash-from-gini-net" title="Permalink to this headline">¶</a></h3>
 <p>The current Gini API public key SHA256 hash digest in Base64 encoding can be extracted with the
 following openssl commands:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>openssl s_client -servername gini.net -connect gini.net:443 <span class="p">|</span> openssl x509 -pubkey -noout <span class="p">|</span> openssl pkey -pubin -outform der <span class="p">|</span> openssl dgst -sha256 -binary <span class="p">|</span> openssl enc -base64
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ openssl s_client -servername gini.net -connect gini.net:443 <span class="p">|</span> openssl x509 -pubkey -noout <span class="p">|</span> openssl pkey -pubin -outform der <span class="p">|</span> openssl dgst -sha256 -binary <span class="p">|</span> openssl enc -base64
 </pre></div>
 </div>
 </div>
 <div class="section" id="extract-hash-from-public-key">
 <h3>Extract Hash From Public Key<a class="headerlink" href="#extract-hash-from-public-key" title="Permalink to this headline">¶</a></h3>
 <p>You can also extract the hash from a public key. The following example shows how to extract it from
-a public key named <tt class="docutils literal"><span class="pre">gini.pub</span></tt>:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>cat gini.pub <span class="p">|</span> openssl pkey -pubin -outform der <span class="p">|</span> openssl dgst -sha256 -binary <span class="p">|</span> openssl enc -base64
+a public key named <code class="docutils literal notranslate"><span class="pre">gini.pub</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ cat gini.pub <span class="p">|</span> openssl pkey -pubin -outform der <span class="p">|</span> openssl dgst -sha256 -binary <span class="p">|</span> openssl enc -base64
 </pre></div>
 </div>
 </div>
