@@ -210,9 +210,6 @@ public class SdkIntegrationTestAccounting {
                 setCredentialsStore(credentialsStore).
                 build();
 
-        // Wait before starting another analysis (this test often fails otherwise with a 400 when getting the extractions)
-        Thread.sleep(2000);
-
         analyzeDocumentAndAssertExtractions(uploadBuilder);
 
         UserCredentials newUserCredentials = credentialsStore.getUserCredentials();
