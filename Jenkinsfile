@@ -33,7 +33,7 @@ pipeline {
                 script {
                     def emulatorPort = emulator.start(avd.createName("api-26-nexus-5x"), "nexus_5x", '''\
                         -prop persist.sys.language=en -prop persist.sys.country=US -gpu on -camera-back emulated \
-                        -no-snapshot-save -no-snapshot-load -no-boot-anim -no-audio -no-window
+                        -no-snapshot-save -no-snapshot-load -no-audio -no-window
                     ''')
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
@@ -66,7 +66,7 @@ pipeline {
                 script {
                     def emulatorPort = emulator.start(avd.createName("api-22-nexus-5x"), "nexus_5x", '''\
                         -prop persist.sys.language=en -prop persist.sys.country=US -gpu on -camera-back emulated \
-                        -no-snapshot-save -no-snapshot-load -no-boot-anim -no-audio -no-window
+                        -no-snapshot-save -no-snapshot-load -no-audio -no-window
                     ''')
                     sh "echo $emulatorPort > emulator_port"
                     adb.setAnimationDurationScale("emulator-$emulatorPort", 0)
