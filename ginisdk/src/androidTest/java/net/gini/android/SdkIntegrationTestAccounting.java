@@ -318,7 +318,7 @@ public class SdkIntegrationTestAccounting {
     private Map<Document, Map<String, SpecificExtraction>> analyzeDocumentAndAssertExtractions(DocumentUploadBuilder uploadBuilder)
             throws InterruptedException {
         final Pair<Document, Map<String, SpecificExtraction>> retrieveExtractions =
-                analyzeDocument(uploadBuilder, 3, 0);
+                analyzeDocument(uploadBuilder, 10, 0);
 
         final Map<String, SpecificExtraction> extractions = retrieveExtractions.second;
 
