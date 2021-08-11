@@ -611,7 +611,7 @@ public class SdkIntegrationTest {
 
         if (retrieveExtractions.isFaulted() && retries < maxRetries) {
             Log.e("TEST", Log.getStackTraceString(retrieveExtractions.getError()));
-
+            Thread.sleep(1000);
             return analyzeDocument(uploadBuilder, maxRetries, retries + 1);
         }
 
