@@ -1,6 +1,6 @@
 package net.gini.android;
 
-import static android.support.test.InstrumentationRegistry.getTargetContext;
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 
 import static net.gini.android.Utils.CHARSET_UTF8;
 
@@ -9,6 +9,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
@@ -20,8 +21,8 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.support.test.filters.MediumTest;
-import android.support.test.runner.AndroidJUnit4;
+import androidx.test.filters.MediumTest;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import net.gini.android.DocumentTaskManager.DocumentType;
 import net.gini.android.authorization.Session;
@@ -69,7 +70,7 @@ public class DocumentTaskManagerTest {
     @Before
     public void setUp() {
         // https://code.google.com/p/dexmaker/issues/detail?id=2
-        System.setProperty("dexmaker.dexcache", getTargetContext().getCacheDir().getPath());
+        System.setProperty("dexmaker.dexcache", getApplicationContext().getCacheDir().getPath());
 
         mApiCommunicator = Mockito.mock(ApiCommunicator.class);
         mSessionManager = Mockito.mock(SessionManager.class);
@@ -81,7 +82,7 @@ public class DocumentTaskManagerTest {
     }
 
     private Bitmap createBitmap() throws IOException {
-        AssetManager assetManager = getTargetContext().getResources().getAssets();
+        AssetManager assetManager = getApplicationContext().getResources().getAssets();
 
         InputStream inputStream;
         inputStream = assetManager.open("yoda.jpg");
@@ -89,14 +90,14 @@ public class DocumentTaskManagerTest {
     }
 
     private byte[] createByteArray() throws IOException {
-        AssetManager assetManager = getTargetContext().getResources().getAssets();
+        AssetManager assetManager = getApplicationContext().getResources().getAssets();
 
         InputStream inputStream = assetManager.open("yoda.jpg");
         return TestUtils.createByteArray(inputStream);
     }
 
     private JSONObject readJSONFile(final String filename) throws IOException, JSONException {
-        InputStream inputStream = getTargetContext().getResources().getAssets().open(filename);
+        InputStream inputStream = getApplicationContext().getResources().getAssets().open(filename);
         int size = inputStream.available();
         byte[] buffer = new byte[size];
         @SuppressWarnings("unused")
@@ -110,7 +111,7 @@ public class DocumentTaskManagerTest {
         BufferedReader inputStreamReader = null;
         try {
             final AssetManager assetManager =
-                    getTargetContext().getResources().getAssets();
+                    getApplicationContext().getResources().getAssets();
             inputStreamReader = new BufferedReader(
                     new InputStreamReader(assetManager.open("document-template.json"), CHARSET_UTF8));
             StringBuilder stringBuilder = new StringBuilder();
@@ -196,7 +197,7 @@ public class DocumentTaskManagerTest {
     public void testThatCreateDocumentResolvesToDocument() throws IOException, JSONException, InterruptedException {
         final Uri createdDocumentUri = Uri.parse("https://api.gini.net/documents/1234");
         when(mApiCommunicator.uploadDocument(any(byte[].class), any(String.class), any(String.class), any(String.class),
-                any(Session.class), any(DocumentMetadata.class)))
+                any(Session.class), nullable(DocumentMetadata.class)))
                 .thenReturn(Task.forResult(createdDocumentUri));
         when(mApiCommunicator.getDocument(eq(createdDocumentUri), any(Session.class))).thenReturn(
                 createDocumentJSONTask("1234"));
@@ -223,7 +224,7 @@ public class DocumentTaskManagerTest {
 
         verify(mApiCommunicator)
                 .uploadDocument(any(byte[].class), eq(MediaTypes.IMAGE_JPEG), eq("foobar.jpg"), eq("invoice"),
-                        eq(mSession), any(DocumentMetadata.class));
+                        eq(mSession), nullable(DocumentMetadata.class));
     }
 
     @Test
@@ -244,7 +245,7 @@ public class DocumentTaskManagerTest {
                 .uploadDocument(eq(document),
                         eq("application/vnd.gini.v2.partial+jpeg"), eq("foobar.jpg"),
                         eq("Invoice"),
-                        eq(mSession), any(DocumentMetadata.class));
+                        eq(mSession), nullable(DocumentMetadata.class));
     }
 
     @Test
@@ -286,7 +287,7 @@ public class DocumentTaskManagerTest {
                 .uploadDocument(any(byte[].class),
                         eq("application/vnd.gini.v2.composite+json"), eq((String) null),
                         eq("Invoice"),
-                        eq(mSession), any(DocumentMetadata.class));
+                        eq(mSession), nullable(DocumentMetadata.class));
     }
 
     @Test
@@ -316,7 +317,7 @@ public class DocumentTaskManagerTest {
                 .uploadDocument(eq(jsonBytes),
                         eq("application/vnd.gini.v2.composite+json"), eq((String) null),
                         eq("Invoice"),
-                        eq(mSession), any(DocumentMetadata.class));
+                        eq(mSession), nullable(DocumentMetadata.class));
     }
 
     @Test
@@ -346,7 +347,7 @@ public class DocumentTaskManagerTest {
                 .uploadDocument(eq(jsonBytes),
                         eq("application/vnd.gini.v2.composite+json"), eq((String) null),
                         eq("Invoice"),
-                        eq(mSession), any(DocumentMetadata.class));
+                        eq(mSession), nullable(DocumentMetadata.class));
     }
 
     @Test
@@ -376,7 +377,7 @@ public class DocumentTaskManagerTest {
                 .uploadDocument(eq(jsonBytes),
                         eq("application/vnd.gini.v2.composite+json"), eq((String) null),
                         eq("Invoice"),
-                        eq(mSession), any(DocumentMetadata.class));
+                        eq(mSession), nullable(DocumentMetadata.class));
     }
 
     @Test

@@ -1,14 +1,14 @@
 package net.gini.android;
 
-import static android.support.test.InstrumentationRegistry.getTargetContext;
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
-import android.support.test.filters.SmallTest;
-import android.support.test.runner.AndroidJUnit4;
+import androidx.test.filters.SmallTest;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.android.volley.Cache;
 import com.android.volley.RetryPolicy;
@@ -27,13 +27,13 @@ public class SdkBuilderTest {
 
     @Test
     public void testBuilderReturnsSdkInstance() {
-        SdkBuilder builder = new SdkBuilder(getTargetContext(), "clientId", "clientSecret", "@example.com");
+        SdkBuilder builder = new SdkBuilder(getApplicationContext(), "clientId", "clientSecret", "@example.com");
         assertNotNull(builder.build());
     }
 
     @Test
     public void testBuilderReturnsCorrectConfiguredSdkInstance() {
-        SdkBuilder builder = new SdkBuilder(getTargetContext(), "clientId", "clientSecret", "@example.com");
+        SdkBuilder builder = new SdkBuilder(getApplicationContext(), "clientId", "clientSecret", "@example.com");
         Gini sdkInstance = builder.build();
 
         assertNotNull(sdkInstance.getDocumentTaskManager());
@@ -44,7 +44,7 @@ public class SdkBuilderTest {
     public void testBuilderWorksWithAlternativeSessionManager() {
         final SessionManager sessionManager = new NullSessionManager();
 
-        final SdkBuilder builder = new SdkBuilder(getTargetContext(), sessionManager);
+        final SdkBuilder builder = new SdkBuilder(getApplicationContext(), sessionManager);
         final Gini sdkInstance = builder.build();
 
         assertNotNull(sdkInstance);
@@ -54,7 +54,7 @@ public class SdkBuilderTest {
 
     @Test
     public void testSetWrongConnectionTimeout() {
-        SdkBuilder builder = new SdkBuilder(getTargetContext(), "clientId", "clientSecret", "@example.com");
+        SdkBuilder builder = new SdkBuilder(getApplicationContext(), "clientId", "clientSecret", "@example.com");
         try {
             builder.setConnectionTimeoutInMs(-1);
             fail("IllegalArgumentException should be thrown");
@@ -64,7 +64,7 @@ public class SdkBuilderTest {
 
     @Test
     public void testSetWrongConnectionMaxNumberOfRetries() {
-        SdkBuilder builder = new SdkBuilder(getTargetContext(), "clientId", "clientSecret", "@example.com");
+        SdkBuilder builder = new SdkBuilder(getApplicationContext(), "clientId", "clientSecret", "@example.com");
         try {
             builder.setMaxNumberOfRetries(-1);
             fail("IllegalArgumentException should be thrown");
@@ -74,7 +74,7 @@ public class SdkBuilderTest {
 
     @Test
     public void testSetWrongConnectionBackOffMultiplier() {
-        SdkBuilder builder = new SdkBuilder(getTargetContext(), "clientId", "clientSecret", "@example.com");
+        SdkBuilder builder = new SdkBuilder(getApplicationContext(), "clientId", "clientSecret", "@example.com");
         try {
             builder.setConnectionBackOffMultiplier(-1);
             fail("IllegalArgumentException should be thrown");
@@ -84,7 +84,7 @@ public class SdkBuilderTest {
 
     @Test
     public void testRetryPolicyWiring() {
-        SdkBuilder builder = new SdkBuilder(getTargetContext(), "clientId", "clientSecret", "@example.com");
+        SdkBuilder builder = new SdkBuilder(getApplicationContext(), "clientId", "clientSecret", "@example.com");
         builder.setConnectionTimeoutInMs(3333);
         builder.setMaxNumberOfRetries(66);
         builder.setConnectionBackOffMultiplier(1.3636f);
@@ -98,7 +98,7 @@ public class SdkBuilderTest {
 
     @Test
     public void testVolleyCacheConfiguration() {
-        SdkBuilder builder = new SdkBuilder(getTargetContext(), "clientId", "clientSecret", "@example.com");
+        SdkBuilder builder = new SdkBuilder(getApplicationContext(), "clientId", "clientSecret", "@example.com");
         NullCache nullCache = new NullCache();
         builder.setCache(nullCache);
         Gini sdkInstance = builder.build();
