@@ -1,9 +1,17 @@
 Gini Android SDK
 ================
 
-An SDK for integrating Gini technology into other apps. With this SDK you will be able to extract semantic information
-from various types of documents.
+An SDK for communicating with the Gini API. It allows you to easily add information extraction capabilities to your app.
 
+The Gini API provides an information extraction service for analyzing documents (e.g. invoices or contracts).
+Specifically it extracts information such as the document sender or the payment relevant information (amount to pay,
+IBAN, BIC, payment reference, etc.) in an invoice
+
+Documentation
+-------------
+
+See the [integration guide](http://developer.gini.net/gini-sdk-android/) for detailed guidance how to
+integrate the Gini SDK into your app.
 
 Dependencies
 ------------
@@ -14,33 +22,7 @@ The Gini Android SDK has the following dependencies:
 * [Bolts from facebook](https://github.com/BoltsFramework/Bolts-Android)
 * [TrustKit from DataTheorem](https://github.com/datatheorem/TrustKit-Android)
 
-Integration
------------
+License
+-------
 
-You can easily integrate the Gini Android SDK into your app using Gradle and our Maven repository.
-
-```
-    repositories {
-        maven {
-            url "https://repo.gini.net/nexus/content/repositories/public"
-        }
-        ...
-    }
-    
-    dependencies {
-        compile ('net.gini:gini-android-sdk:2.8.0@aar'){
-            transitive = true
-        }
-        ...
-    }
-
-```
-
-See the [integration guide](http://developer.gini.net/gini-sdk-android/) for detailed guidance how to 
-integrate the Gini SDK into your app.
-
-See the [Gini Android SDK documentation](http://developer.gini.net/gini-sdk-android/java-docs-release/net/gini/android/DocumentTaskManager.html)
-for more details how to use the `DocumentTaskManager`.
-
-
-Copyright (c) 2014-2019, [Gini GmbH](https://www.gini.net/)
+The Gini Android SDK is available under the MIT license. See the LICENSE file for details.
