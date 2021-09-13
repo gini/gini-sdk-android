@@ -10,13 +10,20 @@ First of all: Add the Library to your Build
 
 The gini sdk is provided as a aar archive. You can integrate it in your gradle based project by
 adding it as dependency. In order to gain access to the aar file, you have to add the Gini Maven
-repository to your build script.
+repository to your build script. You also need to add jcenter and the sonatype snapshots repo for Botls 1.5.0.
 
 .. code-block:: groovy
 
     repositories {
         maven {
             url "https://repo.gini.net/nexus/content/repositories/public"
+        }
+        // For bolts-android 1.5.0
+        //noinspection JcenterRepositoryObsolete
+        jcenter()
+        // For bolts-tasks and bolts-applinks 1.4.1-SNAPSHOT (which they should have released as version 1.5.0)
+        maven {
+            url "https://oss.sonatype.org/content/repositories/snapshots/"
         }
         ...
     }
