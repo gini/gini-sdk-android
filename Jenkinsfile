@@ -97,8 +97,8 @@ pipeline {
         stage('Build Documentation') {
             when {
                 expression {
-                  def tag = sh(returnStdout: true, script: 'git tag --contains $(git rev-parse HEAD)').trim()
-                  return !tag.isEmpty()
+                    def status = sh(returnStatus: true, script: 'git describe --exact-match HEAD')
+                    return status == 0
                 }
             }
             steps {
@@ -111,8 +111,8 @@ pipeline {
         stage('Release Documentation') {
             when {
                 expression {
-                    def tag = sh(returnStdout: true, script: 'git tag --contains $(git rev-parse HEAD)').trim()
-                    return !tag.isEmpty()
+                    def status = sh(returnStatus: true, script: 'git describe --exact-match HEAD')
+                    return status == 0
                 }
                 expression {
                     boolean publish = false
@@ -133,8 +133,8 @@ pipeline {
         stage('Release Library') {
             when {
                 expression {
-                    def tag = sh(returnStdout: true, script: 'git tag --contains $(git rev-parse HEAD)').trim()
-                    return !tag.isEmpty()
+                    def status = sh(returnStatus: true, script: 'git describe --exact-match HEAD')
+                    return status == 0
                 }
                 expression {
                     boolean publish = false
