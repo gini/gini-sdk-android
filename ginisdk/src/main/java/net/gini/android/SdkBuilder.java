@@ -26,6 +26,8 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.annotation.XmlRes;
 
+import javax.net.ssl.TrustManager;
+
 public class SdkBuilder {
 
     private final Context mContext;
@@ -52,6 +54,7 @@ public class SdkBuilder {
     private RetryPolicyFactory mRetryPolicyFactory;
     private Cache mCache;
     private GiniApiType mGiniApiType;
+    private TrustManager mTrustManager;
 
     /**
      * Constructor to initialize a new builder instance where anonymous Gini users are used. <b>This requires access to
@@ -204,6 +207,21 @@ public class SdkBuilder {
     }
 
     /**
+     * Set a custom {@link TrustManager} implementation to have full control over which certificates to trust.
+     * <p>
+     * Please be aware that if you set a custom TrustManager implementation here than it will override any
+     * <a href="https://developer.android.com/training/articles/security-config">network security configuration</a>
+     * you may have set.
+     *
+     * @param trustManager A {@link TrustManager} implementation.
+     * @return The builder instance to enable chaining.
+     */
+    public SdkBuilder setTrustManager(@NonNull final TrustManager trustManager) {
+        mTrustManager = trustManager;
+        return this;
+    }
+
+    /**
      * Builds the Gini instance with the configuration settings of the builder instance.
      *
      * @return The fully configured Gini instance.
@@ -228,6 +246,8 @@ public class SdkBuilder {
             }
             if (mNetworkSecurityConfigResId != 0) {
                 requestQueueBuilder.setNetworkSecurityConfigResId(mNetworkSecurityConfigResId);
+            } else if (mTrustManager != null) {
+                requestQueueBuilder.setTrustManager(mTrustManager);
             }
             mRequestQueue = requestQueueBuilder.build();
         }
