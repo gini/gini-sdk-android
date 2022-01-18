@@ -29,7 +29,7 @@ repository to your build script. You also need to add jcenter and the sonatype s
     }
 
     dependencies {
-        compile ('net.gini:gini-android-sdk:2.9.2@aar'){
+        compile ('net.gini:gini-android-sdk:2.10.0@aar'){
             transitive = true
         }
         ...
