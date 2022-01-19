@@ -92,8 +92,9 @@
 <li class="toctree-l2"><a class="reference internal" href="#using-the-gini-accounting-api">Using the Gini Accounting API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#public-key-pinning">Public Key Pinning</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#configure-pinning">Configure Pinning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id4">TrustKit</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#enable-pinning">Enable Pinning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">TrustKit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#enable-pinning-with-a-network-security-configuration">Enable Pinning with a Network Security Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#enable-pinning-with-a-custom-trustmanager-implementation">Enable Pinning with a custom TrustManager implementation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#extract-hash-from-gini-net">Extract Hash From gini.net</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#extract-hash-from-public-key">Extract Hash From Public Key</a></li>
 </ul>
@@ -226,7 +227,7 @@ repository to your build script. You also need to add jcenter and the sonatype s
 <span class="o">}</span>
 
 <span class="n">dependencies</span> <span class="o">{</span>
-    <span class="n">compile</span> <span class="o">(</span><span class="s1">&#39;net.gini:gini-android-sdk:2.9.2@aar&#39;</span><span class="o">){</span>
+    <span class="n">compile</span> <span class="o">(</span><span class="s1">&#39;net.gini:gini-android-sdk:2.10.0@aar&#39;</span><span class="o">){</span>
         <span class="n">transitive</span> <span class="o">=</span> <span class="kc">true</span>
     <span class="o">}</span>
     <span class="o">...</span>
@@ -292,12 +293,14 @@ to <cite>GiniApiType.ACCOUNTING</cite> when using the <cite>SdkBuilder</cite>:</
 <h2>Public Key Pinning<a class="headerlink" href="#public-key-pinning" title="Permalink to this headline">¶</a></h2>
 <p>Since version 1.5.0 public key pinning is provided using the <a class="reference external" href="https://developer.android.com/training/articles/security-config.html">Android Network Security Configuration</a> and <a class="reference external" href="https://github.com/datatheorem/TrustKit-Android">TrustKit</a>. The previous configuration through the
 <cite>SdkBuilder</cite> was removed.</p>
-<p>To use public key pinning you need to create an <a class="reference external" href="https://developer.android.com/training/articles/security-config.html">Android network security configuration</a> xml file. This
-configuration is supported natively on Android Nougat (API Level 24) and newer. For versions between
-API Level 17 and 23 the Gini SDK relies on <a class="reference external" href="https://github.com/datatheorem/TrustKit-Android">TrustKit</a>. On API Levels 15 and 16 our own pinning
-implementation is used.</p>
+<p>Since version 2.10.0 it is also possible to use a custom <a class="reference external" href="https://developer.android.com/reference/javax/net/ssl/TrustManager">TrustManager</a> to pin certificates.</p>
+<p>To use public key pinning you can either create an <a class="reference external" href="https://developer.android.com/training/articles/security-config.html">Android network security configuration</a> xml file or set a custom <a class="reference external" href="https://developer.android.com/reference/javax/net/ssl/TrustManager">TrustManager</a> implementation.</p>
+<p>The network security configuration is supported
+natively on Android Nougat (API Level 24) and newer. For versions between API Level 19 and 23 the Gini SDK relies on
+<a class="reference external" href="https://github.com/datatheorem/TrustKit-Android">TrustKit</a>.</p>
+<p>The custom <code class="docutils literal notranslate"><span class="pre">TrustManager</span></code> is supported on all Android versions.</p>
 <p>We recommend reading the <a class="reference external" href="https://developer.android.com/training/articles/security-config.html">Android Network Security Configuration</a> guide and the <a class="reference external" href="https://github.com/datatheorem/TrustKit-Android#limitations">TrustKit
-limitations for API Levels 17 to 23</a>.</p>
+limitations for API Levels 19 to 23</a>.</p>
 <div class="section" id="configure-pinning">
 <h3>Configure Pinning<a class="headerlink" href="#configure-pinning" title="Permalink to this headline">¶</a></h3>
 <p>The following sample configuration shows how to set the public key pin for the two domains the Gini
@@ -340,8 +343,8 @@ from the public key (see <a class="reference internal" href="#extract-hash-from-
 to security vulnerabilities.</p>
 </div>
 </div>
-<div class="section" id="id4">
-<h3>TrustKit<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id5">
+<h3>TrustKit<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference external" href="https://github.com/datatheorem/TrustKit-Android">TrustKit</a> configuration tag
 <code class="docutils literal notranslate"><span class="pre">&lt;trustkit-config&gt;</span></code> is required in order to disable TrustKit reporting and to enforce public key
 pinning. This is important because without it TrustKit won’t throw <code class="docutils literal notranslate"><span class="pre">CertificateExceptions</span></code> if the
@@ -360,14 +363,28 @@ the <code class="docutils literal notranslate"><span class="pre">&lt;application
 </pre></div>
 </div>
 </div>
-<div class="section" id="enable-pinning">
-<h3>Enable Pinning<a class="headerlink" href="#enable-pinning" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="enable-pinning-with-a-network-security-configuration">
+<h3>Enable Pinning with a Network Security Configuration<a class="headerlink" href="#enable-pinning-with-a-network-security-configuration" title="Permalink to this headline">¶</a></h3>
 <p>For the Gini SDK to know about the xml you need to set the xml resource id using the
 <code class="docutils literal notranslate"><span class="pre">SdkBuilder#setNetworkSecurityConfigResId()</span></code> method:</p>
 <div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="n">Gini</span> <span class="n">gini</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SdkBuilder</span><span class="p">(</span><span class="n">getContext</span><span class="p">(),</span> <span class="s">&quot;gini-client-id&quot;</span><span class="p">,</span> <span class="s">&quot;GiniClientSecret&quot;</span><span class="p">,</span> <span class="s">&quot;example.com&quot;</span><span class="p">)</span>
         <span class="p">.</span><span class="na">setNetworkSecurityConfigResId</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">xml</span><span class="p">.</span><span class="na">network_security_config</span><span class="p">)</span>
         <span class="p">.</span><span class="na">build</span><span class="p">();</span>
 </pre></div>
+</div>
+</div>
+<div class="section" id="enable-pinning-with-a-custom-trustmanager-implementation">
+<h3>Enable Pinning with a custom TrustManager implementation<a class="headerlink" href="#enable-pinning-with-a-custom-trustmanager-implementation" title="Permalink to this headline">¶</a></h3>
+<p>You can also take full control over which certificates to trust by passing your own <code class="docutils literal notranslate"><span class="pre">TrustManager</span></code> implementation
+to the <code class="docutils literal notranslate"><span class="pre">SdkBuilder#setTrustManager()</span></code> method:</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="n">Gini</span> <span class="n">gini</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SdkBuilder</span><span class="p">(</span><span class="n">getContext</span><span class="p">(),</span> <span class="s">&quot;gini-client-id&quot;</span><span class="p">,</span> <span class="s">&quot;GiniClientSecret&quot;</span><span class="p">,</span> <span class="s">&quot;example.com&quot;</span><span class="p">)</span>
+        <span class="p">.</span><span class="na">setTrustManager</span><span class="p">(</span><span class="n">yourTrustManager</span><span class="p">)</span>
+        <span class="p">.</span><span class="na">build</span><span class="p">();</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Setting a custom <code class="docutils literal notranslate"><span class="pre">TrustManager</span></code> will override the network security configuration.</p>
 </div>
 </div>
 <div class="section" id="extract-hash-from-gini-net">

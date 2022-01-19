@@ -29,7 +29,7 @@ repository to your build script. You also need to add jcenter and the sonatype s
     }
 
     dependencies {
-        compile ('net.gini:gini-android-sdk:2.9.2@aar'){
+        compile ('net.gini:gini-android-sdk:2.10.0@aar'){
             transitive = true
         }
         ...
@@ -108,16 +108,22 @@ Since version 1.5.0 public key pinning is provided using the `Android Network Se
 <https://github.com/datatheorem/TrustKit-Android>`_. The previous configuration through the
 `SdkBuilder` was removed.
 
-To use public key pinning you need to create an `Android network security configuration
-<https://developer.android.com/training/articles/security-config.html>`_ xml file. This
-configuration is supported natively on Android Nougat (API Level 24) and newer. For versions between
-API Level 17 and 23 the Gini SDK relies on `TrustKit
-<https://github.com/datatheorem/TrustKit-Android>`_. On API Levels 15 and 16 our own pinning
-implementation is used.
+Since version 2.10.0 it is also possible to use a custom `TrustManager
+<https://developer.android.com/reference/javax/net/ssl/TrustManager>`_ to pin certificates.
+
+To use public key pinning you can either create an `Android network security configuration
+<https://developer.android.com/training/articles/security-config.html>`_ xml file or set a custom `TrustManager
+<https://developer.android.com/reference/javax/net/ssl/TrustManager>`_ implementation. 
+
+The network security configuration is supported
+natively on Android Nougat (API Level 24) and newer. For versions between API Level 19 and 23 the Gini SDK relies on
+`TrustKit <https://github.com/datatheorem/TrustKit-Android>`_.
+
+The custom ``TrustManager`` is supported on all Android versions.
 
 We recommend reading the `Android Network Security Configuration
 <https://developer.android.com/training/articles/security-config.html>`_ guide and the `TrustKit
-limitations for API Levels 17 to 23 <https://github.com/datatheorem/TrustKit-Android#limitations>`_.
+limitations for API Levels 19 to 23 <https://github.com/datatheorem/TrustKit-Android#limitations>`_.
 
 Configure Pinning
 -----------------
@@ -186,8 +192,8 @@ the ``<application>`` tag to point to the xml:
         ...
     </manifest>
 
-Enable Pinning
---------------
+Enable Pinning with a Network Security Configuration
+----------------------------------------------------
 
 For the Gini SDK to know about the xml you need to set the xml resource id using the
 ``SdkBuilder#setNetworkSecurityConfigResId()`` method:
@@ -197,6 +203,23 @@ For the Gini SDK to know about the xml you need to set the xml resource id using
     Gini gini = new SdkBuilder(getContext(), "gini-client-id", "GiniClientSecret", "example.com")
             .setNetworkSecurityConfigResId(R.xml.network_security_config)
             .build();
+
+
+Enable Pinning with a custom TrustManager implementation
+--------------------------------------------------------
+
+You can also take full control over which certificates to trust by passing your own ``TrustManager`` implementation
+to the ``SdkBuilder#setTrustManager()`` method:
+
+.. code-block:: java
+
+    Gini gini = new SdkBuilder(getContext(), "gini-client-id", "GiniClientSecret", "example.com")
+            .setTrustManager(yourTrustManager)
+            .build();
+
+.. warning::
+
+    Setting a custom ``TrustManager`` will override the network security configuration.
 
 Extract Hash From gini.net
 --------------------------
