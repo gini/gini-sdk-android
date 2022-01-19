@@ -19,6 +19,12 @@ import net.gini.android.authorization.SessionManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
 import bolts.Task;
 
 @SmallTest
@@ -104,6 +110,34 @@ public class SdkBuilderTest {
         Gini sdkInstance = builder.build();
 
         assertSame(sdkInstance.getDocumentTaskManager().mApiCommunicator.mRequestQueue.getCache(), nullCache);
+    }
+
+    @Test
+    public void allowsSettingCustomTrustManager() {
+        SdkBuilder builder = new SdkBuilder(getApplicationContext(), "clientId", "clientSecret", "@example.com");
+        final TrustManager trustManager = new X509TrustManager() {
+
+            @Override
+            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+
+            }
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+
+            }
+
+            @Override
+            public X509Certificate[] getAcceptedIssuers() {
+                return new X509Certificate[0];
+            }
+        };
+
+        Gini sdkInstance = builder
+                .setTrustManager(trustManager)
+                .build();
+
+        assertNotNull(sdkInstance);
     }
 
     private static final class NullCache implements Cache {
